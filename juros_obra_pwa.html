@@ -9,7 +9,6 @@
 <meta name="apple-mobile-web-app-title" content="Juros de Obra">
 <meta name="description" content="Estime suas parcelas de evolução de obra com precisão.">
 <title>Juros de Obra</title>
-<link rel="manifest" href="#" id="manifest-placeholder">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -24,14 +23,14 @@
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
 
-/* ── SPLASH ── */
+/* SPLASH */
 #splash{position:fixed;inset:0;background:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:999;transition:opacity .4s ease;}
 #splash.hide{opacity:0;pointer-events:none;}
 .splash-icon{width:72px;height:72px;background:#fff;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;}
 .splash-title{color:#fff;font-size:22px;font-weight:600;letter-spacing:-.02em;}
 .splash-sub{color:rgba(255,255,255,.65);font-size:13px;}
 
-/* ── LAYOUT ── */
+/* LAYOUT */
 #root{display:flex;flex-direction:column;min-height:100vh;}
 header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
 .header-logo{display:flex;align-items:center;gap:10px;}
@@ -41,29 +40,29 @@ header{background:var(--card);border-bottom:1px solid var(--border);padding:14px
 .btn-profiles{background:var(--accent-light);color:var(--accent);border:none;border-radius:8px;padding:8px 14px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;}
 .btn-profiles:hover{background:#d0eadb;}
 
-main{flex:1;padding:20px 20px 60px;max-width:600px;width:100%;margin:0 auto;}
+main{flex:1;padding:20px 20px 60px;max-width:660px;width:100%;margin:0 auto;}
 
-/* ── PROGRESS ── */
+/* PROGRESS */
 .progress-wrap{display:flex;gap:5px;margin-bottom:24px;}
 .progress-dot{flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s;}
 .progress-dot.done{background:var(--accent);}
 .progress-dot.active{background:var(--accent);opacity:.5;}
 
-/* ── STEP CARD ── */
+/* STEP CARD */
 .step-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px 24px;animation:fadeUp .2s ease;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .step-num{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em;margin-bottom:10px;}
 .step-title{font-size:20px;font-weight:600;line-height:1.3;margin-bottom:6px;}
 .step-hint{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;}
 
-/* ── INPUTS ── */
+/* INPUTS */
 input[type=text],input[type=number],input[type=month]{
   width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;
   font-family:var(--font);font-size:15px;color:var(--text);background:var(--bg);
   outline:none;transition:border .15s;-webkit-appearance:none;appearance:none;
 }
 input:focus{border-color:var(--accent);}
-input.invalid{border-color:var(--danger);background:var(--danger-light);}
+input.invalid{border-color:var(--danger) !important;background:var(--danger-light);}
 .input-wrap{position:relative;}
 .input-wrap .pre{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none;z-index:1;}
 .input-wrap .suf{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none;z-index:1;}
@@ -75,7 +74,7 @@ input.invalid{border-color:var(--danger);background:var(--danger-light);}
 .char-count{font-size:11px;color:var(--muted);text-align:right;margin-top:4px;}
 .char-count.warn{color:var(--danger);}
 
-/* ── CONFIRM / INFO BOXES ── */
+/* CONFIRM / INFO BOXES */
 .confirm-box{background:var(--accent-light);border:1px solid #B2D8C4;border-radius:8px;padding:14px 16px;margin:14px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;}
 .confirm-box .c-label{font-size:12px;color:var(--accent);font-weight:500;}
 .confirm-box .c-val{font-size:20px;font-weight:600;color:var(--accent);font-family:var(--mono);white-space:nowrap;}
@@ -91,16 +90,14 @@ input.invalid{border-color:var(--danger);background:var(--danger-light);}
 .months-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-light);border:1px solid #B2D8C4;border-radius:20px;padding:6px 14px;font-size:13px;color:var(--accent);font-weight:500;margin:12px 0 0;}
 .months-badge.err{background:#FFF0F0;border-color:#F5C6C6;color:#A0392B;}
 
-/* ── BUTTONS ── */
+/* BUTTONS */
 .btn{display:block;width:100%;padding:13px;border-radius:8px;border:none;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;margin-top:16px;transition:opacity .15s;}
 .btn-primary{background:var(--accent);color:#fff;}
 .btn-primary:hover{opacity:.88;}
 .btn-back{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:400;}
 .btn-back:hover{background:var(--bg);}
-.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);font-weight:400;}
-.btn-danger:hover{background:var(--danger-light);}
 
-/* ── PROFILES SCREEN ── */
+/* PROFILES */
 .screen-title{font-size:18px;font-weight:600;margin-bottom:4px;}
 .screen-sub{font-size:13px;color:var(--muted);margin-bottom:20px;}
 .profile-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
@@ -108,6 +105,7 @@ input.invalid{border-color:var(--danger);background:var(--danger-light);}
 .profile-card:hover{border-color:var(--accent);}
 .profile-card .pc-name{font-weight:600;font-size:15px;margin-bottom:2px;}
 .profile-card .pc-sub{font-size:12px;color:var(--muted);}
+.profile-card .pc-perc{font-size:12px;color:var(--accent);font-weight:500;margin-top:3px;}
 .profile-card .pc-actions{display:flex;gap:8px;flex-shrink:0;}
 .pc-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:var(--font);color:var(--muted);}
 .pc-btn:hover{background:var(--bg);}
@@ -116,26 +114,28 @@ input.invalid{border-color:var(--danger);background:var(--danger-light);}
 .empty-state .es-icon{font-size:40px;margin-bottom:12px;}
 .empty-state p{font-size:14px;line-height:1.6;}
 
-/* ── RESULT ── */
-.result-header{margin-bottom:16px;}
+/* RESULT — sticky summary */
+.result-header{margin-bottom:14px;}
 .result-header h2{font-size:18px;font-weight:600;margin-bottom:2px;word-break:break-word;}
 .result-header p{font-size:13px;color:var(--muted);}
-.result-header .rh-actions{display:flex;gap:8px;margin-top:10px;}
+.rh-actions{display:flex;gap:8px;margin-top:10px;}
 .rh-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;font-family:var(--font);cursor:pointer;color:var(--text);font-weight:500;}
 .rh-btn:hover{background:var(--bg);}
 .rh-btn.save{background:var(--accent-light);border-color:#B2D8C4;color:var(--accent);}
 .rh-btn.save:hover{background:#d0eadb;}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
-.summary-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;}
-.summary-card .s-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
-.summary-card .s-val{font-size:15px;font-weight:600;color:var(--text);}
+
+.sticky-summary{position:sticky;top:62px;z-index:9;background:var(--bg);padding:10px 0 8px;}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.summary-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.summary-card .s-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;}
+.summary-card .s-val{font-size:14px;font-weight:600;color:var(--text);}
 .summary-card.accent{background:var(--accent-light);border-color:#B2D8C4;}
 .summary-card.accent .s-val{color:var(--accent);}
 .summary-card.paid{background:var(--blue-bg);border-color:#B2D4E8;}
 .summary-card.paid .s-val{color:var(--blue);}
-.alert{background:var(--warn-bg);border:1px solid #F6E0A0;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--warn);margin-bottom:14px;line-height:1.5;}
+.alert{background:var(--warn-bg);border:1px solid #F6E0A0;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--warn);margin-bottom:12px;line-height:1.5;}
 
-/* ── TABLE ── */
+/* TABLE */
 .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto;margin-bottom:8px;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
 thead tr{background:var(--bg);}
@@ -147,12 +147,26 @@ tr.obra-done td{background:#F8F8F6;color:var(--muted);}
 tr.obra-done td input{background:#F0F0EE;color:var(--muted);pointer-events:none;}
 .val-col{font-family:var(--mono);font-size:12px;text-align:right;}
 .num-col{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;min-width:26px;}
-.perc-input{width:58px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-family:var(--mono);font-size:12px;text-align:right;background:var(--bg);outline:none;transition:border .15s;}
+
+/* campos inline — mais largos e suportam decimais */
+.perc-input{
+  width:74px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;
+  font-family:var(--mono);font-size:12px;text-align:right;background:var(--bg);
+  outline:none;transition:border .15s;-webkit-appearance:none;appearance:none;
+  /* garantir que vírgula funcione como separador decimal no mobile */
+  inputmode:decimal;
+}
 .perc-input:focus{border-color:var(--accent);}
-.perc-input.invalid{border-color:var(--danger);background:var(--danger-light);}
-.tr-input{width:68px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-family:var(--mono);font-size:12px;text-align:right;background:var(--bg);outline:none;transition:border .15s;}
+.perc-input.invalid{border-color:var(--danger) !important;background:var(--danger-light);}
+.tr-input{
+  width:82px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;
+  font-family:var(--mono);font-size:12px;text-align:right;background:var(--bg);
+  outline:none;transition:border .15s;-webkit-appearance:none;appearance:none;
+  inputmode:decimal;
+}
 .tr-input:focus{border-color:var(--accent);}
-.tr-input.invalid{border-color:var(--danger);background:var(--danger-light);}
+.tr-input.invalid{border-color:var(--danger) !important;background:var(--danger-light);}
+
 .badge-pago{background:#E6F2EC;color:var(--accent);font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500;cursor:pointer;white-space:nowrap;border:none;font-family:var(--font);}
 .badge-nao{background:#F2F2F0;color:var(--muted);font-size:11px;padding:3px 8px;border-radius:20px;cursor:pointer;white-space:nowrap;border:none;font-family:var(--font);}
 .badge-blocked{background:#F2F2F0;color:#CCC;font-size:11px;padding:3px 8px;border-radius:20px;cursor:not-allowed;white-space:nowrap;border:none;}
@@ -165,9 +179,24 @@ tr.obra-done td input{background:#F0F0EE;color:var(--muted);pointer-events:none;
 .btn-reset{display:block;width:100%;padding:11px;border-radius:8px;border:1px solid var(--border);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--muted);margin-top:4px;}
 .btn-reset:hover{background:var(--bg);}
 
-/* ── TOAST ── */
+/* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;transition:all .3s;pointer-events:none;z-index:100;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* CELEBRAÇÃO */
+#celebration{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .4s;}
+#celebration.show{opacity:1;pointer-events:all;}
+.celebration-backdrop{position:absolute;inset:0;background:rgba(26,107,74,.7);backdrop-filter:blur(4px);}
+.celebration-card{position:relative;background:#fff;border-radius:24px;padding:36px 32px;text-align:center;max-width:320px;width:90%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes popIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.celebration-emoji{font-size:56px;display:block;margin-bottom:12px;animation:bounce 1s ease infinite alternate;}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.celebration-title{font-size:20px;font-weight:600;color:var(--accent);margin-bottom:8px;}
+.celebration-sub{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:20px;}
+.celebration-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;}
+/* confetti */
+.confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall linear forwards;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
 </style>
 </head>
 <body>
@@ -194,16 +223,25 @@ tr.obra-done td input{background:#F0F0EE;color:var(--muted);pointer-events:none;
 
 <div class="toast" id="toast"></div>
 
+<!-- CELEBRAÇÃO -->
+<div id="celebration">
+  <div class="celebration-backdrop" onclick="closeCelebration()"></div>
+  <div class="celebration-card">
+    <span class="celebration-emoji">🎉</span>
+    <div class="celebration-title">Parabéns!</div>
+    <div class="celebration-sub">Seu novo apartamento está pronto!<br>Todas as parcelas de evolução de obra foram concluídas.</div>
+    <button class="celebration-btn" onclick="closeCelebration()">Que incrível! 🏠</button>
+  </div>
+</div>
+
 <script>
-// ── CONSTANTES ─────────────────────────────────────────────
 const MAX_MESES = 48;
 const STORAGE_KEY = 'juros_obra_perfis';
 const TOTAL_STEPS = 8;
 
-// ── ESTADO ─────────────────────────────────────────────────
 let currentStep = 0;
 let currentProfileId = null;
-let screen = 'onboarding'; // 'profiles' | 'onboarding' | 'result'
+let screen = 'onboarding';
 
 const form = {
   mesInicial:'', valorTotal:'', percFinanciado:80,
@@ -213,38 +251,51 @@ const form = {
 };
 let meses = [];
 
-// ── STORAGE ────────────────────────────────────────────────
+// ── STORAGE ──
 function loadProfiles(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }catch(e){return[];} }
 function saveProfiles(p){ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
 
+function ultimaPercPaga(mesArr){
+  // percorre de trás para frente e acha a última linha paga não bloqueada
+  for(let i=mesArr.length-1;i>=0;i--){
+    if(mesArr[i].pago && !mesArr[i].bloqueado) return mesArr[i].perc;
+  }
+  return null;
+}
+
 function saveProfile(){
-  const profiles = loadProfiles();
-  const data = { id: currentProfileId||Date.now().toString(), nome: form.nomeSimulacao||'Apto 1', form: {...form}, meses: JSON.parse(JSON.stringify(meses)), savedAt: new Date().toISOString() };
-  const idx = profiles.findIndex(p=>p.id===data.id);
+  const profiles=loadProfiles();
+  const data={
+    id:currentProfileId||Date.now().toString(),
+    nome:form.nomeSimulacao||'Apto 1',
+    form:{...form},
+    meses:JSON.parse(JSON.stringify(meses)),
+    savedAt:new Date().toISOString()
+  };
+  const idx=profiles.findIndex(p=>p.id===data.id);
   if(idx>=0) profiles[idx]=data; else profiles.push(data);
-  currentProfileId = data.id;
+  currentProfileId=data.id;
   saveProfiles(profiles);
   showToast('Perfil salvo com sucesso!');
 }
 
 function deleteProfile(id){
   if(!confirm('Excluir este perfil? Esta ação não pode ser desfeita.')) return;
-  const profiles = loadProfiles().filter(p=>p.id!==id);
-  saveProfiles(profiles);
+  saveProfiles(loadProfiles().filter(p=>p.id!==id));
   renderProfiles();
 }
 
 function loadProfile(id){
-  const p = loadProfiles().find(p=>p.id===id);
+  const p=loadProfiles().find(p=>p.id===id);
   if(!p) return;
-  currentProfileId = p.id;
-  Object.assign(form, p.form);
-  meses = JSON.parse(JSON.stringify(p.meses));
-  screen = 'result';
+  currentProfileId=p.id;
+  Object.assign(form,p.form);
+  meses=JSON.parse(JSON.stringify(p.meses));
+  screen='result';
   renderResult();
 }
 
-// ── HELPERS ────────────────────────────────────────────────
+// ── HELPERS ──
 function fmtBRL(v){ return Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2}); }
 function fmtPerc(v,d=4){ return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d})+'%'; }
 function sanitizeName(s){ return s.replace(/[<>"'`\\\/\{\}\[\]]/g,'').trim().slice(0,30); }
@@ -255,6 +306,8 @@ function addM(base,n){ let m=base.m+n,y=base.y; while(m>12){m-=12;y++;} return {
 function mLabel(ym){ return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][ym.m-1]+'/'+ym.y; }
 function mLabelFull(s){ if(!s) return ''; const ym=parseMS(s); return ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][ym.m-1]+' de '+ym.y; }
 function fmtDate(iso){ return new Date(iso).toLocaleDateString('pt-BR'); }
+// Normaliza vírgula → ponto para parseFloat funcionar em ambos os locales
+function parseDecimal(val){ return parseFloat(String(val).replace(',','.')); }
 
 function showToast(msg){
   const t=document.getElementById('toast');
@@ -264,21 +317,21 @@ function showToast(msg){
 function markError(id){ const el=document.getElementById(id); if(el){el.classList.add('invalid');el.focus();} }
 function setHtml(html){ document.getElementById('main').innerHTML=html; }
 
-// ── PROGRESS ───────────────────────────────────────────────
 function renderProgress(){
   return `<div class="progress-wrap">${Array.from({length:TOTAL_STEPS},(_,i)=>`<div class="progress-dot ${i<currentStep?'done':i===currentStep?'active':''}"></div>`).join('')}</div>`;
 }
 
-// ── CÁLCULO ────────────────────────────────────────────────
+// ── CÁLCULO ──
 function calcTable(){
   const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
   const ter=parseFloat(form.valorTerreno);
   const enc=parseFloat(form.seguro||0)+parseFloat(form.taxaAdm||25);
   const tm=parseFloat(form.taxaAnual)/100/12;
   const sMax=fin-ter;
-  const ini=parseMS(form.mesInicial), ent=parseMS(form.mesEntrega);
+  const ini=parseMS(form.mesInicial),ent=parseMS(form.mesEntrega);
   const total=Math.min(mBetween(ini,ent),MAX_MESES);
   const rows=[];
+  // Parcela 1 = primeiro mês (terreno, perc 0)
   rows.push({mes:mLabel(ini),perc:0,saldo:ter,tr:form.trInicial,previsto:(tm+form.trInicial)*ter+enc,pago:false,bloqueado:false});
   for(let i=1;i<=total;i++){
     const ym=addM(ini,i);
@@ -330,65 +383,125 @@ function removerLinha(){
   renderResult();
 }
 
-// ── TOGGLE PAGO ────────────────────────────────────────────
+// ── CELEBRAÇÃO ──
+function showCelebration(){
+  launchConfetti();
+  document.getElementById('celebration').classList.add('show');
+}
+function closeCelebration(){
+  document.getElementById('celebration').classList.remove('show');
+}
+function launchConfetti(){
+  const colors=['#1A6B4A','#F6C90E','#E74C3C','#3498DB','#9B59B6','#2ECC71','#F39C12'];
+  const cel=document.getElementById('celebration');
+  for(let i=0;i<60;i++){
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.cssText=`
+      left:${Math.random()*100}%;
+      top:${-10-Math.random()*20}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${6+Math.random()*8}px;
+      height:${6+Math.random()*8}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      animation-duration:${1.5+Math.random()*2}s;
+      animation-delay:${Math.random()*0.5}s;
+    `;
+    cel.appendChild(el);
+    setTimeout(()=>el.remove(), 4000);
+  }
+}
+
+// ── TOGGLE PAGO ──
 function togglePago(i){
   const r=meses[i];
   if(r.bloqueado) return;
   if(!r.pago){
-    for(let j=0;j<i;j++){ if(!meses[j].bloqueado&&!meses[j].pago){alert('Marque primeiro a parcela de '+meses[j].mes+'.');return;} }
+    for(let j=0;j<i;j++){
+      if(!meses[j].bloqueado&&!meses[j].pago){alert('Marque primeiro a parcela de '+meses[j].mes+'.');return;}
+    }
     r.pago=true;
+    // verifica se é a parcela com 100% de obra
+    if(r.perc>=100) setTimeout(showCelebration,300);
   } else {
-    for(let j=i+1;j<meses.length;j++){ if(!meses[j].bloqueado&&meses[j].pago){alert('Desmarque primeiro a parcela de '+meses[j].mes+'.');return;} }
+    for(let j=i+1;j<meses.length;j++){
+      if(!meses[j].bloqueado&&meses[j].pago){alert('Desmarque primeiro a parcela de '+meses[j].mes+'.');return;}
+    }
     r.pago=false;
   }
   refreshTable();
 }
 
-// ── EDIÇÃO INLINE ──────────────────────────────────────────
-function updatePerc(i,val){
+// ── EDIÇÃO INLINE ──
+function updatePerc(i, rawVal){
   const el=document.getElementById('pi-'+i);
-  const v=parseFloat(val);
-  if(val===''||isNaN(v)||v<0||v>100){ if(el)el.classList.add('invalid'); return; }
-  if(el)el.classList.remove('invalid');
-  meses[i].perc=v; recalcRow(i); aplicaBloqueio(); refreshTable();
+  const v=parseDecimal(rawVal);
+  if(rawVal===''||isNaN(v)||v<0||v>100){ if(el) el.classList.add('invalid'); return; }
+
+  // impede valor decrescente em relação à linha anterior não-bloqueada
+  let prevPerc=-1;
+  for(let j=i-1;j>=0;j--){
+    if(!meses[j].bloqueado){ prevPerc=meses[j].perc; break; }
+  }
+  if(v<prevPerc){
+    if(el){ el.classList.add('invalid'); el.title='O valor não pode ser menor que a linha anterior ('+prevPerc+'%).'; }
+    showToast('⚠️ % de obra não pode diminuir. Anterior: '+prevPerc+'%');
+    return;
+  }
+
+  if(el){ el.classList.remove('invalid'); el.title=''; }
+  meses[i].perc=v;
+  recalcRow(i);
+  aplicaBloqueio();
+  refreshTable();
 }
+
 function validatePercBlur(i){
   const el=document.getElementById('pi-'+i); if(!el) return;
-  const v=parseFloat(el.value);
-  if(el.value===''||isNaN(v)||v<0||v>100){el.classList.add('invalid');} else {el.classList.remove('invalid');}
+  const v=parseDecimal(el.value);
+  if(el.value===''||isNaN(v)||v<0||v>100){ el.classList.add('invalid'); }
+  else { el.classList.remove('invalid'); }
 }
-function updateTR(i,val){
+
+function updateTR(i, rawVal){
   const el=document.getElementById('ti-'+i);
-  const v=parseFloat(val);
-  if(val===''||isNaN(v)||v<0){ if(el)el.classList.add('invalid'); return; }
-  if(el)el.classList.remove('invalid');
-  meses[i].tr=v/100; recalcRow(i);
+  const v=parseDecimal(rawVal);
+  if(rawVal===''||isNaN(v)||v<0){ if(el) el.classList.add('invalid'); return; }
+  if(el){ el.classList.remove('invalid'); el.title=''; }
+  meses[i].tr=v/100;
+  recalcRow(i);
   const elP=document.getElementById('rp-'+i);
   if(elP) elP.textContent=meses[i].bloqueado?'—':fmtBRL(meses[i].previsto);
   updateSummary();
 }
+
 function validateTRBlur(i){
   const el=document.getElementById('ti-'+i); if(!el) return;
-  const v=parseFloat(el.value);
-  if(el.value===''||isNaN(v)||v<0){el.classList.add('invalid');} else {el.classList.remove('invalid');}
+  const v=parseDecimal(el.value);
+  if(el.value===''||isNaN(v)||v<0){ el.classList.add('invalid'); }
+  else { el.classList.remove('invalid'); }
 }
 
 function refreshTable(){
   meses.forEach((r,i)=>{
     const row=document.getElementById('row-'+i); if(!row) return;
     row.className=r.bloqueado?'obra-done':r.pago?'pago-row':'';
-    const pi=document.getElementById('pi-'+i); if(pi){pi.disabled=r.bloqueado;if(!r.bloqueado)pi.value=r.perc;}
-    const ti=document.getElementById('ti-'+i); if(ti) ti.disabled=r.bloqueado;
-    const rs=document.getElementById('rs-'+i); if(rs) rs.textContent=r.bloqueado?'—':fmtBRL(r.saldo);
-    const rp=document.getElementById('rp-'+i); if(rp) rp.textContent=r.bloqueado?'—':fmtBRL(r.previsto);
+    const pi=document.getElementById('pi-'+i);
+    if(pi){ pi.disabled=r.bloqueado; if(!r.bloqueado) pi.value=r.perc; }
+    const ti=document.getElementById('ti-'+i);
+    if(ti) ti.disabled=r.bloqueado;
+    const rs=document.getElementById('rs-'+i);
+    if(rs) rs.textContent=r.bloqueado?'—':fmtBRL(r.saldo);
+    const rp=document.getElementById('rp-'+i);
+    if(rp) rp.textContent=r.bloqueado?'—':fmtBRL(r.previsto);
     const bp=document.getElementById('bp-'+i);
     if(bp){
-      if(r.bloqueado) bp.outerHTML=`<span id="bp-${i}" class="badge-blocked">—</span>`;
-      else if(r.pago) bp.outerHTML=`<button id="bp-${i}" class="badge-pago" onclick="togglePago(${i})">✓ Pago</button>`;
-      else            bp.outerHTML=`<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`;
+      if(r.bloqueado)      bp.outerHTML=`<span id="bp-${i}" class="badge-blocked">—</span>`;
+      else if(r.pago)      bp.outerHTML=`<button id="bp-${i}" class="badge-pago" onclick="togglePago(${i})">✓ Pago</button>`;
+      else                 bp.outerHTML=`<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`;
     }
   });
-  const btnAdd=document.getElementById('btn-add'), btnRem=document.getElementById('btn-rem'), rcInfo=document.getElementById('rc-info');
+  const btnAdd=document.getElementById('btn-add'),btnRem=document.getElementById('btn-rem'),rcInfo=document.getElementById('rc-info');
   if(btnAdd) btnAdd.disabled=meses.length>=MAX_MESES+1;
   if(btnRem){ const last=meses[meses.length-1]; btnRem.disabled=meses.length<=1||(last&&last.pago); }
   if(rcInfo) rcInfo.textContent=(meses.length-1)+' parcela(s) · máx. '+MAX_MESES;
@@ -406,23 +519,27 @@ function updateSummary(){
   if(e('sum-media')) e('sum-media').textContent=fmtBRL(media);
 }
 
-// ── TELA: PERFIS ───────────────────────────────────────────
+// ── TELA: PERFIS ──
 function goProfiles(){ screen='profiles'; renderProfiles(); }
 
 function renderProfiles(){
   const profiles=loadProfiles();
-  const list = profiles.length
-    ? profiles.map(p=>`
-      <div class="profile-card" onclick="loadProfile('${p.id}')">
-        <div>
-          <div class="pc-name">${escHtml(p.nome)}</div>
-          <div class="pc-sub">Salvo em ${fmtDate(p.savedAt)} · ${p.meses.length-1} parcelas</div>
-        </div>
-        <div class="pc-actions" onclick="event.stopPropagation()">
-          <button class="pc-btn" onclick="loadProfile('${p.id}')">Abrir</button>
-          <button class="pc-btn del" onclick="deleteProfile('${p.id}')">Excluir</button>
-        </div>
-      </div>`).join('')
+  const list=profiles.length
+    ? profiles.map(p=>{
+        const perc=ultimaPercPaga(p.meses);
+        const percLabel=perc!==null?`✅ Última parcela paga: ${perc}% de obra`:'Nenhuma parcela paga ainda';
+        return `<div class="profile-card" onclick="loadProfile('${p.id}')">
+          <div>
+            <div class="pc-name">${escHtml(p.nome)}</div>
+            <div class="pc-sub">Salvo em ${fmtDate(p.savedAt)} · ${p.meses.length} parcelas</div>
+            <div class="pc-perc">${percLabel}</div>
+          </div>
+          <div class="pc-actions" onclick="event.stopPropagation()">
+            <button class="pc-btn" onclick="loadProfile('${p.id}')">Abrir</button>
+            <button class="pc-btn del" onclick="deleteProfile('${p.id}')">Excluir</button>
+          </div>
+        </div>`;
+      }).join('')
     : `<div class="empty-state"><div class="es-icon">📭</div><p>Nenhum perfil salvo ainda.<br>Faça uma simulação e clique em <strong>Salvar</strong>.</p></div>`;
 
   setHtml(`
@@ -441,7 +558,7 @@ function novaSimulacao(){
   renderStep();
 }
 
-// ── TELA: ONBOARDING ───────────────────────────────────────
+// ── ONBOARDING ──
 function nextStep(){
   try{
     if(currentStep===0){
@@ -471,7 +588,7 @@ function nextStep(){
       if(mBetween(ini,fin)<=0){markError('inp-mesEntrega');return;}
       form.mesEntrega=v;
     } else if(currentStep===6){
-      form.trInicial=(parseFloat(document.getElementById('inp-tr').value)||0.1)/100;
+      form.trInicial=(parseDecimal(document.getElementById('inp-tr').value)||0.1)/100;
     } else if(currentStep===7){
       form.nomeSimulacao=sanitizeName(document.getElementById('inp-nome').value)||'Apto 1';
     }
@@ -490,13 +607,12 @@ function renderStep(){
   const seg=parseFloat(form.seguro)||0;
   const ta=parseFloat(form.taxaAnual)||0;
 
-  const steps = [
-    // 0
+  const steps=[
     `<div class="step-num">01 / 08</div>
     <div class="step-title">Qual o mês da 1ª parcela de evolução?</div>
     <div class="step-hint">Consta no seu contrato com a Caixa Econômica.</div>
     <input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="this.classList.remove('invalid')">`,
-    // 1
+
     `<div class="step-num">02 / 08</div>
     <div class="step-title">Qual o valor total do imóvel?</div>
     <div class="step-hint">O valor cheio do apartamento conforme contrato.</div>
@@ -510,7 +626,7 @@ function renderStep(){
       <div><div class="c-label">Valor financiado</div><div style="font-size:11px;color:var(--accent);margin-top:2px">Confirme antes de continuar</div></div>
       <div class="c-val" id="val-fin">${fin_val>0?fmtBRL(fin_val):''}</div>
     </div>`,
-    // 2
+
     `<div class="step-num">03 / 08</div>
     <div class="step-title">Qual o valor do terreno?</div>
     <div class="step-hint">Consta no <strong>item 1.7</strong> do seu contrato Caixa. O terreno é a parcela do financiamento disponível desde o início — por isso as primeiras parcelas são menores.</div>
@@ -524,7 +640,7 @@ function renderStep(){
       <div class="diff-row hl"><span class="d-label">Saldo máximo durante a obra</span><span class="d-val" id="d-saldo">${ter>0?fmtBRL(fin-ter):'—'}</span></div>
     </div>
     <div class="info-box">💡 O terreno já está incluso no financiamento desde a assinatura. As parcelas sobem conforme a obra avança.</div>`,
-    // 3
+
     `<div class="step-num">04 / 08</div>
     <div class="step-title">Quais os seus encargos mensais?</div>
     <div class="step-hint">Valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
@@ -539,7 +655,7 @@ function renderStep(){
       <div><div class="c-label">Total de encargos mensais</div></div>
       <div class="c-val" id="val-enc">${seg>0?fmtBRL(seg+25):''}</div>
     </div>`,
-    // 4
+
     `<div class="step-num">05 / 08</div>
     <div class="step-title">Qual a sua taxa de juros anual?</div>
     <div class="step-hint">Consta na primeira página do contrato. O app converte para taxa mensal automaticamente.</div>
@@ -548,19 +664,19 @@ function renderStep(){
       <div><div class="c-label">Taxa mensal equivalente</div><div style="font-size:11px;color:var(--accent);margin-top:2px">Usada nos cálculos mensais</div></div>
       <div class="c-val" id="val-taxa">${ta>0?fmtPerc(ta/12,4):''}</div>
     </div>`,
-    // 5
+
     `<div class="step-num">06 / 08</div>
     <div class="step-title">Qual a data de entrega prevista?</div>
     <div class="step-hint">Sua 1ª parcela começa em <strong>${mLabelFull(form.mesInicial)}</strong>. A entrega define quantos meses de evolução serão simulados.</div>
     <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMeses();this.classList.remove('invalid')">
     <div id="badge-meses"></div>`,
-    // 6
+
     `<div class="step-num">07 / 08</div>
     <div class="step-title">Qual a taxa referencial estimada?</div>
     <div class="step-hint">A TR (Taxa Referencial) é divulgada pelo Banco Central todo mês. Para esta simulação inicial, use 0,1000% como estimativa — você poderá editar mês a mês na tabela de resultados.</div>
     <div class="input-wrap"><input type="number" id="inp-tr" class="has-suf" placeholder="0.1000" value="${(form.trInicial*100).toFixed(4)}" min="0" step="0.0001"><span class="suf">%</span></div>
     <div class="info-box">💡 Em versões futuras você receberá uma notificação no início de cada mês para atualizar a TR oficial.</div>`,
-    // 7
+
     `<div class="step-num">08 / 08</div>
     <div class="step-title">Como quer chamar essa simulação?</div>
     <div class="step-hint">Máximo 30 caracteres. Ex: Apto Centro, Torre B, Meu apê.</div>
@@ -568,15 +684,14 @@ function renderStep(){
     <div class="char-count" id="char-count">0 / 30</div>`
   ];
 
-  const btnLabel = currentStep===7 ? 'Ver resultados →' : (currentStep===1 ? 'Confirmar e continuar →' : 'Continuar →');
-  const html = `
+  const btnLabel=currentStep===7?'Ver resultados →':(currentStep===1?'Confirmar e continuar →':'Continuar →');
+  setHtml(`
     ${renderProgress()}
     <div class="step-card">
       ${steps[currentStep]}
       <button class="btn btn-primary" onclick="nextStep()">${btnLabel}</button>
       ${currentStep>0?'<button class="btn btn-back" onclick="prevStep()">← Voltar</button>':''}
-    </div>`;
-  setHtml(html);
+    </div>`);
 
   if(currentStep===5) setTimeout(()=>{if(form.mesEntrega)atualizaMeses();},50);
   if(currentStep===7) setTimeout(()=>{ const el=document.getElementById('inp-nome'); if(el) updateCharCount(el); },50);
@@ -584,7 +699,6 @@ function renderStep(){
   setTimeout(()=>{ const f=document.querySelector('.step-card input'); if(f) f.focus(); },80);
 }
 
-// helpers reativos onboarding
 function atualizaFin(){
   const vt=parseFloat(document.getElementById('inp-valorTotal')?.value)||0;
   const p=parseFloat(document.getElementById('inp-percFinanciado')?.value)||80;
@@ -632,7 +746,7 @@ function updateCharCount(inp){
   if(el){el.textContent=len+' / 30';el.className='char-count'+(len>=28?' warn':'');}
 }
 
-// ── TELA: RESULTADO ────────────────────────────────────────
+// ── RESULTADO ──
 function renderResult(){
   aplicaBloqueio();
   const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
@@ -642,13 +756,24 @@ function renderResult(){
   const media=ativas.length?total/ativas.length:0;
   const lastPago=meses[meses.length-1]?.pago||false;
 
+  // numeração começa em 1
   const tableRows=meses.map((r,i)=>`
     <tr id="row-${i}" class="${r.bloqueado?'obra-done':r.pago?'pago-row':''}">
-      <td class="num-col">${i}</td>
+      <td class="num-col">${i+1}</td>
       <td style="white-space:nowrap;font-size:12px">${escHtml(r.mes)}</td>
-      <td style="text-align:right"><input id="pi-${i}" class="perc-input" type="number" value="${r.perc}" min="0" max="100" step="0.1" ${r.bloqueado?'disabled':''} oninput="updatePerc(${i},this.value)" onblur="validatePercBlur(${i})"></td>
+      <td style="text-align:right">
+        <input id="pi-${i}" class="perc-input" type="text" inputmode="decimal" value="${r.perc}"
+          ${r.bloqueado?'disabled':''}
+          onchange="updatePerc(${i},this.value)"
+          onblur="validatePercBlur(${i})">
+      </td>
       <td id="rs-${i}" class="val-col">${r.bloqueado?'—':fmtBRL(r.saldo)}</td>
-      <td style="text-align:right"><input id="ti-${i}" class="tr-input" type="number" value="${(r.tr*100).toFixed(4)}" min="0" step="0.0001" ${r.bloqueado?'disabled':''} oninput="updateTR(${i},this.value)" onblur="validateTRBlur(${i})"></td>
+      <td style="text-align:right">
+        <input id="ti-${i}" class="tr-input" type="text" inputmode="decimal" value="${(r.tr*100).toFixed(4)}"
+          ${r.bloqueado?'disabled':''}
+          onchange="updateTR(${i},this.value)"
+          onblur="validateTRBlur(${i})">
+      </td>
       <td id="rp-${i}" class="val-col" style="font-weight:500">${r.bloqueado?'—':fmtBRL(r.previsto)}</td>
       <td style="text-align:center">
         ${r.bloqueado?`<span id="bp-${i}" class="badge-blocked">—</span>`
@@ -667,13 +792,17 @@ function renderResult(){
         <button class="rh-btn" onclick="novaSimulacao()">+ Nova simulação</button>
       </div>
     </div>
-    <div class="alert">TR editável por mês (coluna TR%). Estimativa inicial: ${fmtPerc(form.trInicial*100,4)}. Atualize com o valor oficial do Banco Central a cada mês.</div>
-    <div class="summary-grid">
-      <div class="summary-card"><div class="s-label">Financiado</div><div class="s-val">${fmtBRL(fin)}</div></div>
-      <div class="summary-card"><div class="s-label">Média estimada</div><div class="s-val" id="sum-media">${fmtBRL(media)}</div></div>
-      <div class="summary-card paid"><div class="s-label">Total pago até agora</div><div class="s-val" id="sum-pago">${fmtBRL(pago)}</div></div>
-      <div class="summary-card accent"><div class="s-label">Total estimado</div><div class="s-val" id="sum-total">${fmtBRL(total)}</div></div>
+
+    <div class="sticky-summary">
+      <div class="summary-grid">
+        <div class="summary-card"><div class="s-label">Financiado</div><div class="s-val">${fmtBRL(fin)}</div></div>
+        <div class="summary-card"><div class="s-label">Média estimada</div><div class="s-val" id="sum-media">${fmtBRL(media)}</div></div>
+        <div class="summary-card paid"><div class="s-label">Total pago até agora</div><div class="s-val" id="sum-pago">${fmtBRL(pago)}</div></div>
+        <div class="summary-card accent"><div class="s-label">Total estimado</div><div class="s-val" id="sum-total">${fmtBRL(total)}</div></div>
+      </div>
     </div>
+
+    <div class="alert">TR editável por mês (coluna TR%). Estimativa inicial: ${fmtPerc(form.trInicial*100,4)}. Atualize com o valor oficial do Banco Central a cada mês.</div>
     <div class="table-wrap">
       <table>
         <thead><tr>
@@ -695,7 +824,7 @@ function renderResult(){
   `);
 }
 
-// ── INIT ───────────────────────────────────────────────────
+// ── INIT ──
 window.addEventListener('load',()=>{
   setTimeout(()=>{ document.getElementById('splash').classList.add('hide'); },1200);
   const profiles=loadProfiles();
