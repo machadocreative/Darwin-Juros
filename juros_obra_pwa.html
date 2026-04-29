@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1A6B4A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Juros de Obra">
+<meta name="apple-mobile-web-app-title" content="Darwin Juros">
 <meta name="description" content="Estime suas parcelas de evolução de obra com precisão.">
 <title>Juros de Obra</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -203,8 +203,8 @@ tr.obra-done td input{background:#F0F0EE;color:var(--muted);pointer-events:none;
 
 <div id="splash">
   <div class="splash-icon">🏗️</div>
-  <div class="splash-title">Juros de Obra</div>
-  <div class="splash-sub">Caixa Econômica Federal</div>
+  <div class="splash-title">Darwin Juros</div>
+  <div class="splash-sub">Sua evolução, sem surpresas</div>
 </div>
 
 <div id="root">
@@ -212,11 +212,12 @@ tr.obra-done td input{background:#F0F0EE;color:var(--muted);pointer-events:none;
     <div class="header-logo">
       <div class="logo-icon">🏗️</div>
       <div>
-        <span>Juros de Obra</span>
-        <small>Caixa Econômica Federal</small>
+        <span>Darwin Juros</span>
+        <small>Sua evolução, sem surpresas</small>
       </div>
     </div>
     <button class="btn-profiles" onclick="goProfiles()">📁 Perfis</button>
+    <button class="rh-btn" onclick="novaSimulacao()">+ Nova simulação</button>
   </header>
   <main id="main"></main>
 </div>
@@ -543,8 +544,8 @@ function renderProfiles(){
     : `<div class="empty-state"><div class="es-icon">📭</div><p>Nenhum perfil salvo ainda.<br>Faça uma simulação e clique em <strong>Salvar</strong>.</p></div>`;
 
   setHtml(`
-    <div class="screen-title">Meus perfis</div>
-    <div class="screen-sub">Simule e salve quantos imóveis quiser.</div>
+    <div class="screen-title">Meus Imóveis</div>
+    <div class="screen-sub">Simule e salve quantos perfis quiser.</div>
     <div class="profile-list">${list}</div>
     <button class="btn btn-primary" onclick="novaSimulacao()">+ Nova simulação</button>
   `);
@@ -788,7 +789,7 @@ function renderResult(){
       <h2>${escHtml(form.nomeSimulacao||'Apto 1')}</h2>
       <p>${ativas.length} parcelas · ${mLabelFull(form.mesInicial)} → ${mLabelFull(form.mesEntrega)}</p>
       <div class="rh-actions">
-        <button class="rh-btn save" onclick="saveProfile()">💾 Salvar perfil</button>
+        <button class="rh-btn save" onclick="saveProfile()">💾 Salvar</button>
         <button class="rh-btn" onclick="novaSimulacao()">+ Nova simulação</button>
       </div>
     </div>
@@ -802,7 +803,7 @@ function renderResult(){
       </div>
     </div>
 
-    <div class="alert">TR editável por mês (coluna TR%). Estimativa inicial: ${fmtPerc(form.trInicial*100,4)}. Atualize com o valor oficial do Banco Central a cada mês.</div>
+    <div class="alert">TR editável por mês (coluna TR%). Atualize com o valor oficial do Banco Central a cada mês. <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a></div>
     <div class="table-wrap">
       <table>
         <thead><tr>
@@ -814,7 +815,7 @@ function renderResult(){
         <tbody>${tableRows}</tbody>
       </table>
       <div class="row-controls">
-        <span class="rc-info" id="rc-info">${meses.length-1} parcela(s) · máx. ${MAX_MESES}</span>
+        <span class="rc-info" id="rc-info">${meses.length} parcela(s) · máx. ${MAX_MESES}</span>
         <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length<=1||lastPago?'disabled':''}>−</button>
         <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>=MAX_MESES+1?'disabled':''}>+</button>
       </div>
