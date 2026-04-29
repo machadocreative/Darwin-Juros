@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1A6B4A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Darwin Juros">
+  <meta name="description" content="Estime suas parcelas de evolução de obra com mais precisão.">
+  <title>Darwin Juros</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-icon">🏗️</div>
+  <div class="splash-title">Darwin Juros</div>
+  <div class="splash-sub">Caixa Econômica Federal</div>
+</div>
+
+<div id="root">
+  <header>
+    <div class="header-logo">
+      <div class="logo-icon">🏗️</div>
+      <div>
+        <span>Darwin Juros</span>
+        <small>Caixa Econômica Federal</small>
+      </div>
+    </div>
+    <button class="btn-root" onclick="goProfiles()">📁 Perfis</button>
+  </header>
+  <main id="main"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- CELEBRAÇÃO -->
+<div id="celebration">
+  <div class="celebration-backdrop" onclick="closeCelebration()"></div>
+  <div class="celebration-card">
+    <span class="celebration-emoji">🎉</span>
+    <div class="celebration-title">Parabéns!</div>
+    <div class="celebration-sub">Seu novo apartamento está pronto!<br>Todas as parcelas de evolução de obra foram concluídas.</div>
+    <button class="celebration-btn" onclick="closeCelebration()">Que incrível! 🏠</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
