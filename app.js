@@ -141,6 +141,12 @@ function proximoMes(){
   return mLabel(addM(ini,meses.length));
 }
 
+// retorna o mês/ano da última parcela ativa (não bloqueada)
+function ultimoMesAtivo(){
+  const ativas=meses.filter(r=>!r.bloqueado);
+  return ativas.length ? ativas[ativas.length-1].mes : mLabel(parseMS(form.mesInicial));
+}
+
 function adicionarLinha(){
   if(meses.length>=MAX_MESES+1) return;
   const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
@@ -179,6 +185,30 @@ function novaSimulacaoSafe(){
   } else {
     novaSimulacao();
   }
+}
+
+// ── EDITAR SIMULAÇÃO EXISTENTE ──
+// Volta ao onboarding mantendo todos os dados já preenchidos.
+// O usuário edita apenas o que quiser e ao chegar na tela de resultado
+// os dados de meses (% e pago) são preservados se o nº de meses não mudou,
+// ou regenerados se mudou o prazo.
+function editarSimulacao(){
+  if(hasUnsavedChanges){
+    showSaveReminder(()=>{ hasUnsavedChanges=false; _iniciarEdicao(); });
+  } else {
+    _iniciarEdicao();
+  }
+}
+
+function _iniciarEdicao(){
+  // guarda os dados de resultado para restaurar após o onboarding
+  const mesesBackup=JSON.parse(JSON.stringify(meses));
+  const profileIdBackup=currentProfileId;
+  screen='onboarding';
+  currentStep=0;
+  // ao terminar o onboarding em modo edição, reconcilia os meses
+  window._editMode={ mesesBackup, profileIdBackup };
+  renderStep();
 }
 
 function showSaveReminder(onDiscard){
@@ -262,6 +292,14 @@ function togglePago(i){
 // ── EDIÇÃO INLINE ──
 function updatePerc(i, rawVal){
   const el=document.getElementById('pi-'+i);
+
+  // bloqueia edição em linhas já pagas
+  if(meses[i].pago){
+    if(el) el.value=meses[i].perc; // restaura valor original
+    showToast('⚠️ Desmarque "Pago" antes de editar a % desta parcela.');
+    return;
+  }
+
   const v=parseDecimal(rawVal);
   if(rawVal===''||isNaN(v)||v<0||v>100){ if(el) el.classList.add('invalid'); return; }
 
@@ -316,7 +354,11 @@ function refreshTable(){
     const row=document.getElementById('row-'+i); if(!row) return;
     row.className=r.bloqueado?'obra-done':r.pago?'pago-row':'';
     const pi=document.getElementById('pi-'+i);
-    if(pi){ pi.disabled=r.bloqueado; if(!r.bloqueado) pi.value=r.perc; }
+    if(pi){
+      pi.disabled=r.bloqueado;
+      if(!r.bloqueado) pi.value=r.perc;
+      pi.classList.toggle('perc-locked', r.pago && !r.bloqueado);
+    }
     const ti=document.getElementById('ti-'+i);
     if(ti) ti.disabled=r.bloqueado;
     const rs=document.getElementById('rs-'+i);
@@ -334,6 +376,10 @@ function refreshTable(){
   if(btnAdd) btnAdd.disabled=meses.length>=MAX_MESES+1;
   if(btnRem){ const last=meses[meses.length-1]; btnRem.disabled=meses.length<=1||(last&&last.pago); }
   if(rcInfo) rcInfo.textContent=(meses.length-1)+' parcela(s) · máx. '+MAX_MESES;
+  // atualiza subtítulo com mês inicial e último mês ativo
+  const sub=document.getElementById('result-subtitle');
+  const ativasCount=meses.filter(r=>!r.bloqueado).length;
+  if(sub) sub.textContent=ativasCount+' parcelas · '+(meses[0]?.mes||'')+' → '+ultimoMesAtivo();
   updateSummary();
 }
 
@@ -381,6 +427,7 @@ function renderProfiles(){
 
 function novaSimulacao(){
   currentProfileId=null;
+  window._editMode=null;
   Object.keys(form).forEach(k=>{ form[k]=''; });
   form.percFinanciado=80; form.trInicial=0.001;
   meses=[]; currentStep=0; screen='onboarding';
@@ -422,7 +469,31 @@ function nextStep(){
       form.nomeSimulacao=sanitizeName(document.getElementById('inp-nome').value)||'Apto 1';
     }
     currentStep++;
-    if(currentStep>=TOTAL_STEPS){ meses=calcTable(); screen='result'; renderResult(); }
+    if(currentStep>=TOTAL_STEPS){
+      const edit=window._editMode;
+      if(edit){
+        // modo edição: reconstrói a tabela com o novo prazo
+        const newTable=calcTable();
+        const backup=edit.mesesBackup;
+        // preserva perc, tr e pago das linhas existentes, completa com novas
+        meses=newTable.map((row,i)=>{
+          if(i<backup.length){
+            return { ...row, perc:backup[i].perc, tr:backup[i].tr, pago:backup[i].pago };
+          }
+          return row;
+        });
+        // recalcula saldo/previsto de cada linha com os valores restaurados
+        meses.forEach((_,i)=>recalcRow(i));
+        aplicaBloqueio();
+        currentProfileId=edit.profileIdBackup;
+        window._editMode=null;
+        hasUnsavedChanges=true;
+      } else {
+        meses=calcTable();
+      }
+      screen='result';
+      renderResult();
+    }
     else renderStep();
   } catch(e){ console.error(e); }
 }
@@ -592,7 +663,7 @@ function renderResult(){
       <td class="num-col">${i+1}</td>
       <td class="td-mes">${escHtml(r.mes)}</td>
       <td class="td-right">
-        <input id="pi-${i}" class="perc-input" type="text" inputmode="decimal" value="${r.perc}"
+        <input id="pi-${i}" class="perc-input${r.pago?' perc-locked':''}" type="text" inputmode="decimal" value="${r.perc}"
           ${r.bloqueado?'disabled':''}
           onchange="updatePerc(${i},this.value)"
           onblur="validatePercBlur(${i})">
@@ -615,10 +686,10 @@ function renderResult(){
   setHtml(`    
     <div class="result-header">
       <h2>${escHtml(form.nomeSimulacao||'Apto 1')}</h2>
-      <p>${ativas.length} parcelas · ${mLabelFull(form.mesInicial)} → ${mLabelFull(form.mesEntrega)}</p>
+      <p id="result-subtitle">${ativas.length} parcelas · ${meses[0]?.mes||''} → ${ultimoMesAtivo()}</p>
       <div class="rh-actions">
         <button class="rh-btn save" onclick="saveProfile()">💾 Salvar</button>
-        <button class="rh-btn" onclick="novaSimulacaoSafe()">+ Nova simulação</button>
+        <button class="rh-btn" onclick="editarSimulacao()">✏️ Editar</button>
       </div>
     </div>
 
@@ -650,7 +721,6 @@ function renderResult(){
     </div>
     <p class="note">Edite % de obra e TR mês a mês. Use + / − para ajustar o número de parcelas.</p>
     <button class="btn-reset" onclick="goProfilesSafe()">← Voltar aos perfis</button>
-    <button class="btn-reset" onclick="novaSimulacaoSafe()">+ Nova simulação</button>
   `);
 }
 
