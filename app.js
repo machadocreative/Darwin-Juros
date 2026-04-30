@@ -1,6 +1,6 @@
 const MAX_MESES = 48;
 const STORAGE_KEY = 'juros_obra_perfis';
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 7;
 
 let currentStep = 0;
 let currentProfileId = null;
@@ -429,7 +429,7 @@ function novaSimulacao(){
   currentProfileId=null;
   window._editMode=null;
   Object.keys(form).forEach(k=>{ form[k]=''; });
-  form.percFinanciado=80; form.trInicial=0.001;
+  form.percFinanciado=80; form.trInicial=0.001; // TR padrão fixo: 0,1000%
   meses=[]; currentStep=0; screen='onboarding';
   renderStep();
 }
@@ -464,8 +464,6 @@ function nextStep(){
       if(mBetween(ini,fin)<=0){markError('inp-mesEntrega');return;}
       form.mesEntrega=v;
     } else if(currentStep===6){
-      form.trInicial=(parseDecimal(document.getElementById('inp-tr').value)||0.1)/100;
-    } else if(currentStep===7){
       form.nomeSimulacao=sanitizeName(document.getElementById('inp-nome').value)||'Apto 1';
     }
     currentStep++;
@@ -508,12 +506,12 @@ function renderStep(){
   const ta=parseFloat(form.taxaAnual)||0;
 
   const steps=[
-    `<div class="step-num">01 / 08</div>
+    `<div class="step-num">01 / 07</div>
     <div class="step-title">Qual o mês da 1ª parcela de evolução?</div>
     <div class="step-hint">Consta no seu contrato com a Caixa Econômica.</div>
     <input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="this.classList.remove('invalid')">`,
 
-    `<div class="step-num">02 / 08</div>
+    `<div class="step-num">02 / 07</div>
     <div class="step-title">Qual o valor total do imóvel?</div>
     <div class="step-hint">O valor cheio do apartamento conforme contrato.</div>
     <label class="field-label">Valor total</label>
@@ -527,7 +525,7 @@ function renderStep(){
       <div class="c-val" id="val-fin">${fin_val>0?fmtBRL(fin_val):''}</div>
     </div>`,
 
-    `<div class="step-num">03 / 08</div>
+    `<div class="step-num">03 / 07</div>
     <div class="step-title">Qual o valor do terreno?</div>
     <div class="step-hint">Nos contratos da Caixa Econômica, consta no <strong>item 1.7</strong> do seu contrato Caixa.</div>
     <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTerreno" class="has-pre" placeholder="12000" value="${form.valorTerreno}" min="0" step="100" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
@@ -541,7 +539,7 @@ function renderStep(){
     </div>
     <div class="info-box">💡 O valor terreno já está incluso como saldo devedor desde a assinatura. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
 
-    `<div class="step-num">04 / 08</div>
+    `<div class="step-num">04 / 07</div>
     <div class="step-title">Quais os seus encargos mensais?</div>
     <div class="step-hint">Valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
     <label class="field-label">1. Seguro</label>
@@ -556,35 +554,33 @@ function renderStep(){
       <div class="c-val" id="val-enc">${seg>0?fmtBRL(seg+25):''}</div>
     </div>`,
 
-    `<div class="step-num">05 / 08</div>
+    `<div class="step-num">05 / 07</div>
     <div class="step-title">Qual a sua taxa de juros anual?</div>
     <div class="step-hint">Consta na primeira página do contrato. O app converte para taxa mensal automaticamente.</div>
     <div class="input-wrap"><input type="number" id="inp-taxaAnual" class="has-suf" placeholder="10,0000" value="${form.taxaAnual}" min="0" step="0.01" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
     <div class="confirm-box" id="box-taxa" style="${ta>0?'':'display:none'}">
-      <div><div class="c-label">Taxa mensal equivalente</div><div class="c-sublabel">Usada nos cálculos mensais</div></div>
-      <div class="c-val" id="val-taxa">${ta>0?fmtPerc(ta/12,4):''}</div>
-    </div>`,
+      <div>
+        <div class="c-label">Taxa mensal + TR base (0,1000%)</div>
+        <div class="c-sublabel">Usada nos cálculos mensais de cada parcela</div>
+      </div>
+      <div class="c-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.001,4):''}</div>
+    </div>
+    <div class="info-box">O valor de cada parcela de Evolução de Obra é calculado pela soma da <strong>Taxa de Juros mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês. Utilizaremos 0,1000% de TR como valor inicial — você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
 
-    `<div class="step-num">06 / 08</div>
+    `<div class="step-num">06 / 07</div>
     <div class="step-title">Qual a data de entrega prevista?</div>
     <div class="step-hint">Sua 1ª parcela começa em <strong>${mLabelFull(form.mesInicial)}</strong>. A entrega define quantos meses de evolução serão simulados.</div>
     <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMeses();this.classList.remove('invalid')">
     <div id="badge-meses"></div>`,
 
-    `<div class="step-num">07 / 08</div>
-    <div class="step-title">Qual a taxa referencial estimada?</div>
-    <div class="step-hint">A TR (Taxa Referencial) é divulgada pelo Banco Central todo mês. Para esta simulação inicial, use 0,1000% como estimativa — você poderá editar mês a mês na tabela de resultados.</div>
-    <div class="input-wrap"><input type="number" id="inp-tr" class="has-suf" placeholder="0.1000" value="${(form.trInicial*100).toFixed(4)}" min="0" step="0.0001"><span class="suf">%</span></div>
-    <div class="info-box">💡 Em versões futuras você receberá uma notificação no início de cada mês para atualizar a TR oficial.</div>`,
-
-    `<div class="step-num">08 / 08</div>
+    `<div class="step-num">07 / 07</div>
     <div class="step-title">Como quer chamar essa simulação?</div>
     <div class="step-hint">Máximo 30 caracteres. Ex: Apto Centro, Torre B, Meu apê.</div>
     <input type="text" id="inp-nome" placeholder="Apto 1" value="${escHtml(form.nomeSimulacao||'')}" maxlength="30" oninput="updateCharCount(this)">
     <div class="char-count" id="char-count">0 / 30</div>`
   ];
 
-  const btnLabel=currentStep===7?'Ver resultados →':(currentStep===1?'Confirmar e continuar →':'Continuar →');
+  const btnLabel=currentStep===6?'Ver resultados →':(currentStep===1?'Confirmar e continuar →':'Continuar →');
   setHtml(`
     ${renderProgress()}
     <div class="step-card">
@@ -594,7 +590,7 @@ function renderStep(){
     </div>`);
 
   if(currentStep===5) setTimeout(()=>{if(form.mesEntrega)atualizaMeses();},50);
-  if(currentStep===7) setTimeout(()=>{ const el=document.getElementById('inp-nome'); if(el) updateCharCount(el); },50);
+  if(currentStep===6) setTimeout(()=>{ const el=document.getElementById('inp-nome'); if(el) updateCharCount(el); },50);
   if(currentStep===2) setTimeout(()=>{if(ter>0)atualizaTer();},50);
   setTimeout(()=>{ const f=document.querySelector('.step-card input'); if(f) f.focus(); },80);
 }
@@ -624,7 +620,8 @@ function atualizaEncargos(){
 function atualizaTaxa(){
   const ta=parseFloat(document.getElementById('inp-taxaAnual')?.value)||0;
   const box=document.getElementById('box-taxa'),val=document.getElementById('val-taxa');
-  if(box&&val){box.style.display=ta>0?'flex':'none';val.textContent=fmtPerc(ta/12,4);}
+  // mostra taxa mensal + TR base (0,1000%) = taxa combinada usada no cálculo
+  if(box&&val){box.style.display=ta>0?'flex':'none';val.textContent=fmtPerc(ta/12+0.001,4);}
 }
 function atualizaMeses(){
   const v=document.getElementById('inp-mesEntrega')?.value;
