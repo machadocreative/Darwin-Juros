@@ -5,6 +5,7 @@ const TOTAL_STEPS = 8;
 let currentStep = 0;
 let currentProfileId = null;
 let screen = 'onboarding';
+let hasUnsavedChanges = false;
 
 const form = {
   mesInicial:'', valorTotal:'', percFinanciado:80,
@@ -39,13 +40,28 @@ function saveProfile(){
   if(idx>=0) profiles[idx]=data; else profiles.push(data);
   currentProfileId=data.id;
   saveProfiles(profiles);
+  hasUnsavedChanges=false;
   showToast('Perfil salvo com sucesso!');
 }
 
 function deleteProfile(id){
-  if(!confirm('Excluir este perfil? Esta ação não pode ser desfeita.')) return;
-  saveProfiles(loadProfiles().filter(p=>p.id!==id));
-  renderProfiles();
+  const card=document.getElementById('pc-'+id);
+  if(!card) return;
+  if(card.dataset.confirming==='1'){
+    saveProfiles(loadProfiles().filter(p=>p.id!==id));
+    showToast('Perfil excluído.');
+    renderProfiles();
+    return;
+  }
+  card.dataset.confirming='1';
+  const btn=document.getElementById('del-'+id);
+  if(btn){ btn.textContent='Confirmar?'; btn.style.color='var(--danger)'; btn.style.borderColor='var(--danger)'; }
+  setTimeout(()=>{
+    if(card&&card.dataset.confirming==='1'){
+      card.dataset.confirming='0';
+      if(btn){ btn.textContent='Excluir'; btn.style.color=''; btn.style.borderColor=''; }
+    }
+  },4000);
 }
 
 function loadProfile(id){
@@ -135,6 +151,7 @@ function adicionarLinha(){
   const saldo=ter+(fin-ter)*(perc/100);
   meses.push({mes:proximoMes(),perc,saldo,tr:form.trInicial,previsto:(tm+form.trInicial)*saldo+enc,pago:false,bloqueado:false});
   aplicaBloqueio();
+  hasUnsavedChanges=true;
   renderResult();
 }
 
@@ -143,7 +160,59 @@ function removerLinha(){
   if(!last||last.pago||meses.length<=1) return;
   meses.pop();
   aplicaBloqueio();
+  hasUnsavedChanges=true;
   renderResult();
+}
+
+// ── NAVEGAÇÃO COM LEMBRETE DE SALVAR ──
+function goProfilesSafe(){
+  if(screen==='result' && hasUnsavedChanges){
+    showSaveReminder(()=>{ hasUnsavedChanges=false; goProfiles(); });
+  } else {
+    goProfiles();
+  }
+}
+
+function novaSimulacaoSafe(){
+  if(screen==='result' && hasUnsavedChanges){
+    showSaveReminder(()=>{ hasUnsavedChanges=false; novaSimulacao(); });
+  } else {
+    novaSimulacao();
+  }
+}
+
+function showSaveReminder(onDiscard){
+  // injeta banner de lembrete no topo da tela de resultado
+  const existing=document.getElementById('save-reminder');
+  if(existing){ existing.remove(); }
+  const banner=document.createElement('div');
+  banner.id='save-reminder';
+  banner.style.cssText=`
+    position:fixed;bottom:0;left:0;right:0;z-index:50;
+    background:#1A1A18;color:#fff;padding:16px 20px;
+    display:flex;flex-direction:column;gap:10px;
+    box-shadow:0 -4px 20px rgba(0,0,0,.2);
+    animation:slideUp .2s ease;
+  `;
+  banner.innerHTML=`
+    <div style="font-size:14px;font-weight:500;">💾 Você tem alterações não salvas</div>
+    <div style="font-size:12px;opacity:.7;">Salve antes de sair para não perder as atualizações de % de obra e TR.</div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="saveProfile();document.getElementById('save-reminder')?.remove();"
+        style="flex:1;padding:10px;border-radius:8px;border:none;background:#1A6B4A;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+        💾 Salvar agora
+      </button>
+      <button id="discard-btn"
+        style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-family:inherit;font-size:14px;cursor:pointer;">
+        Sair sem salvar
+      </button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+  document.getElementById('discard-btn').addEventListener('click',()=>{
+    banner.remove();
+    onDiscard();
+  });
 }
 
 // ── CELEBRAÇÃO ──
@@ -181,16 +250,18 @@ function togglePago(i){
   if(r.bloqueado) return;
   if(!r.pago){
     for(let j=0;j<i;j++){
-      if(!meses[j].bloqueado&&!meses[j].pago){alert('Marque primeiro a parcela de '+meses[j].mes+'.');return;}
+      if(!meses[j].bloqueado&&!meses[j].pago){showToast('⚠️ Marque primeiro a parcela de '+meses[j].mes+'.');return;}
     }
     r.pago=true;
+    hasUnsavedChanges=true;
     // verifica se é a parcela com 100% de obra
     if(r.perc>=100) setTimeout(showCelebration,300);
   } else {
     for(let j=i+1;j<meses.length;j++){
-      if(!meses[j].bloqueado&&meses[j].pago){alert('Desmarque primeiro a parcela de '+meses[j].mes+'.');return;}
+      if(!meses[j].bloqueado&&meses[j].pago){showToast('⚠️ Desmarque primeiro a parcela de '+meses[j].mes+'.');return;}
     }
     r.pago=false;
+    hasUnsavedChanges=true;
   }
   refreshTable();
 }
@@ -216,6 +287,7 @@ function updatePerc(i, rawVal){
   meses[i].perc=v;
   recalcRow(i);
   aplicaBloqueio();
+  hasUnsavedChanges=true;
   refreshTable();
 }
 
@@ -233,6 +305,7 @@ function updateTR(i, rawVal){
   if(el){ el.classList.remove('invalid'); el.title=''; }
   meses[i].tr=v/100;
   recalcRow(i);
+  hasUnsavedChanges=true;
   const elP=document.getElementById('rp-'+i);
   if(elP) elP.textContent=meses[i].bloqueado?'—':fmtBRL(meses[i].previsto);
   updateSummary();
@@ -291,7 +364,7 @@ function renderProfiles(){
     ? profiles.map(p=>{
         const perc=ultimaPercPaga(p.meses);
         const percLabel=perc!==null?`✅ Última parcela paga: ${perc}% de obra`:'Nenhuma parcela paga ainda';
-        return `<div class="profile-card" onclick="loadProfile('${p.id}')">
+        return `<div class="profile-card" id="pc-${p.id}" onclick="loadProfile('${p.id}')">
           <div>
             <div class="pc-name">${escHtml(p.nome)}</div>
             <div class="pc-sub">Salvo em ${fmtDate(p.savedAt)} · ${p.meses.length} parcelas</div>
@@ -299,7 +372,7 @@ function renderProfiles(){
           </div>
           <div class="pc-actions" onclick="event.stopPropagation()">
             <button class="pc-btn" onclick="loadProfile('${p.id}')">Abrir</button>
-            <button class="pc-btn del" onclick="deleteProfile('${p.id}')">Excluir</button>
+            <button class="pc-btn del" id="del-${p.id}" onclick="deleteProfile('${p.id}')">Excluir</button>
           </div>
         </div>`;
       }).join('')
@@ -512,6 +585,7 @@ function updateCharCount(inp){
 // ── RESULTADO ──
 function renderResult(){
   aplicaBloqueio();
+  hasUnsavedChanges=false; // reset ao entrar pela primeira vez / recarregar
   const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
   const ativas=meses.filter(r=>!r.bloqueado);
   const total=ativas.reduce((s,r)=>s+r.previsto,0);
@@ -551,7 +625,7 @@ function renderResult(){
       <p>${ativas.length} parcelas · ${mLabelFull(form.mesInicial)} → ${mLabelFull(form.mesEntrega)}</p>
       <div class="rh-actions">
         <button class="rh-btn save" onclick="saveProfile()">💾 Salvar</button>
-        <button class="rh-btn" onclick="novaSimulacao()">+ Nova simulação</button>
+        <button class="rh-btn" onclick="novaSimulacaoSafe()">+ Nova simulação</button>
       </div>
     </div>
 
@@ -582,7 +656,8 @@ function renderResult(){
       </div>
     </div>
     <p class="note">Edite % de obra e TR mês a mês. Use + / − para ajustar o número de parcelas.</p>
-    <button class="btn-reset" onclick="goProfiles()">← Voltar aos perfis</button>
+    <button class="btn-reset" onclick="goProfilesSafe()">← Voltar aos perfis</button>
+    <button class="btn-reset" style="margin-top:8px" onclick="novaSimulacaoSafe()">+ Nova simulação</button>
   `);
 }
 
