@@ -182,34 +182,26 @@ function novaSimulacaoSafe(){
 }
 
 function showSaveReminder(onDiscard){
-  // injeta banner de lembrete no topo da tela de resultado
   const existing=document.getElementById('save-reminder');
-  if(existing){ existing.remove(); }
+  if(existing) existing.remove();
+
   const banner=document.createElement('div');
   banner.id='save-reminder';
-  banner.style.cssText=`
-    position:fixed;bottom:0;left:0;right:0;z-index:50;
-    background:#1A1A18;color:#fff;padding:16px 20px;
-    display:flex;flex-direction:column;gap:10px;
-    box-shadow:0 -4px 20px rgba(0,0,0,.2);
-    animation:slideUp .2s ease;
-  `;
   banner.innerHTML=`
-    <div style="font-size:14px;font-weight:500;">💾 Você tem alterações não salvas</div>
-    <div style="font-size:12px;opacity:.7;">Salve antes de sair para não perder as atualizações de % de obra e TR.</div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="saveProfile();document.getElementById('save-reminder')?.remove();"
-        style="flex:1;padding:10px;border-radius:8px;border:none;background:#1A6B4A;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
-        💾 Salvar agora
-      </button>
-      <button id="discard-btn"
-        style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-family:inherit;font-size:14px;cursor:pointer;">
-        Sair sem salvar
-      </button>
+    <div class="save-reminder-title">💾 Você tem alterações não salvas</div>
+    <div class="save-reminder-sub">Salve antes de sair para não perder as atualizações de % de obra e TR.</div>
+    <div class="save-reminder-actions">
+      <button class="save-reminder-save" id="reminder-save-btn">💾 Salvar agora</button>
+      <button class="save-reminder-discard" id="reminder-discard-btn">Sair sem salvar</button>
     </div>
   `;
   document.body.appendChild(banner);
-  document.getElementById('discard-btn').addEventListener('click',()=>{
+
+  document.getElementById('reminder-save-btn').addEventListener('click',()=>{
+    saveProfile();
+    banner.remove();
+  });
+  document.getElementById('reminder-discard-btn').addEventListener('click',()=>{
     banner.remove();
     onDiscard();
   });
@@ -229,6 +221,7 @@ function launchConfetti(){
   for(let i=0;i<60;i++){
     const el=document.createElement('div');
     el.className='confetti-piece';
+    // cssText aqui é intencional: valores gerados aleatoriamente em runtime (posição, cor, tamanho, duração)
     el.style.cssText=`
       left:${Math.random()*100}%;
       top:${-10-Math.random()*20}px;
@@ -459,7 +452,7 @@ function renderStep(){
       <div class="input-wrap"><input type="number" id="inp-percFinanciado" class="has-suf" placeholder="80" value="${form.percFinanciado}" min="1" max="100" step="1" oninput="atualizaFin()"><span class="suf">%</span></div>
     </div>
     <div class="confirm-box" id="box-fin" style="${fin_val>0?'':'display:none'}">
-      <div><div class="c-label">Valor financiado</div><div style="font-size:11px;color:var(--accent);margin-top:2px">Confirme antes de continuar</div></div>
+      <div><div class="c-label">Valor financiado</div><div class="c-sublabel">Confirme antes de continuar</div></div>
       <div class="c-val" id="val-fin">${fin_val>0?fmtBRL(fin_val):''}</div>
     </div>`,
 
@@ -497,7 +490,7 @@ function renderStep(){
     <div class="step-hint">Consta na primeira página do contrato. O app converte para taxa mensal automaticamente.</div>
     <div class="input-wrap"><input type="number" id="inp-taxaAnual" class="has-suf" placeholder="10,0000" value="${form.taxaAnual}" min="0" step="0.01" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
     <div class="confirm-box" id="box-taxa" style="${ta>0?'':'display:none'}">
-      <div><div class="c-label">Taxa mensal equivalente</div><div style="font-size:11px;color:var(--accent);margin-top:2px">Usada nos cálculos mensais</div></div>
+      <div><div class="c-label">Taxa mensal equivalente</div><div class="c-sublabel">Usada nos cálculos mensais</div></div>
       <div class="c-val" id="val-taxa">${ta>0?fmtPerc(ta/12,4):''}</div>
     </div>`,
 
@@ -597,22 +590,22 @@ function renderResult(){
   const tableRows=meses.map((r,i)=>`
     <tr id="row-${i}" class="${r.bloqueado?'obra-done':r.pago?'pago-row':''}">
       <td class="num-col">${i+1}</td>
-      <td style="white-space:nowrap;font-size:12px">${escHtml(r.mes)}</td>
-      <td style="text-align:right">
+      <td class="td-mes">${escHtml(r.mes)}</td>
+      <td class="td-right">
         <input id="pi-${i}" class="perc-input" type="text" inputmode="decimal" value="${r.perc}"
           ${r.bloqueado?'disabled':''}
           onchange="updatePerc(${i},this.value)"
           onblur="validatePercBlur(${i})">
       </td>
       <td id="rs-${i}" class="val-col">${r.bloqueado?'—':fmtBRL(r.saldo)}</td>
-      <td style="text-align:right">
+      <td class="td-right">
         <input id="ti-${i}" class="tr-input" type="text" inputmode="decimal" value="${(r.tr*100).toFixed(4)}"
           ${r.bloqueado?'disabled':''}
           onchange="updateTR(${i},this.value)"
           onblur="validateTRBlur(${i})">
       </td>
-      <td id="rp-${i}" class="val-col" style="font-weight:500">${r.bloqueado?'—':fmtBRL(r.previsto)}</td>
-      <td style="text-align:center">
+      <td id="rp-${i}" class="val-col td-prev">${r.bloqueado?'—':fmtBRL(r.previsto)}</td>
+      <td class="td-center">
         ${r.bloqueado?`<span id="bp-${i}" class="badge-blocked">—</span>`
           :r.pago?`<button id="bp-${i}" class="badge-pago" onclick="togglePago(${i})">✓ Pago</button>`
           :`<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`}
@@ -642,10 +635,10 @@ function renderResult(){
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th style="text-align:center">#</th><th>Mês</th>
-          <th style="text-align:right">% Obra</th><th style="text-align:right">Saldo dev.</th>
-          <th style="text-align:right">TR %</th><th style="text-align:right">Previsto</th>
-          <th style="text-align:center">Pago?</th>
+          <th class="th-center">#</th><th>Mês</th>
+          <th class="th-right">% Obra</th><th class="th-right">Saldo dev.</th>
+          <th class="th-right">TR %</th><th class="th-right">Previsto</th>
+          <th class="th-center">Pago?</th>
         </tr></thead>
         <tbody>${tableRows}</tbody>
       </table>
@@ -657,7 +650,7 @@ function renderResult(){
     </div>
     <p class="note">Edite % de obra e TR mês a mês. Use + / − para ajustar o número de parcelas.</p>
     <button class="btn-reset" onclick="goProfilesSafe()">← Voltar aos perfis</button>
-    <button class="btn-reset" style="margin-top:8px" onclick="novaSimulacaoSafe()">+ Nova simulação</button>
+    <button class="btn-reset" onclick="novaSimulacaoSafe()">+ Nova simulação</button>
   `);
 }
 

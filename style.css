@@ -1010,3 +1010,95 @@
   from { transform: translateY(100%); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
+
+/* HEADER ACTIONS */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* SAVE REMINDER BANNER */
+#save-reminder {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: #1A1A18;
+    color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.2);
+    animation: slideUp .2s ease;
+}
+
+.save-reminder-title {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.save-reminder-sub {
+    font-size: 12px;
+    opacity: .7;
+}
+
+.save-reminder-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.save-reminder-save {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.save-reminder-save:hover {
+    opacity: .88;
+}
+
+.save-reminder-discard {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,.3);
+    background: transparent;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.save-reminder-discard:hover {
+    background: rgba(255,255,255,.1);
+}
+echo "CSS adicional adicionado"
+/* TABLE COLUMN ALIGNMENT — replaces inline styles in app.js */
+.td-mes    { white-space: nowrap; font-size: 12px; }
+.td-right  { text-align: right; }
+.td-center { text-align: center; }
+.td-prev   { font-weight: 500; }
+.th-right  { text-align: right; }
+.th-center { text-align: center; }
+
+/* CONFIRM BOX SUB-LABEL */
+.c-sublabel {
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 2px;
+}
+
+/* SECOND RESET BUTTON SPACING */
+.btn-reset + .btn-reset {
+    margin-top: 8px;
+}
