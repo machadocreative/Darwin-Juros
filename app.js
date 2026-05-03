@@ -10,7 +10,7 @@ let hasUnsavedChanges = false;
 const form = {
   mesInicial:'', valorTotal:'', percFinanciado:80,
   valorTerreno:'', seguro:'', taxaAdm:'',
-  taxaAnual:'', trInicial:0.001, mesEntrega:'',
+  taxaAnual:'', trInicial:0.1000, mesEntrega:'',
   nomeSimulacao:''
 };
 let meses = [];
@@ -429,7 +429,7 @@ function novaSimulacao(){
   currentProfileId=null;
   window._editMode=null;
   Object.keys(form).forEach(k=>{ form[k]=''; });
-  form.percFinanciado=80; form.trInicial=0.001; // TR padrão fixo: 0,1000%
+  form.percFinanciado=80; form.trInicial=0.1000; // TR padrão fixo: 0,1000%
   meses=[]; currentStep=0; screen='onboarding';
   renderStep();
 }
@@ -515,7 +515,7 @@ function renderStep(){
     <div class="step-title">Qual o valor total do imóvel?</div>
     <div class="step-hint">O valor cheio do apartamento conforme contrato.</div>
     <label class="field-label">Valor total</label>
-    <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTotal" class="has-pre" placeholder="250000" value="${form.valorTotal}" min="0" step="100" oninput="atualizaFin()"></div>
+    <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTotal" class="has-pre" placeholder="250.000" value="${form.valorTotal}" min="0" step="100" oninput="atualizaFin()"></div>
     <div class="field-group">
       <label class="field-label">Percentual financiado</label>
       <div class="input-wrap"><input type="number" id="inp-percFinanciado" class="has-suf" placeholder="80" value="${form.percFinanciado}" min="1" max="100" step="1" oninput="atualizaFin()"><span class="suf">%</span></div>
@@ -527,8 +527,8 @@ function renderStep(){
 
     `<div class="step-num">03 / 07</div>
     <div class="step-title">Qual o valor do terreno?</div>
-    <div class="step-hint">Nos contratos da Caixa Econômica, consta no <strong>item 1.7</strong> do seu contrato Caixa.</div>
-    <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTerreno" class="has-pre" placeholder="12000" value="${form.valorTerreno}" min="0" step="100" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
+    <div class="step-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
+    <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTerreno" class="has-pre" placeholder="12.000" value="${form.valorTerreno}" min="0" step="100" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
     <div class="error-msg" id="err-terreno">O valor do terreno deve ser menor que o financiado (${fmtBRL(fin)}).</div>
     <div class="diff-box" id="box-ter" style="${ter>0?'':'display:none'}">
       <div class="d-title">Composição do financiamento</div>
@@ -537,7 +537,7 @@ function renderStep(){
       <hr class="diff-divider">
       <div class="diff-row hl"><span class="d-label">Saldo máximo durante a obra</span><span class="d-val" id="d-saldo">${ter>0?fmtBRL(fin-ter):'—'}</span></div>
     </div>
-    <div class="info-box">💡 O valor terreno já está incluso como saldo devedor desde a assinatura. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
+    <div class="info-box">💡 O valor do terreno é considerado como saldo devedor desde o primeiro mês. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
 
     `<div class="step-num">04 / 07</div>
     <div class="step-title">Quais os seus encargos mensais?</div>
@@ -547,7 +547,7 @@ function renderStep(){
     <div class="field-group">
       <label class="field-label">2. Taxa Administrativa</label>
       <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-taxaAdm" class="has-pre" placeholder="25,00" value="${form.taxaAdm||''}" min="0" step="0.01" oninput="atualizaEncargos()"></div>
-      <div class="info-box">O valor de seguro é diferente para cada comprador - Verifique no seu contrato. Já a Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
+      <div class="info-box">O valor de seguro é único para cada comprador — Verifique no seu contrato. Já a Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
     </div>
     <div class="confirm-box" id="box-enc" style="${seg>0?'':'display:none'}">
       <div><div class="c-label">Total de encargos mensais</div></div>
@@ -556,16 +556,29 @@ function renderStep(){
 
     `<div class="step-num">05 / 07</div>
     <div class="step-title">Qual a sua taxa de juros anual?</div>
-    <div class="step-hint">Consta na primeira página do contrato. O app converte para taxa mensal automaticamente.</div>
+    <div class="step-hint">O valor de cada parcela de Evolução de Obra é calculado pela soma da <strong>Taxa de Juros mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês.
+        O app converte a taxa anual para mensal automaticamente.</div>
     <div class="input-wrap"><input type="number" id="inp-taxaAnual" class="has-suf" placeholder="10,0000" value="${form.taxaAnual}" min="0" step="0.01" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
+   
+    <div class="diff-box" id="box-ter" style="${ta>0?'':'display:none'}">
+      <div class="d-title">Composição do financiamento</div>
+      <div class="diff-row"><span class="c-label">Taxa de Juros Mensal</span><span class="d-val">${ta>0?fmtPerc(ta/12+0.1000,4):''}</span></div>
+      <div class="diff-row"><span class="c-label">(+) Taxa Referencial</span><span class="d-val" id="d-tr">0,1000%</span></div>
+      <hr class="diff-divider">
+      <div class="diff-row hl">
+        <span class="d-label">Taxa de Juros estimada para cada Parcela de evolução de Obra</span>
+        <span class="c-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.1000,4):''}</span></div>
+    </div>
+   
     <div class="confirm-box" id="box-taxa" style="${ta>0?'':'display:none'}">
       <div>
         <div class="c-label">Taxa mensal + TR base (0,1000%)</div>
         <div class="c-sublabel">Usada nos cálculos mensais de cada parcela</div>
       </div>
-      <div class="c-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.001,4):''}</div>
+      <div class="c-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.1000,4):''}</div>
     </div>
-    <div class="info-box">O valor de cada parcela de Evolução de Obra é calculado pela soma da <strong>Taxa de Juros mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês. Utilizaremos 0,1000% de TR como valor inicial — você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
+    
+    <div class="info-box">Utilizaremos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
 
     `<div class="step-num">06 / 07</div>
     <div class="step-title">Qual a data de entrega prevista?</div>
@@ -621,7 +634,7 @@ function atualizaTaxa(){
   const ta=parseFloat(document.getElementById('inp-taxaAnual')?.value)||0;
   const box=document.getElementById('box-taxa'),val=document.getElementById('val-taxa');
   // mostra taxa mensal + TR base (0,1000%) = taxa combinada usada no cálculo
-  if(box&&val){box.style.display=ta>0?'flex':'none';val.textContent=fmtPerc(ta/12+0.001,4);}
+  if(box&&val){box.style.display=ta>0?'flex':'none';val.textContent=fmtPerc(ta/12+0.1000,4);}
 }
 function atualizaMeses(){
   const v=document.getElementById('inp-mesEntrega')?.value;
@@ -633,9 +646,9 @@ function atualizaMeses(){
   if(n>=1&&n<=MAX_MESES)
     badge.innerHTML=`<div class="months-badge">📅 ${mLabelFull(form.mesInicial)} → ${mLabelFull(v)} = <strong>${n} parcela(s)</strong></div>`;
   else if(n>MAX_MESES)
-    badge.innerHTML=`<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas. Serão exibidas as primeiras ${MAX_MESES}.</div>`;
+    badge.innerHTML=`<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
   else
-    badge.innerHTML=`<div class="months-badge err">⚠️ A entrega deve ser após a 1ª parcela.</div>`;
+    badge.innerHTML=`<div class="months-badge err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
 }
 function updateCharCount(inp){
   const len=sanitizeName(inp.value).length;
