@@ -547,7 +547,7 @@ function renderStep(){
     <div class="field-group">
       <label class="field-label">2. Taxa Administrativa</label>
       <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-taxaAdm" class="has-pre" placeholder="25,00" value="${form.taxaAdm||''}" min="0" step="0.01" oninput="atualizaEncargos()"></div>
-      <div class="info-box">O valor de seguro é único para cada comprador — Verifique no seu contrato. Já a Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
+      <div class="info-box">💡 O valor de seguro é único para cada comprador — Verifique no seu contrato. Já a Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
     </div>
     <div class="confirm-box" id="box-enc" style="${seg>0?'':'display:none'}">
       <div><div class="c-label">Total de encargos mensais</div></div>
@@ -557,28 +557,20 @@ function renderStep(){
     `<div class="step-num">05 / 07</div>
     <div class="step-title">Qual a sua taxa de juros anual?</div>
     <div class="step-hint">O valor de cada parcela de Evolução de Obra é calculado pela soma da <strong>Taxa de Juros mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês.
-        O app converte a taxa anual para mensal automaticamente.</div>
+        Já a O app converte a Taxa anual para mensal automaticamente.</div>
     <div class="input-wrap"><input type="number" id="inp-taxaAnual" class="has-suf" placeholder="10,0000" value="${form.taxaAnual}" min="0" step="0.01" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
    
-    <div class="diff-box" id="box-ter" style="${ta>0?'':'display:none'}">
-      <div class="d-title">Composição do financiamento</div>
-      <div class="diff-row"><span class="c-label">Taxa de Juros Mensal</span><span class="d-val">${ta>0?fmtPerc(ta/12+0.1000,4):''}</span></div>
+    <div class="diff-box" id="box-taxa" style="${ta>0?'':'display:none'}">
+      <div class="d-title">Composição dos Juros</div>
+      <div class="diff-row"><span class="c-label">Taxa de Juros Mensal</span><span class="d-val">${ta>0?fmtPerc(ta/12):''}</span></div>
       <div class="diff-row"><span class="c-label">(+) Taxa Referencial</span><span class="d-val" id="d-tr">0,1000%</span></div>
       <hr class="diff-divider">
       <div class="diff-row hl">
-        <span class="d-label">Taxa de Juros estimada para cada Parcela de evolução de Obra</span>
+        <span class="d-label">Taxa de Juros estimada</span>
         <span class="c-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.1000,4):''}</span></div>
     </div>
-   
-    <div class="confirm-box" id="box-taxa" style="${ta>0?'':'display:none'}">
-      <div>
-        <div class="c-label">Taxa mensal + TR base (0,1000%)</div>
-        <div class="c-sublabel">Usada nos cálculos mensais de cada parcela</div>
-      </div>
-      <div class="c-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.1000,4):''}</div>
-    </div>
-    
-    <div class="info-box">Utilizaremos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
+
+    <div class="info-box">💡 Utilizaremos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
 
     `<div class="step-num">06 / 07</div>
     <div class="step-title">Qual a data de entrega prevista?</div>
@@ -680,7 +672,7 @@ function renderResult(){
       </td>
       <td id="rs-${i}" class="val-col">${r.bloqueado?'—':fmtBRL(r.saldo)}</td>
       <td class="td-right">
-        <input id="ti-${i}" class="tr-input" type="text" inputmode="decimal" value="${(r.tr*100).toFixed(4)}"
+        <input id="ti-${i}" class="tr-input" type="text" inputmode="decimal" value="${(r.tr).toFixed(4)}"
           ${r.bloqueado?'disabled':''}
           onchange="updateTR(${i},this.value)"
           onblur="validateTRBlur(${i})">
