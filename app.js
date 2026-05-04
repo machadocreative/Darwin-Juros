@@ -41,7 +41,7 @@ function saveProfile(){
   const profiles=loadProfiles();
   const data={
     id:currentProfileId||Date.now().toString(),
-    nome:form.nomeSimulacao||'Apto 101',
+    nome:form.nomeSimulacao||'Apto 1',
     form:{...form},
     meses:JSON.parse(JSON.stringify(meses)),
     savedAt:new Date().toISOString()
@@ -409,18 +409,9 @@ function updateSummary(){
 }
 
 // ── TELA: PERFIS ──
-function goProfiles(){
-  const lingeringBanner = document.getElementById('save-reminder');
-  if (lingeringBanner) lingeringBanner.remove();
-
-  screen='profiles';
-  renderProfiles();
-}
+function goProfiles(){ screen='profiles'; renderProfiles(); }
 
 function renderProfiles(){
-  const lingeringBanner = document.getElementById('save-reminder');
-  if (lingeringBanner) lingeringBanner.remove();
-
   const profiles=loadProfiles();
   const list=profiles.length
     ? profiles.map(p=>{
@@ -639,7 +630,7 @@ function renderConfirmacaoB(){
       </div>
 
       <label class="field-label" style="margin-top:12px">Nome desta simulação</label>
-      <input type="text" id="cb-inp-nome" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao||'')}" maxlength="30" oninput="updateCharCount(this)">
+      <input type="text" id="cb-inp-nome" placeholder="Apto 1" value="${escHtml(form.nomeSimulacao||'')}" maxlength="30" oninput="updateCharCount(this)">
       <div class="char-count" id="char-count">0 / 30</div>
 
       <button class="btn btn-primary" onclick="confirmarB()">Ver resultados →</button>
@@ -672,7 +663,7 @@ function confirmarB(){
 
   // detecta nome duplicado
   const profiles=loadProfiles();
-  const nomeFinal=nome||'Apto 101';
+  const nomeFinal=nome||'Apto 1';
   const duplicado=profiles.find(p=>p.nome.toLowerCase()===nomeFinal.toLowerCase() && p.id!==currentProfileId);
   if(duplicado){ showToast('⚠️ Já existe um perfil com esse nome. Escolha outro.'); return; }
 
@@ -703,6 +694,33 @@ function confirmarB(){
   hasUnsavedChanges=false;
   renderResult();
 
+  // pergunta se quer marcar as linhas pagas automaticamente
+  setTimeout(()=>{ perguntarMarcarPagas(linhasParaMarcar); }, 400);
+}
+
+function perguntarMarcarPagas(n){
+  const banner=document.createElement('div');
+  banner.id='marcar-pagas-banner';
+  banner.className='save-reminder'; // reutiliza estilo do save-reminder
+  banner.innerHTML=`
+    <div class="save-reminder-title">📋 Você já pagou ${n} parcela(s)</div>
+    <div class="save-reminder-sub">Deseja marcá-las como pagas automaticamente na tabela?</div>
+    <div class="save-reminder-actions">
+      <button class="save-reminder-save" id="marcar-sim-btn">✓ Marcar como pagas</button>
+      <button class="save-reminder-discard" id="marcar-nao-btn">Deixar em branco</button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+  document.getElementById('marcar-sim-btn').addEventListener('click',()=>{
+    for(let i=0;i<n;i++){ if(meses[i]&&!meses[i].bloqueado) meses[i].pago=true; }
+    hasUnsavedChanges=true;
+    banner.remove();
+    refreshTable();
+    showToast('✅ '+n+' parcela(s) marcada(s) como pagas.');
+  });
+  document.getElementById('marcar-nao-btn').addEventListener('click',()=>{ banner.remove(); });
+}
+
 function novaSimulacao(){
   currentProfileId=null;
   window._editMode=null;
@@ -710,7 +728,7 @@ function novaSimulacao(){
   fluxo='A';
   Object.keys(form).forEach(k=>{ form[k]=''; });
   Object.keys(formB).forEach(k=>{ formB[k]=''; });
-  form.percFinanciado=80; form.trInicial=0.1000;
+  form.percFinanciado=80; form.trInicial=0.001;
   meses=[]; currentStep=0;
   renderBifurcacao();
 }
@@ -745,10 +763,10 @@ function nextStep(){
       if(mBetween(ini,fin)<=0){markError('inp-mesEntrega');return;}
       form.mesEntrega=v;
     } else if(currentStep===6){
-      const raw=sanitizeName(document.getElementById('inp-nome').value)||'Apto 101';
+      const raw=sanitizeName(document.getElementById('inp-nome').value)||'Apto 1';
       const profiles=loadProfiles();
       const duplicado=profiles.find(p=>p.nome.toLowerCase()===raw.toLowerCase() && p.id!==currentProfileId);
-      if(duplicado){ showToast('⚠️ Já existe um perfil com esse nome. Use um nome diferente.'); markError('inp-nome'); return; }
+      if(duplicado){ showToast('⚠️ Já existe um perfil com esse nome. Escolha outro.'); markError('inp-nome'); return; }
       form.nomeSimulacao=raw;
     }
     currentStep++;
@@ -828,7 +846,7 @@ function renderStep(){
 
     `<div class="step-num">03 / 07</div>
     <div class="step-title">Qual o valor do terreno?</div>
-    <div class="step-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
+    <div class="step-hint">Nos contratos da Caixa Econômica, consta no <strong>item 1.7</strong> do seu contrato Caixa.</div>
     <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTerreno" class="has-pre" placeholder="12.000" value="${form.valorTerreno}" min="0" step="100" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
     <div class="error-msg" id="err-terreno">O valor do terreno deve ser menor que o financiado (${fmtBRL(fin)}).</div>
     <div class="diff-box" id="box-ter" style="${ter>0?'':'display:none'}">
@@ -836,7 +854,7 @@ function renderStep(){
       <div class="diff-row"><span class="d-label">Valor financiado total</span><span class="d-val">${fmtBRL(fin)}</span></div>
       <div class="diff-row"><span class="d-label">(−) Terreno</span><span class="d-val" id="d-ter">${ter>0?fmtBRL(ter):'—'}</span></div>
       <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Saldo devedor repassado à Construtora</span><span class="d-val" id="d-saldo">${ter>0?fmtBRL(fin-ter):'—'}</span></div>
+      <div class="diff-row hl"><span class="d-label">Saldo máximo durante a obra</span><span class="d-val" id="d-saldo">${ter>0?fmtBRL(fin-ter):'—'}</span></div>
     </div>
     <div class="info-box">💡 O valor do terreno é considerado como saldo devedor desde o primeiro mês. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
 
@@ -848,7 +866,7 @@ function renderStep(){
     <div class="field-group">
       <label class="field-label">2. Taxa Administrativa</label>
       <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-taxaAdm" class="has-pre" placeholder="25,00" value="${form.taxaAdm||''}" min="0" step="0.01" oninput="atualizaEncargos()"></div>
-      <div class="info-box">💡 O valor de seguro é único para cada comprador — Verifique no seu contrato. Já a Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00..</div>
+      <div class="info-box">O valor de seguro é único para cada comprador — Verifique no seu contrato. Já a Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
     </div>
     <div class="confirm-box" id="box-enc" style="${seg>0?'':'display:none'}">
       <div><div class="c-label">Total de encargos mensais</div></div>
@@ -857,16 +875,16 @@ function renderStep(){
 
     `<div class="step-num">05 / 07</div>
     <div class="step-title">Qual a sua taxa de juros anual?</div>
-    <div class="step-hint">Os juros de cada parcela de Evolução de Obra são definidos pela soma da <strong>Taxa de Juros Mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês. O app irá converter sua taxa anual para mensal automaticamente.</div>
+    <div class="step-hint">Consta na primeira página do contrato. O app converte para taxa mensal automaticamente.</div>
     <div class="input-wrap"><input type="number" id="inp-taxaAnual" class="has-suf" placeholder="10,0000" value="${form.taxaAnual}" min="0" step="0.01" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
     <div class="diff-box" id="box-taxa" style="${ta>0?'':'display:none'}">
-      <div class="d-title">Composição dos Juros de Evolução</div>
-      <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${ta>0?fmtPerc(ta/12,4):''}</span></div>
-      <div class="diff-row"><span class="d-label">(+) Taxa Refererencial</span><span class="d-val">0,1000%</span></div>
+      <div class="d-title">Composição dos juros mensais</div>
+      <div class="diff-row"><span class="d-label">Taxa de juros mensal</span><span class="d-val" id="val-taxa-mensal">${ta>0?fmtPerc(ta/12,4):''}</span></div>
+      <div class="diff-row"><span class="d-label">(+) TR base estimada</span><span class="d-val">0,1000%</span></div>
       <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Taxa combinada mensal</span><span class="d-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.1000,4):''}</span></div>
+      <div class="diff-row hl"><span class="d-label">Taxa combinada mensal</span><span class="d-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.001,4):''}</span></div>
     </div>
-    <div class="info-box">💡 Utilizaremos 0,1000% de TR apenas como valor inicial — Você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
+    <div class="info-box">O valor de cada parcela de Evolução de Obra é calculado pela soma da <strong>Taxa de Juros mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês. Utilizaremos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
 
     `<div class="step-num">06 / 07</div>
     <div class="step-title">Qual a data de entrega prevista?</div>
@@ -877,7 +895,7 @@ function renderStep(){
     `<div class="step-num">07 / 07</div>
     <div class="step-title">Como quer chamar essa simulação?</div>
     <div class="step-hint">Máximo 30 caracteres. Ex: Apto Centro, Torre B, Meu apê.</div>
-    <input type="text" id="inp-nome" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao||'')}" maxlength="30" oninput="updateCharCount(this)">
+    <input type="text" id="inp-nome" placeholder="Apto 1" value="${escHtml(form.nomeSimulacao||'')}" maxlength="30" oninput="updateCharCount(this)">
     <div class="char-count" id="char-count">0 / 30</div>`
   ];
 
@@ -936,7 +954,7 @@ function atualizaTaxa(){
   const elMensal=document.getElementById('val-taxa-mensal');
   const elCombinada=document.getElementById('val-taxa');
   if(elMensal)    elMensal.textContent=fmtPerc(ta/12,4);
-  if(elCombinada) elCombinada.textContent=fmtPerc(ta/12+0.1000,4);
+  if(elCombinada) elCombinada.textContent=fmtPerc(ta/12+0.001,4);
 }
 function atualizaMeses(){
   const v=document.getElementById('inp-mesEntrega')?.value;
@@ -947,7 +965,7 @@ function atualizaMeses(){
   if(!badge) return;
   if(n>=1&&n<=MAX_MESES)
     // n = parcelas de obra; n+1 = total incluindo parcela 0 (terreno)
-    badge.innerHTML=`<div class="months-badge">📅 ${mLabelFull(form.mesInicial)} → ${mLabelFull(v)} = <strong>${n} parcela(s) de obra</strong></div>`;
+    badge.innerHTML=`<div class="months-badge">📅 ${mLabelFull(form.mesInicial)} → ${mLabelFull(v)} = <strong>${n} parcela(s) de obra</strong> + parcela inicial do terreno</div>`;
   else if(n>MAX_MESES)
     badge.innerHTML=`<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas de obra. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
   else
@@ -998,7 +1016,7 @@ function renderResult(){
 
   setHtml(`    
     <div class="result-header">
-      <h2>${escHtml(form.nomeSimulacao||'Apto 101')}</h2>
+      <h2>${escHtml(form.nomeSimulacao||'Apto 1')}</h2>
       <p id="result-subtitle">${ativas.length} parcelas · ${meses[0]?.mes||''} → ${ultimoMesAtivo()}</p>
       <div class="rh-actions">
         <button class="rh-btn save" onclick="saveProfile()">💾 Salvar</button>
@@ -1014,8 +1032,8 @@ function renderResult(){
         <div class="summary-card accent"><div class="s-label">Total estimado</div><div class="s-val" id="sum-total">${fmtBRL(total)}</div></div>
       </div>
     </div>
-       
-    <div class="alert">Edite % de obra e Taxa Referencial mês a mês — Atualize a TR com o valor oficial do Banco Central a cada mês. <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a></div>
+
+    <div class="alert">TR editável por mês (coluna TR%). Atualize com o valor oficial do Banco Central a cada mês. <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a></div>
     <div class="table-wrap">
       <table>
         <thead><tr>
@@ -1027,12 +1045,12 @@ function renderResult(){
         <tbody>${tableRows}</tbody>
       </table>
       <div class="row-controls">
-        <span class="rc-info" id="rc-info">${meses.length} parcela(s) · máx. ${MAX_MESES}</span>
+        <span class="rc-info" id="rc-info">${meses.length-1} parcela(s) · máx. ${MAX_MESES}</span>
         <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length<=1||lastPago?'disabled':''}>−</button>
         <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>MAX_MESES?'disabled':''}>+</button>
       </div>
     </div>
-    <p class="note">Use + / − para ajustar o número de parcelas.</p>
+    <p class="note">Edite % de obra e TR mês a mês. Use + / − para ajustar o número de parcelas.</p>
     <button class="btn-reset" onclick="goProfilesSafe()">← Voltar aos perfis</button>
   `);
 }
