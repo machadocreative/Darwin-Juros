@@ -420,7 +420,7 @@ function goProfiles(){
 function renderProfiles(){
   const lingeringBanner = document.getElementById('save-reminder');
   if (lingeringBanner) lingeringBanner.remove();
-  
+
   const profiles=loadProfiles();
   const list=profiles.length
     ? profiles.map(p=>{
@@ -1013,37 +1013,8 @@ function renderResult(){
         <div class="summary-card paid"><div class="s-label">Total pago até agora</div><div class="s-val" id="sum-pago">${fmtBRL(pago)}</div></div>
         <div class="summary-card accent"><div class="s-label">Total estimado</div><div class="s-val" id="sum-total">${fmtBRL(total)}</div></div>
       </div>
-    </div> `);
-
-
-  // pergunta se quer marcar as linhas pagas automaticamente
-  setTimeout(()=>{ perguntarMarcarPagas(linhasParaMarcar); }, 400);
-}
-
-function perguntarMarcarPagas(n){
-  const banner=document.createElement('div');
-  banner.id='marcar-pagas-banner';
-  banner.className='save-reminder'; // reutiliza estilo do save-reminder
-  banner.innerHTML=`
-    <div class="save-reminder-title">📋 Você já pagou ${n} parcela(s)</div>
-    <div class="save-reminder-sub">Deseja marcá-las como pagas automaticamente na tabela?</div>
-    <div class="save-reminder-actions">
-      <button class="save-reminder-save" id="marcar-sim-btn">✓ Marcar como pagas</button>
-      <button class="save-reminder-discard" id="marcar-nao-btn">Deixar em branco</button>
     </div>
-  `;
-  document.body.appendChild(banner);
-  document.getElementById('marcar-sim-btn').addEventListener('click',()=>{
-    for(let i=0;i<n;i++){ if(meses[i]&&!meses[i].bloqueado) meses[i].pago=true; }
-    hasUnsavedChanges=true;
-    banner.remove();
-    refreshTable();
-    showToast('✅ '+n+' parcela(s) marcada(s) como pagas.');
-  });
-  document.getElementById('marcar-nao-btn').addEventListener('click',()=>{ banner.remove(); });
-}
-
-  setHtml(`    
+       
     <div class="alert">Edite % de obra e Taxa Referencial mês a mês — Atualize a TR com o valor oficial do Banco Central a cada mês. <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a></div>
     <div class="table-wrap">
       <table>
