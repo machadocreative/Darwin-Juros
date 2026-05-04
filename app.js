@@ -11,7 +11,7 @@ let fluxo = 'A'; // 'A' | 'B'
 const form = {
   mesInicial:'', valorTotal:'', percFinanciado:80,
   valorTerreno:'', seguro:'', taxaAdm:'',
-  taxaAnual:'', trInicial:0.1000, mesEntrega:'',
+  taxaAnual:'', trInicial:0.001, mesEntrega:'',
   nomeSimulacao:''
 };
 
@@ -119,13 +119,14 @@ function calcTable(){
   const tm=parseFloat(form.taxaAnual)/100/12;
   const sMax=fin-ter;
   const ini=parseMS(form.mesInicial),ent=parseMS(form.mesEntrega);
-  const total=Math.min(mBetween(ini,ent),MAX_MESES);
+  // total de parcelas = diferença de meses + 1 (inclui o mês inicial)
+  const totalParcelas=Math.min(mBetween(ini,ent)+1, MAX_MESES);
   const rows=[];
-  // Parcela 1 = primeiro mês (terreno, perc 0)
-  rows.push({mes:mLabel(ini),perc:0,saldo:ter,tr:form.trInicial,previsto:(tm+form.trInicial)*ter+enc,pago:false,bloqueado:false});
-  for(let i=1;i<=total;i++){
+  for(let i=0;i<totalParcelas;i++){
     const ym=addM(ini,i);
-    const perc=parseFloat(((i/total)*100).toFixed(1));
+    // parcela 1 (i=0): 0% de obra, saldo = terreno
+    // últimas parcelas chegam a 100%
+    const perc = totalParcelas===1 ? 0 : parseFloat(((i/(totalParcelas-1))*100).toFixed(1));
     const saldo=ter+sMax*(perc/100);
     rows.push({mes:mLabel(ym),perc,saldo,tr:form.trInicial,previsto:(tm+form.trInicial)*saldo+enc,pago:false,bloqueado:false});
   }
@@ -159,9 +160,8 @@ function ultimoMesAtivo(){
 }
 
 function adicionarLinha(){
-  // MAX_MESES parcelas de obra + linha 0 do terreno = MAX_MESES+1 linhas total
-  // meses.length >= MAX_MESES+1 significa que já temos 48 parcelas de obra → bloqueia
-  if(meses.length>MAX_MESES) return;
+  // limite: MAX_MESES parcelas no total
+  if(meses.length>=MAX_MESES) return;
   const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
   const ter=parseFloat(form.valorTerreno);
   const enc=parseFloat(form.seguro||0)+parseFloat(form.taxaAdm||25);
@@ -387,9 +387,9 @@ function refreshTable(){
     }
   });
   const btnAdd=document.getElementById('btn-add'),btnRem=document.getElementById('btn-rem'),rcInfo=document.getElementById('rc-info');
-  if(btnAdd) btnAdd.disabled=meses.length>MAX_MESES;
+  if(btnAdd) btnAdd.disabled=meses.length>=MAX_MESES;
   if(btnRem){ const last=meses[meses.length-1]; btnRem.disabled=meses.length<=1||(last&&last.pago); }
-  if(rcInfo) rcInfo.textContent=(meses.length-1)+' parcela(s) · máx. '+MAX_MESES;
+  if(rcInfo) rcInfo.textContent=meses.length+' parcela(s) · máx. '+MAX_MESES;
   // atualiza subtítulo com mês inicial e último mês ativo
   const sub=document.getElementById('result-subtitle');
   const ativasCount=meses.filter(r=>!r.bloqueado).length;
@@ -552,8 +552,8 @@ function inferirDadosB(){
   const ultimaParc  = parseFloat(formB.ultimaParcela);
 
   // encargos e TR assumidos como padrão
-  const encPadrao   = 25;        // taxa adm padrão
-  const trPadrao    = 0.1000;     // 0,1000% a.m.
+  const encPadrao   = 25;     // taxa adm padrão
+  const trPadrao    = 0.001;  // 0,1000% a.m. (0.001 em decimal, NÃO 0.1)
 
   // inferir taxa mensal: parcela = (tm + TR) * saldo + encargos
   // => tm = (parcela - encargos) / saldo - TR
@@ -562,13 +562,13 @@ function inferirDadosB(){
 
   // inferir mês inicial: hoje - mesesPagos meses
   const hoje = new Date();
-  const iniDate = new Date(hoje.getFullYear(), hoje.getMonth() - mesesPagos, 1);
-  const mesInicialInferido = `${iniDate.getFullYear()}-${String(iniDate.getMonth()+1).padStart(2,'0')}`;
+  const iniDate = new Date(hoje.getFullYear(), hoje.getMonth() - mesesPagos + 1, 1);
+  const mesInicialInferido = `${iniDate.getFullYear()}-${String(iniDate.getMonth()).padStart(2,'0')}`;
 
-  // prazo restante estimado: assumir 36 meses totais menos os já pagos (ajustável)
+  // prazo total estimado: 36 parcelas (inclui o mês inicial)
+  // entDate = iniDate + (prazo - 1) porque calcTable já inclui o mês inicial
   const prazoTotalEstimado = 36;
-  const mesesRestantes = Math.max(prazoTotalEstimado - mesesPagos, 1);
-  const entDate = new Date(iniDate.getFullYear(), iniDate.getMonth() + prazoTotalEstimado, 1);
+  const entDate = new Date(iniDate.getFullYear(), iniDate.getMonth() + prazoTotalEstimado - 1, 1);
   const mesEntregaInferido = `${entDate.getFullYear()}-${String(entDate.getMonth()+1).padStart(2,'0')}`;
 
   // preencher form com valores inferidos
@@ -671,9 +671,10 @@ function confirmarB(){
   form.nomeSimulacao=nomeFinal;
 
   // recalcular datas com prazo ajustado
+  // entDate = iniDate + (pr-1) porque calcTable já inclui o mês inicial como parcela 1
   const inf=window._inferidoB;
   const iniDate=parseMS(form.mesInicial);
-  const entDate=addM(iniDate, pr);
+  const entDate=addM(iniDate, pr-1);
   form.mesEntrega=`${entDate.y}-${String(entDate.m).padStart(2,'0')}`;
 
   // gerar tabela
@@ -760,7 +761,7 @@ function nextStep(){
       const v=document.getElementById('inp-mesEntrega').value;
       if(!v){markError('inp-mesEntrega');return;}
       const ini=parseMS(form.mesInicial),fin=parseMS(v);
-      if(mBetween(ini,fin)<=0){markError('inp-mesEntrega');return;}
+      if(mBetween(ini,fin)<1){markError('inp-mesEntrega');return;}
       form.mesEntrega=v;
     } else if(currentStep===6){
       const raw=sanitizeName(document.getElementById('inp-nome').value)||'Apto 101';
@@ -856,7 +857,7 @@ function renderStep(){
       <hr class="diff-divider">
       <div class="diff-row hl"><span class="d-label">Saldo devedor repassado à Construtora</span><span class="d-val" id="d-saldo">${ter>0?fmtBRL(fin-ter):'—'}</span></div>
     </div>
-    <div class="info-box">💡 O valor do terreno é considerado como saldo devedor desde o primeiro mês. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
+    <div class="info-box">💡 O valor do terreno é o saldo devedor mínimo do financiamento. Na 1ª parcela (0% de obra), o cálculo é feito sobre esse valor — por isso a primeira parcela é menor que as seguintes.</div>`,
 
     `<div class="step-num">04 / 07</div>
     <div class="step-title">Quais os seus encargos mensais?</div>
@@ -883,7 +884,7 @@ function renderStep(){
       <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${ta>0?fmtPerc(ta/12,4):''}</span></div>
       <div class="diff-row"><span class="d-label">(+) Taxa Refererencial</span><span class="d-val">0,1000%</span></div>
       <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Estimativa de Juros Mensal</span><span class="d-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.1000,4):''}</span></div>
+      <div class="diff-row hl"><span class="d-label">Estimativa de Juros Mensal</span><span class="d-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.001,4):''}</span></div>
     </div>
     <div class="info-box">💡 Utilizaremos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
 
@@ -956,20 +957,20 @@ function atualizaTaxa(){
   const elMensal=document.getElementById('val-taxa-mensal');
   const elCombinada=document.getElementById('val-taxa');
   if(elMensal)    elMensal.textContent=fmtPerc(ta/12,4);
-  if(elCombinada) elCombinada.textContent=fmtPerc(ta/12+0.1000,4);
+  if(elCombinada) elCombinada.textContent=fmtPerc(ta/12+0.001,4);
 }
 function atualizaMeses(){
   const v=document.getElementById('inp-mesEntrega')?.value;
   if(!v||!form.mesInicial) return;
   const ini=parseMS(form.mesInicial),fin=parseMS(v);
-  const n=mBetween(ini,fin); // número de meses de obra
+  const n=mBetween(ini,fin); // saltos entre datas
+  const totalParcelas=n+1;   // total real incluindo o mês inicial
   const badge=document.getElementById('badge-meses');
   if(!badge) return;
-  if(n>=1&&n<=MAX_MESES)
-    // n = parcelas de obra; n+1 = total incluindo parcela 1 (terreno)
-    badge.innerHTML=`<div class="months-badge">📅 ${mLabelFull(form.mesInicial)} → ${mLabelFull(v)} = <strong>${n} parcela(s) de obra</strong></div>`;
-  else if(n>MAX_MESES)
-    badge.innerHTML=`<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas de obra. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
+  if(n>=1&&totalParcelas<=MAX_MESES)
+    badge.innerHTML=`<div class="months-badge">📅 ${mLabelFull(form.mesInicial)} → ${mLabelFull(v)} = <strong>${totalParcelas} parcela(s)</strong></div>`;
+  else if(totalParcelas>MAX_MESES)
+    badge.innerHTML=`<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
   else
     badge.innerHTML=`<div class="months-badge err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
 }
@@ -1034,7 +1035,7 @@ function renderResult(){
         <div class="summary-card accent"><div class="s-label">Total estimado</div><div class="s-val" id="sum-total">${fmtBRL(total)}</div></div>
       </div>
     </div>
-
+    
     <div class="alert">Edite % de obra e Taxa Referencial mês a mês — Utilize o valor oficial do Banco Central a cada mês. <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte TR aqui</a></div>
     <div class="table-wrap">
       <table>
@@ -1047,12 +1048,11 @@ function renderResult(){
         <tbody>${tableRows}</tbody>
       </table>
       <div class="row-controls">
-        <span class="rc-info" id="rc-info">${meses.length-1} parcela(s) · máx. ${MAX_MESES}</span>
+        <span class="rc-info" id="rc-info">${meses.length} parcela(s) · máx. ${MAX_MESES} · Use + / − para ajustar o número de parcelas.</span>
         <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length<=1||lastPago?'disabled':''}>−</button>
-        <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>MAX_MESES?'disabled':''}>+</button>
+        <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>=MAX_MESES?'disabled':''}>+</button>
       </div>
     </div>
-    <p class="note">Use + / − para ajustar o número de parcelas.</p>
     <button class="btn-reset" onclick="goProfilesSafe()">← Voltar aos perfis</button>
   `);
 }
