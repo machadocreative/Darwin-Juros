@@ -1,12 +1,18 @@
 const MAX_MESES = 48;
 const STORAGE_KEY = 'juros_obra_perfis';
 const TOTAL_STEPS = 7;
+const PREMIUM_KEY = 'darwin_premium';
+const CUPOM_VALIDO = 'DARWIN10';
 
 let currentStep = 0;
 let currentProfileId = null;
 let screen = 'onboarding'; // 'profiles' | 'onboarding' | 'result' | 'bifurcacao' | 'fluxoB' | 'confirmacaoB'
 let hasUnsavedChanges = false;
 let fluxo = 'A'; // 'A' | 'B'
+
+// ── PREMIUM ──
+function isPremium(){ return localStorage.getItem(PREMIUM_KEY)==='1'; }
+function ativarPremium(){ localStorage.setItem(PREMIUM_KEY,'1'); }
 
 const form = {
   mesInicial:'', valorTotal:'', percFinanciado:80,
@@ -1119,18 +1125,102 @@ function updateCharCount(inp){
   if(el){el.textContent=len+' / 30';el.className='char-count'+(len>=28?' warn':'');}
 }
 
+// ── SLIDER PREVIEW (usuário free) ──
+function calcPreviewSlider(perc){
+  const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
+  const ter=parseFloat(form.valorTerreno);
+  const enc=parseFloat(form.seguro||0)+parseFloat(form.taxaAdm||25);
+  const tm=parseFloat(form.taxaAnual)/100/12;
+  const saldo=ter+(fin-ter)*(perc/100);
+  const previsto=(tm+0.001)*saldo+enc;
+  return {saldo, previsto};
+}
+
+function atualizaSlider(){
+  const slider=document.getElementById('preview-slider');
+  if(!slider) return;
+  const perc=parseInt(slider.value);
+  const {saldo, previsto}=calcPreviewSlider(perc);
+  const elPerc=document.getElementById('slider-perc');
+  const elVal=document.getElementById('slider-val');
+  const elSaldo=document.getElementById('slider-saldo');
+  if(elPerc) elPerc.textContent=perc+'%';
+  if(elVal)  elVal.textContent=fmtBRL(previsto);
+  if(elSaldo) elSaldo.textContent=fmtBRL(saldo);
+  // atualiza cor da track do slider
+  const pct=(perc/100)*100;
+  slider.style.background=`linear-gradient(to right, var(--accent) ${pct}%, var(--border) ${pct}%)`;
+}
+
+// ── PAYWALL ──
+function showPaywall(){
+  const existing=document.getElementById('paywall-overlay');
+  if(existing) existing.remove();
+
+  const overlay=document.createElement('div');
+  overlay.id='paywall-overlay';
+  overlay.className='paywall-overlay';
+  overlay.innerHTML=`
+    <div class="paywall-card">
+      <div class="paywall-icon">🔓</div>
+      <div class="paywall-title">Tabela completa de parcelas</div>
+      <div class="paywall-sub">Veja todas as parcelas mês a mês, edite % de obra e TR, e acompanhe o que já foi pago.</div>
+      <div class="paywall-price">
+        <span class="paywall-amount">R$ 4,99</span>
+        <span class="paywall-terms">Pagamento único · Sem assinatura</span>
+      </div>
+      <button class="paywall-btn-pay" disabled title="Em breve">💳 Pagar</button>
+      <button class="paywall-btn-cupom" onclick="showCupomInput()">🎟️ Tenho um cupom de desconto</button>
+      <div id="cupom-area" style="display:none">
+        <input type="text" id="cupom-input" placeholder="Digite seu cupom" maxlength="20"
+          style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;margin-top:8px;text-transform:uppercase;letter-spacing:.08em;outline:none;">
+        <button class="paywall-btn-aplicar" onclick="aplicarCupom()">Aplicar cupom</button>
+      </div>
+      <button class="paywall-btn-voltar" onclick="closePaywall()">← Voltar</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  // fecha ao clicar fora
+  overlay.addEventListener('click',(e)=>{ if(e.target===overlay) closePaywall(); });
+}
+
+function closePaywall(){
+  document.getElementById('paywall-overlay')?.remove();
+}
+
+function showCupomInput(){
+  const area=document.getElementById('cupom-area');
+  if(area){ area.style.display='block'; document.getElementById('cupom-input')?.focus(); }
+}
+
+function aplicarCupom(){
+  const el=document.getElementById('cupom-input');
+  if(!el) return;
+  const val=(el.value||'').trim().toUpperCase();
+  if(val===CUPOM_VALIDO){
+    ativarPremium();
+    closePaywall();
+    showToast('✅ Cupom aplicado! Acesso completo liberado.');
+    renderResult(); // re-renderiza com tabela completa
+  } else {
+    el.style.borderColor='var(--danger)';
+    el.style.background='var(--danger-light)';
+    showToast('⚠️ Cupom inválido. Tente novamente.');
+  }
+}
+
 // ── RESULTADO ──
 function renderResult(){
   aplicaBloqueio();
-  // NOTA: hasUnsavedChanges NÃO é zerado aqui — só é zerado em saveProfile() e loadProfile()
   const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
   const ativas=meses.filter(r=>!r.bloqueado);
   const total=ativas.reduce((s,r)=>s+r.previsto,0);
   const pago=ativas.filter(r=>r.pago).reduce((s,r)=>s+r.previsto,0);
   const media=ativas.length?total/ativas.length:0;
   const lastPago=meses[meses.length-1]?.pago||false;
+  const premium=isPremium();
 
-  // numeração começa em 1
+  // ── tabela (apenas premium) ──
   const tableRows=meses.map((r,i)=>`
     <tr id="row-${i}" class="${r.bloqueado?'obra-done':r.pago?'pago-row':''}">
       <td class="num-col">${i+1}</td>
@@ -1156,7 +1246,57 @@ function renderResult(){
       </td>
     </tr>`).join('');
 
-  setHtml(`    
+  // ── bloco central: tabela (premium) ou slider (free) ──
+  const blocoTabela = premium ? `
+    <div class="alert">💡 Nas linhas abaixo, edite % de obra e Taxa Referencial — <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a> o valor oficial mês a mês.</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th class="th-center">#</th><th>Mês</th>
+          <th class="th-right">% Obra</th><th class="th-right">Saldo dev.</th>
+          <th class="th-right">TR %</th><th class="th-right">Previsto</th>
+          <th class="th-center">Pago?</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+      <div class="row-controls">
+        <span class="rc-info" id="rc-info">Use + / − para ajustar o número de parcelas (máx. ${MAX_MESES})</span>
+        <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length<=1||lastPago?'disabled':''}>−</button>
+        <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>=MAX_MESES?'disabled':''}>+</button>
+      </div>
+    </div>` : `
+    <div class="free-preview-card">
+      <div class="free-preview-header">
+        <div class="free-preview-title">Simulador de parcela</div>
+        <div class="free-preview-sub">Arraste para ver a previsão em qualquer % de obra</div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-labels">
+          <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+        </div>
+        <input type="range" id="preview-slider" class="preview-slider"
+          min="0" max="100" step="10" value="50"
+          oninput="atualizaSlider()">
+        <div class="slider-perc-label" id="slider-perc">50%</div>
+      </div>
+      <div class="slider-result">
+        <div class="slider-result-row">
+          <span class="slider-result-label">Saldo devedor estimado</span>
+          <span class="slider-result-val" id="slider-saldo">—</span>
+        </div>
+        <div class="slider-result-row highlight">
+          <span class="slider-result-label">Parcela estimada</span>
+          <span class="slider-result-val accent" id="slider-val">—</span>
+        </div>
+        <div class="slider-result-note">+ TR mensal (editável na tabela completa)</div>
+      </div>
+      <button class="free-preview-cta" onclick="showPaywall()">
+        🔓 Ver tabela completa de parcelas
+        <span class="cta-price">R$ 4,99</span>
+      </button>
+    </div>`;
+
+  setHtml(`
     <div class="result-header">
       <h2>${escHtml(form.nomeSimulacao||'Apto 101')}</h2>
       <p id="result-subtitle">${ativas.length} parcelas · ${meses[0]?.mes||''} → ${ultimoMesAtivo()}</p>
@@ -1174,25 +1314,13 @@ function renderResult(){
         <div class="summary-card accent"><div class="s-label">Total estimado</div><div class="s-val" id="sum-total">${fmtBRL(total)}</div></div>
       </div>
     </div>
-    
-    <div class="alert">💡 Nas linhas abaixo, edite % de obra e Taxa Referencial — <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a> o valor oficial mês a mês.</div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th class="th-center">#</th><th>Mês</th>
-          <th class="th-right">% Obra</th><th class="th-right">Saldo dev.</th>
-          <th class="th-right">TR %</th><th class="th-right">Previsto</th>
-          <th class="th-center">Pago?</th>
-        </tr></thead>
-        <tbody>${tableRows}</tbody>
-      </table>
-      <div class="row-controls">
-        <span class="rc-info" id="rc-info">Use + / − para ajustar o número de parcelas (máx. ${MAX_MESES})</span>
-        <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length<=1||lastPago?'disabled':''}>−</button>
-        <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>=MAX_MESES?'disabled':''}>+</button>
-      </div>
-    </div>
+
+    ${blocoTabela}
+    <button class="btn-reset" onclick="goProfilesSafe()">← Voltar aos perfis</button>
   `);
+
+  // inicializa slider se free
+  if(!premium) setTimeout(()=>atualizaSlider(), 50);
 }
 
 // ── INIT ──
