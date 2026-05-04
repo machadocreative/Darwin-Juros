@@ -409,9 +409,18 @@ function updateSummary(){
 }
 
 // ── TELA: PERFIS ──
-function goProfiles(){ screen='profiles'; renderProfiles(); }
+function goProfiles(){
+  const lingeringBanner = document.getElementById('save-reminder');
+  if (lingeringBanner) lingeringBanner.remove();
+
+  screen='profiles';
+  renderProfiles();
+}
 
 function renderProfiles(){
+  const lingeringBanner = document.getElementById('save-reminder');
+  if (lingeringBanner) lingeringBanner.remove();
+  
   const profiles=loadProfiles();
   const list=profiles.length
     ? profiles.map(p=>{
