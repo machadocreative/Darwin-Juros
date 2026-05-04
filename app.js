@@ -543,14 +543,14 @@ function renderBifurcacao(){
       <div class="step-hint">Escolha a opção que melhor descreve o seu momento.</div>
       <div class="bifurcacao-grid">
         <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('A')">
-          <span class="bifurc-icon">🏁</span>
+          <span class="bifurc-icon">💰</span>
           <div>
             <div class="bifurc-label">Ainda não comecei a pagar</div>
             <div class="bifurc-sub">Meu contrato foi assinado recentemente ou as parcelas ainda não começaram</div>
           </div>
         </button>
         <button class="btn-bifurc bifurc-b" onclick="escolherFluxo('B')">
-          <span class="bifurc-icon">📆</span>
+          <span class="bifurc-icon">💸</span>
           <div>
             <div class="bifurc-label">Já estou pagando juros de obra</div>
             <div class="bifurc-sub">Já paguei algumas parcelas e quero acompanhar as próximas</div>
@@ -963,7 +963,7 @@ function renderStep(){
       <hr class="diff-divider">
       <div class="diff-row hl"><span class="d-label">Saldo devedor repassado à Construtora</span><span class="d-val" id="d-saldo">${ter>0?fmtBRL(fin-ter):'—'}</span></div>
     </div>
-    <div class="info-box">💡 O valor do terreno é o saldo devedor mínimo do financiamento. Na 1ª parcela (0% de obra), o cálculo é feito sobre esse valor — por isso a primeira parcela é menor que as seguintes.</div>`,
+    <div class="info-box">💡 O valor do terreno é considerado como saldo devedor desde o primeiro mês. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
 
     `<div class="step-num">04 / 07</div>
     <div class="step-title">Quais os seus encargos mensais?</div>
@@ -982,24 +982,23 @@ function renderStep(){
 
     `<div class="step-num">05 / 07</div>
     <div class="step-title">Qual a Taxa de Juros anual do seu Financiamento?</div>
-    <div class="step-hint">O app irá converter sua taxa anual para mensal abaixo.</div>
-    <div class="step-hint">Os juros das parcelas de Evolução de Obra são definidos pela soma da <strong>Taxa de Juros Mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês.</div>
+    <div class="step-hint">O app irá converter sua taxa anual para mensal abaixo. Já os juros das parcelas de Evolução de Obra são definidos pela soma da <strong>Taxa de Juros Mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês.</div>
     <div class="input-wrap"><input type="number" id="inp-taxaAnual" class="has-suf" placeholder="7,0000" value="${form.taxaAnual}" min="0" step="0.01" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
     <div class="diff-box" id="box-taxa" style="${ta>0?'':'display:none'}">
       <div class="d-title">Composição dos juros mensais</div>
       <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${ta>0?fmtPerc(ta/12,4):''}</span></div>
-      <div class="diff-row"><span class="d-label">(+) Taxa Refererencial</span><span class="d-val">0,1000%</span></div>
+      <div class="diff-row"><span class="d-label">(+) Taxa Referencial</span><span class="d-val">0,1000%</span></div>
       <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Estimativa de Juros Mensal</span><span class="d-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.001,4):''}</span></div>
+      <div class="diff-row hl"><span class="d-label">Estimativa de Juros Mensais</span><span class="d-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.1000,4):''}</span></div>
     </div>
     <div class="info-box">💡 Utilizaremos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
 
     `<div class="step-num">06 / 07</div>
     <div class="step-title">Qual a data de entrega prevista?</div>
-    <div class="step-hint">Sua 1ª parcela começa em <strong>${mLabelFull(form.mesInicial)}</strong>. A entrega define quantos meses de evolução serão simulados.</div>
+    <div class="step-hint">Sua 1ª parcela começa em <strong>${mLabelFull(form.mesInicial)}</strong>. A data de entrega define quantos meses de evolução serão simulados.</div>
     <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMeses();this.classList.remove('invalid')">
     <div id="badge-meses"></div>
-    <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos. Você poderá alterar essa data sempre que necessário.</div>`,
+    <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que necessário.</div>`,
 
     `<div class="step-num">07 / 07</div>
     <div class="step-title">Como quer chamar essa simulação?</div>
@@ -1176,7 +1175,7 @@ function renderResult(){
       </div>
     </div>
     
-    <div class="alert">Edite % de obra e Taxa Referencial mês a mês — Utilize o valor oficial do Banco Central a cada mês. <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte TR aqui</a></div>
+    <div class="alert">💡 Nas linhas abaixo, edite % de obra e Taxa Referencial — <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a> o valor oficial mês a mês.</div>
     <div class="table-wrap">
       <table>
         <thead><tr>
@@ -1188,12 +1187,11 @@ function renderResult(){
         <tbody>${tableRows}</tbody>
       </table>
       <div class="row-controls">
-        <span class="rc-info" id="rc-info">${meses.length} parcela(s) · máx. ${MAX_MESES} · Use + / − para ajustar o número de parcelas.</span>
+        <span class="rc-info" id="rc-info">Use + / − para ajustar o número de parcelas (máx. ${MAX_MESES})</span>
         <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length<=1||lastPago?'disabled':''}>−</button>
         <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>=MAX_MESES?'disabled':''}>+</button>
       </div>
     </div>
-    <button class="btn-reset" onclick="goProfilesSafe()">← Voltar aos perfis</button>
   `);
 }
 
