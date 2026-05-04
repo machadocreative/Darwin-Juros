@@ -4,8 +4,9 @@ const TOTAL_STEPS = 7;
 
 let currentStep = 0;
 let currentProfileId = null;
-let screen = 'onboarding';
+let screen = 'onboarding'; // 'profiles' | 'onboarding' | 'result' | 'bifurcacao' | 'fluxoB' | 'confirmacaoB'
 let hasUnsavedChanges = false;
+let fluxo = 'A'; // 'A' | 'B'
 
 const form = {
   mesInicial:'', valorTotal:'', percFinanciado:80,
@@ -13,6 +14,15 @@ const form = {
   taxaAnual:'', trInicial:0.1000, mesEntrega:'',
   nomeSimulacao:''
 };
+
+// dados brutos coletados no fluxo B
+const formB = {
+  mesesPagos: '',      // inteiro — quantos meses já pagou
+  percAtual: '',       // % de obra atual
+  saldoDevedor: '',    // R$ saldo devedor atual
+  ultimaParcela: ''    // R$ valor da última parcela paga
+};
+
 let meses = [];
 
 // ── STORAGE ──
@@ -71,6 +81,7 @@ function loadProfile(id){
   Object.assign(form,p.form);
   meses=JSON.parse(JSON.stringify(p.meses));
   screen='result';
+  hasUnsavedChanges=false;
   renderResult();
 }
 
@@ -148,7 +159,9 @@ function ultimoMesAtivo(){
 }
 
 function adicionarLinha(){
-  if(meses.length>=MAX_MESES+1) return;
+  // MAX_MESES parcelas de obra + linha 0 do terreno = MAX_MESES+1 linhas total
+  // meses.length >= MAX_MESES+1 significa que já temos 48 parcelas de obra → bloqueia
+  if(meses.length>MAX_MESES) return;
   const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
   const ter=parseFloat(form.valorTerreno);
   const enc=parseFloat(form.seguro||0)+parseFloat(form.taxaAdm||25);
@@ -201,12 +214,13 @@ function editarSimulacao(){
 }
 
 function _iniciarEdicao(){
-  // guarda os dados de resultado para restaurar após o onboarding
+  // fluxo B sempre redireciona para o onboarding A completo (com dados pré-preenchidos)
+  fluxo='A';
+  window._inferidoB=null;
   const mesesBackup=JSON.parse(JSON.stringify(meses));
   const profileIdBackup=currentProfileId;
   screen='onboarding';
   currentStep=0;
-  // ao terminar o onboarding em modo edição, reconcilia os meses
   window._editMode={ mesesBackup, profileIdBackup };
   renderStep();
 }
@@ -373,7 +387,7 @@ function refreshTable(){
     }
   });
   const btnAdd=document.getElementById('btn-add'),btnRem=document.getElementById('btn-rem'),rcInfo=document.getElementById('rc-info');
-  if(btnAdd) btnAdd.disabled=meses.length>=MAX_MESES+1;
+  if(btnAdd) btnAdd.disabled=meses.length>MAX_MESES;
   if(btnRem){ const last=meses[meses.length-1]; btnRem.disabled=meses.length<=1||(last&&last.pago); }
   if(rcInfo) rcInfo.textContent=(meses.length-1)+' parcela(s) · máx. '+MAX_MESES;
   // atualiza subtítulo com mês inicial e último mês ativo
@@ -425,13 +439,298 @@ function renderProfiles(){
   `);
 }
 
+// ── BIFURCAÇÃO INICIAL ──
+function renderBifurcacao(){
+  screen='bifurcacao';
+  setHtml(`
+    <div class="step-card" style="margin-top:8px">
+      <div class="step-title">Em que fase você está?</div>
+      <div class="step-hint" style="margin-bottom:24px">Escolha a opção que melhor descreve o seu momento.</div>
+      <button class="btn-bifurc" onclick="escolherFluxo('A')">
+        <span class="bifurc-icon">🏁</span>
+        <div>
+          <div class="bifurc-label">Ainda não comecei a pagar</div>
+          <div class="bifurc-sub">Meu contrato foi assinado recentemente ou as parcelas ainda não começaram</div>
+        </div>
+      </button>
+      <button class="btn-bifurc" onclick="escolherFluxo('B')" style="margin-top:12px">
+        <span class="bifurc-icon">📆</span>
+        <div>
+          <div class="bifurc-label">Já estou pagando juros de obra</div>
+          <div class="bifurc-sub">Já paguei algumas parcelas e quero acompanhar as próximas</div>
+        </div>
+      </button>
+    </div>
+  `);
+}
+
+function escolherFluxo(f){
+  fluxo=f;
+  if(f==='A'){
+    screen='onboarding'; currentStep=0; renderStep();
+  } else {
+    screen='fluxoB'; currentStep=0; renderFluxoB();
+  }
+}
+
+// ── FLUXO B — 4 perguntas ──
+const STEPS_B = [
+  {
+    num:'01 / 04',
+    title:'Quantos meses de juros de obra você já pagou?',
+    hint:'Conte a partir da primeira parcela de evolução de obra. Exemplo: se você pagou janeiro, fevereiro e março, responda 3.',
+    field:'mesesPagos', type:'number', placeholder:'3', min:1, step:1, suffix:null, prefix:null
+  },
+  {
+    num:'02 / 04',
+    title:'Qual o percentual atual de evolução de obra?',
+    hint:'Consulte o app Habitação Caixa ou o último comunicado da construtora.',
+    field:'percAtual', type:'number', placeholder:'35', min:0, max:100, step:0.1, suffix:'%', prefix:null
+  },
+  {
+    num:'03 / 04',
+    title:'Qual o seu saldo devedor atual?',
+    hint:'Consulte o extrato do seu financiamento no app Habitação Caixa ou no internet banking da Caixa.',
+    field:'saldoDevedor', type:'number', placeholder:'180000', min:0, step:100, suffix:null, prefix:'R$'
+  },
+  {
+    num:'04 / 04',
+    title:'Quanto você pagou na sua última parcela?',
+    hint:'Valor total debitado, incluindo juros e encargos. Consulte seu extrato bancário.',
+    field:'ultimaParcela', type:'number', placeholder:'1250', min:0, step:0.01, suffix:null, prefix:'R$'
+  }
+];
+
+function renderFluxoB(){
+  const s=STEPS_B[currentStep];
+  const val=formB[s.field]||'';
+  let inputHtml='';
+  if(s.prefix){
+    inputHtml=`<div class="input-wrap"><span class="pre">${s.prefix}</span><input type="number" id="inp-b" class="has-pre" placeholder="${s.placeholder}" value="${val}" min="${s.min||0}" step="${s.step||1}" inputmode="decimal" oninput="this.classList.remove('invalid')"></div>`;
+  } else if(s.suffix){
+    inputHtml=`<div class="input-wrap"><input type="number" id="inp-b" class="has-suf" placeholder="${s.placeholder}" value="${val}" min="${s.min||0}" ${s.max?`max="${s.max}"`:''} step="${s.step||1}" inputmode="decimal" oninput="this.classList.remove('invalid')"><span class="suf">${s.suffix}</span></div>`;
+  } else {
+    inputHtml=`<input type="number" id="inp-b" placeholder="${s.placeholder}" value="${val}" min="${s.min||0}" step="${s.step||1}" inputmode="numeric" oninput="this.classList.remove('invalid')">`;
+  }
+  setHtml(`
+    ${renderProgressB()}
+    <div class="step-card">
+      <div class="step-num">${s.num}</div>
+      <div class="step-title">${s.title}</div>
+      <div class="step-hint">${s.hint}</div>
+      ${inputHtml}
+      <button class="btn btn-primary" onclick="nextStepB()">Continuar →</button>
+      ${currentStep>0?'<button class="btn btn-back" onclick="prevStepB()">← Voltar</button>':'<button class="btn btn-back" onclick="renderBifurcacao()">← Voltar</button>'}
+    </div>`);
+  setTimeout(()=>{ const f=document.getElementById('inp-b'); if(f) f.focus(); },80);
+}
+
+function renderProgressB(){
+  return `<div class="progress-wrap">${Array.from({length:4},(_,i)=>`<div class="progress-dot ${i<currentStep?'done':i===currentStep?'active':''}"></div>`).join('')}</div>`;
+}
+
+function nextStepB(){
+  const el=document.getElementById('inp-b');
+  const s=STEPS_B[currentStep];
+  const v=parseDecimal(el?.value);
+  if(!el?.value||isNaN(v)||v<0){ el?.classList.add('invalid'); return; }
+  if(s.field==='mesesPagos' && (!Number.isInteger(v)||v<1)){ el.classList.add('invalid'); showToast('⚠️ Informe um número inteiro maior que zero.'); return; }
+  formB[s.field]=v;
+  if(currentStep<STEPS_B.length-1){ currentStep++; renderFluxoB(); }
+  else { inferirDadosB(); }
+}
+
+function prevStepB(){
+  if(currentStep>0){ currentStep--; renderFluxoB(); }
+}
+
+// ── INFERÊNCIA DOS DADOS (Fluxo B) ──
+function inferirDadosB(){
+  const mesesPagos  = parseInt(formB.mesesPagos);
+  const percAtual   = parseFloat(formB.percAtual);
+  const saldo       = parseFloat(formB.saldoDevedor);
+  const ultimaParc  = parseFloat(formB.ultimaParcela);
+
+  // encargos e TR assumidos como padrão
+  const encPadrao   = 25;        // taxa adm padrão
+  const trPadrao    = 0.001;     // 0,1000% a.m.
+
+  // inferir taxa mensal: parcela = (tm + TR) * saldo + encargos
+  // => tm = (parcela - encargos) / saldo - TR
+  const tm = (ultimaParc - encPadrao) / saldo - trPadrao;
+  const taxaAnualInferida = Math.max(tm * 12 * 100, 0);
+
+  // inferir mês inicial: hoje - mesesPagos meses
+  const hoje = new Date();
+  const iniDate = new Date(hoje.getFullYear(), hoje.getMonth() - mesesPagos, 1);
+  const mesInicialInferido = `${iniDate.getFullYear()}-${String(iniDate.getMonth()+1).padStart(2,'0')}`;
+
+  // prazo restante estimado: assumir 36 meses totais menos os já pagos (ajustável)
+  const prazoTotalEstimado = 36;
+  const mesesRestantes = Math.max(prazoTotalEstimado - mesesPagos, 1);
+  const entDate = new Date(iniDate.getFullYear(), iniDate.getMonth() + prazoTotalEstimado, 1);
+  const mesEntregaInferido = `${entDate.getFullYear()}-${String(entDate.getMonth()+1).padStart(2,'0')}`;
+
+  // preencher form com valores inferidos
+  form.mesInicial    = mesInicialInferido;
+  form.mesEntrega    = mesEntregaInferido;
+  form.taxaAnual     = taxaAnualInferida.toFixed(4);
+  form.taxaAdm       = String(encPadrao);
+  form.seguro        = '';       // não sabemos — usuário preencherá no fluxo A se editar
+  form.percFinanciado= 80;
+  form.trInicial     = trPadrao;
+  // saldo devedor atual como proxy do financiado (aproximação)
+  form.valorTotal    = (saldo / 0.8).toFixed(2);
+  form.valorTerreno  = (saldo * ((100-percAtual)/100) * 0.06).toFixed(2);
+
+  // guarda inferências para mostrar na tela de confirmação
+  window._inferidoB = {
+    taxaAnualInferida: taxaAnualInferida.toFixed(4),
+    mesInicialInferido, mesEntregaInferido,
+    mesesPagos, percAtual, saldo, ultimaParc,
+    encPadrao, trPadrao,
+    prazoTotalEstimado
+  };
+
+  renderConfirmacaoB();
+}
+
+function renderConfirmacaoB(){
+  const inf = window._inferidoB;
+  screen='confirmacaoB';
+  setHtml(`
+    <div class="step-card">
+      <div class="step-num" style="color:var(--accent)">✦ Darwin inferiu os seguintes dados</div>
+      <div class="step-title">Confira e ajuste se necessário</div>
+      <div class="step-hint">Com base nas suas respostas, estimamos os valores abaixo. Edite o que estiver incorreto antes de continuar.</div>
+
+      <div class="diff-box" style="margin-bottom:16px">
+        <div class="d-title">Resumo inferido</div>
+        <div class="diff-row"><span class="d-label">Meses já pagos</span><span class="d-val">${inf.mesesPagos}</span></div>
+        <div class="diff-row"><span class="d-label">% de obra atual</span><span class="d-val">${inf.percAtual}%</span></div>
+        <div class="diff-row"><span class="d-label">Saldo devedor</span><span class="d-val">${fmtBRL(inf.saldo)}</span></div>
+        <div class="diff-row"><span class="d-label">Última parcela paga</span><span class="d-val">${fmtBRL(inf.ultimaParc)}</span></div>
+        <hr class="diff-divider">
+        <div class="diff-row hl"><span class="d-label">Taxa de juros anual inferida</span><span class="d-val" id="cb-taxa">${fmtPerc(parseFloat(inf.taxaAnualInferida),4)}</span></div>
+        <div class="diff-row hl"><span class="d-label">Prazo total estimado</span><span class="d-val" id="cb-prazo">${inf.prazoTotalEstimado} meses</span></div>
+      </div>
+
+      <div class="info-box" style="margin-bottom:16px">⚠️ Valores aproximados — encargos assumidos em R$ 25,00 e TR em 0,1000%. Você poderá ajustar qualquer campo pelo botão ✏️ Editar após ver os resultados.</div>
+
+      <label class="field-label">Ajustar taxa anual (% a.a.)</label>
+      <div class="input-wrap" style="margin-bottom:12px">
+        <input type="number" id="cb-inp-taxa" class="has-suf" placeholder="${inf.taxaAnualInferida}" value="${inf.taxaAnualInferida}" min="0" step="0.01" inputmode="decimal" oninput="atualizaConfirmacaoB()">
+        <span class="suf">% a.a.</span>
+      </div>
+
+      <label class="field-label">Ajustar prazo total (meses)</label>
+      <div class="input-wrap" style="margin-bottom:4px">
+        <input type="number" id="cb-inp-prazo" class="has-suf" placeholder="${inf.prazoTotalEstimado}" value="${inf.prazoTotalEstimado}" min="1" max="${MAX_MESES}" step="1" inputmode="numeric" oninput="atualizaConfirmacaoB()">
+        <span class="suf">meses</span>
+      </div>
+
+      <label class="field-label" style="margin-top:12px">Nome desta simulação</label>
+      <input type="text" id="cb-inp-nome" placeholder="Apto 1" value="${escHtml(form.nomeSimulacao||'')}" maxlength="30" oninput="updateCharCount(this)">
+      <div class="char-count" id="char-count">0 / 30</div>
+
+      <button class="btn btn-primary" onclick="confirmarB()">Ver resultados →</button>
+      <button class="btn btn-back" onclick="voltarParaFluxoB()">← Voltar</button>
+    </div>`);
+  setTimeout(()=>{ const el=document.getElementById('cb-inp-nome'); if(el) updateCharCount(el); },50);
+}
+
+function atualizaConfirmacaoB(){
+  const ta=parseFloat(document.getElementById('cb-inp-taxa')?.value)||0;
+  const pr=parseInt(document.getElementById('cb-inp-prazo')?.value)||36;
+  const elT=document.getElementById('cb-taxa');
+  const elP=document.getElementById('cb-prazo');
+  if(elT) elT.textContent=fmtPerc(ta,4);
+  if(elP) elP.textContent=pr+' meses';
+  if(window._inferidoB){ window._inferidoB.prazoTotalEstimado=pr; }
+}
+
+function voltarParaFluxoB(){
+  screen='fluxoB'; currentStep=STEPS_B.length-1; renderFluxoB();
+}
+
+function confirmarB(){
+  const ta=parseFloat(document.getElementById('cb-inp-taxa')?.value);
+  const pr=parseInt(document.getElementById('cb-inp-prazo')?.value);
+  const nome=sanitizeName(document.getElementById('cb-inp-nome')?.value||'');
+
+  if(!ta||ta<=0){ document.getElementById('cb-inp-taxa')?.classList.add('invalid'); return; }
+  if(!pr||pr<1){  document.getElementById('cb-inp-prazo')?.classList.add('invalid'); return; }
+
+  // detecta nome duplicado
+  const profiles=loadProfiles();
+  const nomeFinal=nome||'Apto 1';
+  const duplicado=profiles.find(p=>p.nome.toLowerCase()===nomeFinal.toLowerCase() && p.id!==currentProfileId);
+  if(duplicado){ showToast('⚠️ Já existe um perfil com esse nome. Escolha outro.'); return; }
+
+  form.taxaAnual=String(ta);
+  form.nomeSimulacao=nomeFinal;
+
+  // recalcular datas com prazo ajustado
+  const inf=window._inferidoB;
+  const iniDate=parseMS(form.mesInicial);
+  const entDate=addM(iniDate, pr);
+  form.mesEntrega=`${entDate.y}-${String(entDate.m).padStart(2,'0')}`;
+
+  // gerar tabela
+  meses=calcTable();
+
+  // marcar automaticamente os meses já pagos (com confirmação)
+  const mesesPagos=parseInt(inf.mesesPagos);
+  const linhasParaMarcar=Math.min(mesesPagos, meses.length);
+
+  // atualiza perc das linhas pagas com o percAtual na última
+  for(let i=0;i<linhasParaMarcar;i++){
+    if(i===linhasParaMarcar-1) meses[i].perc=parseFloat(inf.percAtual);
+    recalcRow(i);
+  }
+  aplicaBloqueio();
+
+  screen='result';
+  hasUnsavedChanges=false;
+  renderResult();
+
+  // pergunta se quer marcar as linhas pagas automaticamente
+  setTimeout(()=>{ perguntarMarcarPagas(linhasParaMarcar); }, 400);
+}
+
+function perguntarMarcarPagas(n){
+  const banner=document.createElement('div');
+  banner.id='marcar-pagas-banner';
+  banner.className='save-reminder'; // reutiliza estilo do save-reminder
+  banner.innerHTML=`
+    <div class="save-reminder-title">📋 Você já pagou ${n} parcela(s)</div>
+    <div class="save-reminder-sub">Deseja marcá-las como pagas automaticamente na tabela?</div>
+    <div class="save-reminder-actions">
+      <button class="save-reminder-save" id="marcar-sim-btn">✓ Marcar como pagas</button>
+      <button class="save-reminder-discard" id="marcar-nao-btn">Deixar em branco</button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+  document.getElementById('marcar-sim-btn').addEventListener('click',()=>{
+    for(let i=0;i<n;i++){ if(meses[i]&&!meses[i].bloqueado) meses[i].pago=true; }
+    hasUnsavedChanges=true;
+    banner.remove();
+    refreshTable();
+    showToast('✅ '+n+' parcela(s) marcada(s) como pagas.');
+  });
+  document.getElementById('marcar-nao-btn').addEventListener('click',()=>{ banner.remove(); });
+}
+
 function novaSimulacao(){
   currentProfileId=null;
   window._editMode=null;
+  window._inferidoB=null;
+  fluxo='A';
   Object.keys(form).forEach(k=>{ form[k]=''; });
-  form.percFinanciado=80; form.trInicial=0.1000; // TR padrão fixo: 0,1000%
-  meses=[]; currentStep=0; screen='onboarding';
-  renderStep();
+  Object.keys(formB).forEach(k=>{ formB[k]=''; });
+  form.percFinanciado=80; form.trInicial=0.001;
+  meses=[]; currentStep=0;
+  renderBifurcacao();
 }
 
 // ── ONBOARDING ──
@@ -464,23 +763,39 @@ function nextStep(){
       if(mBetween(ini,fin)<=0){markError('inp-mesEntrega');return;}
       form.mesEntrega=v;
     } else if(currentStep===6){
-      form.nomeSimulacao=sanitizeName(document.getElementById('inp-nome').value)||'Apto 1';
+      const raw=sanitizeName(document.getElementById('inp-nome').value)||'Apto 1';
+      const profiles=loadProfiles();
+      const duplicado=profiles.find(p=>p.nome.toLowerCase()===raw.toLowerCase() && p.id!==currentProfileId);
+      if(duplicado){ showToast('⚠️ Já existe um perfil com esse nome. Escolha outro.'); markError('inp-nome'); return; }
+      form.nomeSimulacao=raw;
     }
     currentStep++;
     if(currentStep>=TOTAL_STEPS){
       const edit=window._editMode;
       if(edit){
-        // modo edição: reconstrói a tabela com o novo prazo
         const newTable=calcTable();
         const backup=edit.mesesBackup;
-        // preserva perc, tr e pago das linhas existentes, completa com novas
+
+        // item 2: avisa se o novo prazo é menor que o original e há linhas pagas que serão perdidas
+        const novoTotal=newTable.length;
+        const linhasPagasASerPerdidas=backup.slice(novoTotal).filter(r=>r.pago && !r.bloqueado);
+        if(linhasPagasASerPerdidas.length>0){
+          if(!window._confirmouReducaoPrazo){
+            window._confirmouReducaoPrazo=true;
+            // regride um passo para manter o usuário na tela de prazo
+            currentStep--;
+            showToast('⚠️ O novo prazo é menor que o original. '+linhasPagasASerPerdidas.length+' parcela(s) paga(s) serão perdidas. Clique em continuar novamente para confirmar.');
+            return;
+          }
+        }
+        window._confirmouReducaoPrazo=false;
+
         meses=newTable.map((row,i)=>{
           if(i<backup.length){
             return { ...row, perc:backup[i].perc, tr:backup[i].tr, pago:backup[i].pago };
           }
           return row;
         });
-        // recalcula saldo/previsto de cada linha com os valores restaurados
         meses.forEach((_,i)=>recalcRow(i));
         aplicaBloqueio();
         currentProfileId=edit.profileIdBackup;
@@ -488,6 +803,7 @@ function nextStep(){
         hasUnsavedChanges=true;
       } else {
         meses=calcTable();
+        hasUnsavedChanges=false;
       }
       screen='result';
       renderResult();
@@ -520,14 +836,17 @@ function renderStep(){
       <label class="field-label">Percentual financiado</label>
       <div class="input-wrap"><input type="number" id="inp-percFinanciado" class="has-suf" placeholder="80" value="${form.percFinanciado}" min="1" max="100" step="1" oninput="atualizaFin()"><span class="suf">%</span></div>
     </div>
-    <div class="confirm-box" id="box-fin" style="${fin_val>0?'':'display:none'}">
-      <div><div class="c-label">Valor financiado</div><div class="c-sublabel">Confirme antes de continuar</div></div>
-      <div class="c-val" id="val-fin">${fin_val>0?fmtBRL(fin_val):''}</div>
+    <div class="diff-box" id="box-fin" style="${fin_val>0?'':'display:none'}">
+      <div class="d-title">Composição dos valores</div>
+      <div class="diff-row"><span class="d-label">Valor total do imóvel</span><span class="d-val" id="val-total">${fin_val>0?fmtBRL(parseFloat(form.valorTotal)):''}</span></div>
+      <div class="diff-row"><span class="d-label">(−) Valor não financiado (<span id="val-perc-label">${form.percFinanciado||80}</span>% → <span id="val-nfin-perc">${100-parseFloat(form.percFinanciado||80)}</span>%)</span><span class="d-val" id="val-nfin">${fin_val>0?fmtBRL(parseFloat(form.valorTotal)-fin_val):''}</span></div>
+      <hr class="diff-divider">
+      <div class="diff-row hl"><span class="d-label">Valor financiado</span><span class="d-val" id="val-fin">${fin_val>0?fmtBRL(fin_val):''}</span></div>
     </div>`,
 
     `<div class="step-num">03 / 07</div>
     <div class="step-title">Qual o valor do terreno?</div>
-    <div class="step-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
+    <div class="step-hint">Nos contratos da Caixa Econômica, consta no <strong>item 1.7</strong> do seu contrato Caixa.</div>
     <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTerreno" class="has-pre" placeholder="12.000" value="${form.valorTerreno}" min="0" step="100" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
     <div class="error-msg" id="err-terreno">O valor do terreno deve ser menor que o financiado (${fmtBRL(fin)}).</div>
     <div class="diff-box" id="box-ter" style="${ter>0?'':'display:none'}">
@@ -547,7 +866,7 @@ function renderStep(){
     <div class="field-group">
       <label class="field-label">2. Taxa Administrativa</label>
       <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-taxaAdm" class="has-pre" placeholder="25,00" value="${form.taxaAdm||''}" min="0" step="0.01" oninput="atualizaEncargos()"></div>
-      <div class="info-box">💡 O valor de seguro é único para cada comprador — Verifique no seu contrato. Já a Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
+      <div class="info-box">O valor de seguro é único para cada comprador — Verifique no seu contrato. Já a Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
     </div>
     <div class="confirm-box" id="box-enc" style="${seg>0?'':'display:none'}">
       <div><div class="c-label">Total de encargos mensais</div></div>
@@ -556,21 +875,16 @@ function renderStep(){
 
     `<div class="step-num">05 / 07</div>
     <div class="step-title">Qual a sua taxa de juros anual?</div>
-    <div class="step-hint">O valor de cada parcela de Evolução de Obra é calculado pela soma da <strong>Taxa de Juros mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês.
-        Já a O app converte a Taxa anual para mensal automaticamente.</div>
+    <div class="step-hint">Consta na primeira página do contrato. O app converte para taxa mensal automaticamente.</div>
     <div class="input-wrap"><input type="number" id="inp-taxaAnual" class="has-suf" placeholder="10,0000" value="${form.taxaAnual}" min="0" step="0.01" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
-   
     <div class="diff-box" id="box-taxa" style="${ta>0?'':'display:none'}">
-      <div class="d-title">Composição dos Juros</div>
-      <div class="diff-row"><span class="c-label">Taxa de Juros Mensal</span><span class="d-val">${ta>0?fmtPerc(ta/12):''}</span></div>
-      <div class="diff-row"><span class="c-label">(+) Taxa Referencial</span><span class="d-val" id="d-tr">0,1000%</span></div>
+      <div class="d-title">Composição dos juros mensais</div>
+      <div class="diff-row"><span class="d-label">Taxa de juros mensal</span><span class="d-val" id="val-taxa-mensal">${ta>0?fmtPerc(ta/12,4):''}</span></div>
+      <div class="diff-row"><span class="d-label">(+) TR base estimada</span><span class="d-val">0,1000%</span></div>
       <hr class="diff-divider">
-      <div class="diff-row hl">
-        <span class="d-label">Taxa de Juros estimada</span>
-        <span class="c-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.1000,4):''}</span></div>
+      <div class="diff-row hl"><span class="d-label">Taxa combinada mensal</span><span class="d-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.001,4):''}</span></div>
     </div>
-
-    <div class="info-box">💡 Utilizaremos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
+    <div class="info-box">O valor de cada parcela de Evolução de Obra é calculado pela soma da <strong>Taxa de Juros mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês. Utilizaremos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
 
     `<div class="step-num">06 / 07</div>
     <div class="step-title">Qual a data de entrega prevista?</div>
@@ -604,8 +918,19 @@ function atualizaFin(){
   const vt=parseFloat(document.getElementById('inp-valorTotal')?.value)||0;
   const p=parseFloat(document.getElementById('inp-percFinanciado')?.value)||80;
   const fin=vt*(p/100);
-  const box=document.getElementById('box-fin'),val=document.getElementById('val-fin');
-  if(box&&val){box.style.display=vt>0?'flex':'none';val.textContent=fmtBRL(fin);}
+  const nfin=vt-fin;
+  const box=document.getElementById('box-fin');
+  if(box) box.style.display=vt>0?'block':'none';
+  const elTotal=document.getElementById('val-total');
+  const elFin=document.getElementById('val-fin');
+  const elNfin=document.getElementById('val-nfin');
+  const elPercLabel=document.getElementById('val-perc-label');
+  const elNfinPerc=document.getElementById('val-nfin-perc');
+  if(elTotal) elTotal.textContent=fmtBRL(vt);
+  if(elFin)   elFin.textContent=fmtBRL(fin);
+  if(elNfin)  elNfin.textContent=fmtBRL(nfin);
+  if(elPercLabel) elPercLabel.textContent=p;
+  if(elNfinPerc)  elNfinPerc.textContent=100-p;
 }
 function atualizaTer(){
   const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
@@ -624,21 +949,25 @@ function atualizaEncargos(){
 }
 function atualizaTaxa(){
   const ta=parseFloat(document.getElementById('inp-taxaAnual')?.value)||0;
-  const box=document.getElementById('box-taxa'),val=document.getElementById('val-taxa');
-  // mostra taxa mensal + TR base (0,1000%) = taxa combinada usada no cálculo
-  if(box&&val){box.style.display=ta>0?'flex':'none';val.textContent=fmtPerc(ta/12+0.1000,4);}
+  const box=document.getElementById('box-taxa');
+  if(box) box.style.display=ta>0?'block':'none';
+  const elMensal=document.getElementById('val-taxa-mensal');
+  const elCombinada=document.getElementById('val-taxa');
+  if(elMensal)    elMensal.textContent=fmtPerc(ta/12,4);
+  if(elCombinada) elCombinada.textContent=fmtPerc(ta/12+0.001,4);
 }
 function atualizaMeses(){
   const v=document.getElementById('inp-mesEntrega')?.value;
   if(!v||!form.mesInicial) return;
   const ini=parseMS(form.mesInicial),fin=parseMS(v);
-  const n=mBetween(ini,fin);
+  const n=mBetween(ini,fin); // número de meses de obra (sem contar o mês inicial = parcela 0)
   const badge=document.getElementById('badge-meses');
   if(!badge) return;
   if(n>=1&&n<=MAX_MESES)
-    badge.innerHTML=`<div class="months-badge">📅 ${mLabelFull(form.mesInicial)} → ${mLabelFull(v)} = <strong>${n} parcela(s)</strong></div>`;
+    // n = parcelas de obra; n+1 = total incluindo parcela 0 (terreno)
+    badge.innerHTML=`<div class="months-badge">📅 ${mLabelFull(form.mesInicial)} → ${mLabelFull(v)} = <strong>${n} parcela(s) de obra</strong> + parcela inicial do terreno</div>`;
   else if(n>MAX_MESES)
-    badge.innerHTML=`<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
+    badge.innerHTML=`<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas de obra. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
   else
     badge.innerHTML=`<div class="months-badge err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
 }
@@ -651,7 +980,7 @@ function updateCharCount(inp){
 // ── RESULTADO ──
 function renderResult(){
   aplicaBloqueio();
-  hasUnsavedChanges=false; // reset ao entrar pela primeira vez / recarregar
+  // NOTA: hasUnsavedChanges NÃO é zerado aqui — só é zerado em saveProfile() e loadProfile()
   const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
   const ativas=meses.filter(r=>!r.bloqueado);
   const total=ativas.reduce((s,r)=>s+r.previsto,0);
@@ -672,7 +1001,7 @@ function renderResult(){
       </td>
       <td id="rs-${i}" class="val-col">${r.bloqueado?'—':fmtBRL(r.saldo)}</td>
       <td class="td-right">
-        <input id="ti-${i}" class="tr-input" type="text" inputmode="decimal" value="${(r.tr).toFixed(4)}"
+        <input id="ti-${i}" class="tr-input" type="text" inputmode="decimal" value="${(r.tr*100).toFixed(4)}"
           ${r.bloqueado?'disabled':''}
           onchange="updateTR(${i},this.value)"
           onblur="validateTRBlur(${i})">
@@ -716,9 +1045,9 @@ function renderResult(){
         <tbody>${tableRows}</tbody>
       </table>
       <div class="row-controls">
-        <span class="rc-info" id="rc-info">${ativas.length} parcela(s) · máx. ${MAX_MESES}</span>
+        <span class="rc-info" id="rc-info">${meses.length-1} parcela(s) · máx. ${MAX_MESES}</span>
         <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length<=1||lastPago?'disabled':''}>−</button>
-        <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>=MAX_MESES+1?'disabled':''}>+</button>
+        <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>MAX_MESES?'disabled':''}>+</button>
       </div>
     </div>
     <p class="note">Edite % de obra e TR mês a mês. Use + / − para ajustar o número de parcelas.</p>
