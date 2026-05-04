@@ -99,6 +99,101 @@ function fmtDate(iso){ return new Date(iso).toLocaleDateString('pt-BR'); }
 // Normaliza vírgula → ponto para parseFloat funcionar em ambos os locales
 function parseDecimal(val){ return parseFloat(String(val).replace(',','.')); }
 
+// ── MASKED INPUT ENGINE ──
+// Cada campo tem um "tipo de máscara":
+//   'brl'   → R$ 999.999,99   (centavos obrigatórios, 2 decimais)
+//   'perc1' → 999,9%          (1 decimal — % de obra e TR na tabela)
+//   'perc4' → 99,9999%        (4 decimais — taxa anual e taxa mensal)
+//   'int'   → número inteiro  (meses pagos no fluxo B)
+
+function maskApply(rawDigits, tipo){
+  // rawDigits = apenas os dígitos já digitados (string)
+  const d = rawDigits.replace(/\D/g,'');
+  if(!d) return '';
+  if(tipo==='brl'){
+    // sempre 2 casas decimais
+    const n = parseInt(d,10);
+    const reais = Math.floor(n/100);
+    const cents = n%100;
+    return reais.toLocaleString('pt-BR')+','+(cents<10?'0':'')+cents;
+  }
+  if(tipo==='perc1'){
+    // 1 decimal: últimos dígitos = décimos
+    const n = parseInt(d,10);
+    const inteiro = Math.floor(n/10);
+    const dec = n%10;
+    return inteiro.toLocaleString('pt-BR')+','+dec;
+  }
+  if(tipo==='perc4'){
+    // 4 decimais: últimos 4 dígitos = parte decimal
+    const n = parseInt(d,10);
+    const inteiro = Math.floor(n/10000);
+    const dec = String(n%10000).padStart(4,'0');
+    return inteiro.toLocaleString('pt-BR')+','+dec;
+  }
+  if(tipo==='int'){
+    return String(parseInt(d,10));
+  }
+  return d;
+}
+
+function maskValue(el, tipo){
+  // lê o que está no campo, extrai só dígitos, re-aplica a máscara
+  const digits = el.value.replace(/\D/g,'');
+  el.value = maskApply(digits, tipo);
+  el.dataset.rawDigits = digits;
+}
+
+function maskInit(el, tipo, initialNumeric){
+  // inicializa o campo com um valor numérico já existente
+  el.dataset.maskTipo = tipo;
+  if(initialNumeric===''||initialNumeric===null||initialNumeric===undefined){
+    el.value=''; el.dataset.rawDigits=''; return;
+  }
+  const num = parseFloat(initialNumeric)||0;
+  if(tipo==='brl'){
+    const cents = Math.round(num*100);
+    el.dataset.rawDigits = String(cents);
+  } else if(tipo==='perc1'){
+    const tenths = Math.round(num*10);
+    el.dataset.rawDigits = String(tenths);
+  } else if(tipo==='perc4'){
+    const ten4 = Math.round(num*10000);
+    el.dataset.rawDigits = String(ten4);
+  } else if(tipo==='int'){
+    el.dataset.rawDigits = String(Math.round(num));
+  }
+  el.value = maskApply(el.dataset.rawDigits, tipo);
+}
+
+function maskRead(el){
+  // retorna o valor numérico real do campo mascarado
+  const tipo = el?.dataset?.maskTipo;
+  const digits = el?.dataset?.rawDigits||'';
+  if(!digits) return NaN;
+  const n = parseInt(digits,10)||0;
+  if(tipo==='brl')   return n/100;
+  if(tipo==='perc1') return n/10;
+  if(tipo==='perc4') return n/10000;
+  if(tipo==='int')   return n;
+  return NaN;
+}
+
+function maskOnInput(el){
+  // handler chamado no oninput — preserva cursor no fim
+  maskValue(el, el.dataset.maskTipo);
+}
+
+function attachMask(id, tipo, initialNumeric){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.dataset.maskTipo = tipo;
+  el.setAttribute('inputmode','numeric');
+  el.type = 'text';
+  maskInit(el, tipo, initialNumeric);
+  el.oninput = ()=>{ maskValue(el, tipo); el.classList.remove('invalid'); };
+}
+
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
@@ -743,22 +838,31 @@ function nextStep(){
       const v=document.getElementById('inp-mesInicial').value;
       if(!v){markError('inp-mesInicial');return;} form.mesInicial=v;
     } else if(currentStep===1){
-      const v=document.getElementById('inp-valorTotal').value;
-      if(!v||parseFloat(v)<=0){markError('inp-valorTotal');return;}
-      form.valorTotal=v; form.percFinanciado=document.getElementById('inp-percFinanciado').value||80;
+      const elVT=document.getElementById('inp-valorTotal');
+      const elPF=document.getElementById('inp-percFinanciado');
+      const v=maskRead(elVT);
+      if(!v||v<=0){elVT?.classList.add('invalid');return;}
+      form.valorTotal=String(v);
+      form.percFinanciado=maskRead(elPF)||80;
     } else if(currentStep===2){
-      const v=document.getElementById('inp-valorTerreno').value;
+      const elTer=document.getElementById('inp-valorTerreno');
+      const v=maskRead(elTer);
       const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
-      if(!v||parseFloat(v)<=0){markError('inp-valorTerreno');return;}
-      if(parseFloat(v)>=fin){markError('inp-valorTerreno');document.getElementById('err-terreno').style.display='block';return;}
-      form.valorTerreno=v;
+      if(!v||v<=0){elTer?.classList.add('invalid');return;}
+      if(v>=fin){elTer?.classList.add('invalid');document.getElementById('err-terreno').style.display='block';return;}
+      form.valorTerreno=String(v);
     } else if(currentStep===3){
-      const s=document.getElementById('inp-seguro').value;
-      if(!s||parseFloat(s)<=0){markError('inp-seguro');return;}
-      form.seguro=s; form.taxaAdm=document.getElementById('inp-taxaAdm').value||25;
+      const elSeg=document.getElementById('inp-seguro');
+      const elAdm=document.getElementById('inp-taxaAdm');
+      const s=maskRead(elSeg);
+      if(!s||s<=0){elSeg?.classList.add('invalid');return;}
+      form.seguro=String(s);
+      form.taxaAdm=String(maskRead(elAdm)||25);
     } else if(currentStep===4){
-      const v=document.getElementById('inp-taxaAnual').value;
-      if(!v||parseFloat(v)<=0){markError('inp-taxaAnual');return;} form.taxaAnual=v;
+      const elTa=document.getElementById('inp-taxaAnual');
+      const v=maskRead(elTa);
+      if(!v||v<=0){elTa?.classList.add('invalid');return;}
+      form.taxaAnual=String(v);
     } else if(currentStep===5){
       const v=document.getElementById('inp-mesEntrega').value;
       if(!v){markError('inp-mesEntrega');return;}
@@ -916,12 +1020,45 @@ function renderStep(){
   if(currentStep===5) setTimeout(()=>{if(form.mesEntrega)atualizaMeses();},50);
   if(currentStep===6) setTimeout(()=>{ const el=document.getElementById('inp-nome'); if(el) updateCharCount(el); },50);
   if(currentStep===2) setTimeout(()=>{if(ter>0)atualizaTer();},50);
-  setTimeout(()=>{ const f=document.querySelector('.step-card input'); if(f) f.focus(); },80);
+  // aplica máscaras após render
+  setTimeout(()=>{
+    if(currentStep===1){
+      attachMask('inp-valorTotal','brl', form.valorTotal||'');
+      attachMask('inp-percFinanciado','perc1', form.percFinanciado||80);
+      // re-bind atualizaFin depois de aplicar máscara
+      const vt=document.getElementById('inp-valorTotal');
+      const pf=document.getElementById('inp-percFinanciado');
+      if(vt) vt.oninput=()=>{ maskValue(vt,'brl'); vt.classList.remove('invalid'); atualizaFin(); };
+      if(pf) pf.oninput=()=>{ maskValue(pf,'perc1'); pf.classList.remove('invalid'); atualizaFin(); };
+    }
+    if(currentStep===2){
+      attachMask('inp-valorTerreno','brl', form.valorTerreno||'');
+      const vt=document.getElementById('inp-valorTerreno');
+      if(vt) vt.oninput=()=>{ maskValue(vt,'brl'); vt.classList.remove('invalid'); document.getElementById('err-terreno').style.display='none'; atualizaTer(); };
+    }
+    if(currentStep===3){
+      attachMask('inp-seguro','brl', form.seguro||'');
+      attachMask('inp-taxaAdm','brl', form.taxaAdm||25);
+      const seg=document.getElementById('inp-seguro');
+      const adm=document.getElementById('inp-taxaAdm');
+      if(seg) seg.oninput=()=>{ maskValue(seg,'brl'); seg.classList.remove('invalid'); atualizaEncargos(); };
+      if(adm) adm.oninput=()=>{ maskValue(adm,'brl'); atualizaEncargos(); };
+    }
+    if(currentStep===4){
+      attachMask('inp-taxaAnual','perc4', form.taxaAnual||'');
+      const ta=document.getElementById('inp-taxaAnual');
+      if(ta) ta.oninput=()=>{ maskValue(ta,'perc4'); ta.classList.remove('invalid'); atualizaTaxa(); };
+    }
+    const f=document.querySelector('.step-card input');
+    if(f) f.focus();
+  },80);
 }
 
 function atualizaFin(){
-  const vt=parseFloat(document.getElementById('inp-valorTotal')?.value)||0;
-  const p=parseFloat(document.getElementById('inp-percFinanciado')?.value)||80;
+  const elVT=document.getElementById('inp-valorTotal');
+  const elPF=document.getElementById('inp-percFinanciado');
+  const vt=maskRead(elVT)||0;
+  const p=maskRead(elPF)||80;
   const fin=vt*(p/100);
   const nfin=vt-fin;
   const box=document.getElementById('box-fin');
@@ -935,11 +1072,12 @@ function atualizaFin(){
   if(elFin)   elFin.textContent=fmtBRL(fin);
   if(elNfin)  elNfin.textContent=fmtBRL(nfin);
   if(elPercLabel) elPercLabel.textContent=p;
-  if(elNfinPerc)  elNfinPerc.textContent=100-p;
+  if(elNfinPerc)  elNfinPerc.textContent=parseFloat((100-p).toFixed(1));
 }
 function atualizaTer(){
   const fin=parseFloat(form.valorTotal)*(parseFloat(form.percFinanciado)/100);
-  const ter=parseFloat(document.getElementById('inp-valorTerreno')?.value)||0;
+  const elTer=document.getElementById('inp-valorTerreno');
+  const ter=maskRead(elTer)||0;
   const box=document.getElementById('box-ter');
   if(box) box.style.display=ter>0?'block':'none';
   const dt=document.getElementById('d-ter'),ds=document.getElementById('d-saldo');
@@ -947,8 +1085,8 @@ function atualizaTer(){
   if(ds) ds.textContent=fmtBRL(Math.max(0,fin-ter));
 }
 function atualizaEncargos(){
-  const s=parseFloat(document.getElementById('inp-seguro')?.value)||0;
-  const a=parseFloat(document.getElementById('inp-taxaAdm')?.value)||25;
+  const s=maskRead(document.getElementById('inp-seguro'))||0;
+  const a=maskRead(document.getElementById('inp-taxaAdm'))||25;
   const box=document.getElementById('box-enc'),val=document.getElementById('val-enc');
   if(box&&val){box.style.display=s>0?'flex':'none';val.textContent=fmtBRL(s+a);}
 }
