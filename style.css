@@ -1082,7 +1082,6 @@
 .save-reminder-discard:hover {
     background: rgba(255,255,255,.1);
 }
-echo "CSS adicional adicionado"
 /* TABLE COLUMN ALIGNMENT — replaces inline styles in app.js */
 .td-mes    { white-space: nowrap; font-size: 12px; }
 .td-right  { text-align: right; }
@@ -1101,4 +1100,97 @@ echo "CSS adicional adicionado"
 /* SECOND RESET BUTTON SPACING */
 .btn-reset + .btn-reset {
     margin-top: 8px;
+}
+
+/* PERC-INPUT LOCKED — linha já marcada como paga */
+.perc-input.perc-locked {
+    color: var(--muted);
+    cursor: not-allowed;
+    opacity: .7;
+}
+
+/* ── BIFURCAÇÃO ── */
+.bifurcacao-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.btn-bifurc {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    border-radius: var(--radius);
+    padding: 20px 18px;
+    cursor: pointer;
+    font-family: var(--font);
+    text-align: left;
+    border: 1.5px solid transparent;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+.btn-bifurc:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.08);
+}
+.btn-bifurc:active {
+    transform: translateY(0);
+}
+
+/* Opção A — ainda não comecei */
+.btn-bifurc.bifurc-a {
+    background: var(--accent-light);
+    border-color: #A8D5BC;
+}
+.btn-bifurc.bifurc-a:hover {
+    border-color: var(--accent);
+}
+.btn-bifurc.bifurc-a .bifurc-icon {
+    background: var(--accent);
+    color: #fff;
+}
+.btn-bifurc.bifurc-a .bifurc-label {
+    color: var(--accent-dark);
+}
+
+/* Opção B — já estou pagando */
+.btn-bifurc.bifurc-b {
+    background: #EEF6FB;
+    border-color: #B2D4E8;
+}
+.btn-bifurc.bifurc-b:hover {
+    border-color: var(--blue);
+}
+.btn-bifurc.bifurc-b .bifurc-icon {
+    background: var(--blue);
+    color: #fff;
+}
+.btn-bifurc.bifurc-b .bifurc-label {
+    color: var(--blue);
+}
+
+.bifurc-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.bifurc-label {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 2px;
+}
+
+.bifurc-sub {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
 }

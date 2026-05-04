@@ -443,23 +443,25 @@ function renderProfiles(){
 function renderBifurcacao(){
   screen='bifurcacao';
   setHtml(`
-    <div class="step-card" style="margin-top:8px">
+    <div class="step-card">
       <div class="step-title">Em que fase você está?</div>
-      <div class="step-hint" style="margin-bottom:24px">Escolha a opção que melhor descreve o seu momento.</div>
-      <button class="btn-bifurc" onclick="escolherFluxo('A')">
-        <span class="bifurc-icon">🏁</span>
-        <div>
-          <div class="bifurc-label">Ainda não comecei a pagar</div>
-          <div class="bifurc-sub">Meu contrato foi assinado recentemente ou as parcelas ainda não começaram</div>
-        </div>
-      </button>
-      <button class="btn-bifurc" onclick="escolherFluxo('B')" style="margin-top:12px">
-        <span class="bifurc-icon">📆</span>
-        <div>
-          <div class="bifurc-label">Já estou pagando juros de obra</div>
-          <div class="bifurc-sub">Já paguei algumas parcelas e quero acompanhar as próximas</div>
-        </div>
-      </button>
+      <div class="step-hint">Escolha a opção que melhor descreve o seu momento.</div>
+      <div class="bifurcacao-grid">
+        <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('A')">
+          <span class="bifurc-icon">🏁</span>
+          <div>
+            <div class="bifurc-label">Ainda não comecei a pagar</div>
+            <div class="bifurc-sub">Meu contrato foi assinado recentemente ou as parcelas ainda não começaram</div>
+          </div>
+        </button>
+        <button class="btn-bifurc bifurc-b" onclick="escolherFluxo('B')">
+          <span class="bifurc-icon">📆</span>
+          <div>
+            <div class="bifurc-label">Já estou pagando juros de obra</div>
+            <div class="bifurc-sub">Já paguei algumas parcelas e quero acompanhar as próximas</div>
+          </div>
+        </button>
+      </div>
     </div>
   `);
 }
