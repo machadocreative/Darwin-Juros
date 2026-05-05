@@ -1,6 +1,6 @@
 const MAX_MESES = 48;
 const STORAGE_KEY = 'juros_obra_perfis';
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 6;
 const CUPOM_VALIDO = 'DARWIN10';
 
 let currentStep = 0;
@@ -861,8 +861,14 @@ function novaSimulacao(){
 function nextStep(){
   try{
     if(currentStep===0){
-      const v=document.getElementById('inp-mesInicial').value;
-      if(!v){markError('inp-mesInicial');return;} form.mesInicial=v;
+      const inicio=document.getElementById('inp-mesInicial').value;
+      const entrega=document.getElementById('inp-mesEntrega').value;
+      if(!inicio){markError('inp-mesInicial'); return;}
+      if(!entrega){markError('inp-mesEntrega'); return;}
+      const ini=parseMS(inicio);
+      const fim=parseMS(entrega);
+      if(mBetween(ini,fim)<=0){markError('inp-mesEntrega'); return;}
+      form.mesInicial=inicio; form.mesEntrega=entrega;
     } else if(currentStep===1){
       const elVT=document.getElementById('inp-valorTotal');
       const elPF=document.getElementById('inp-percFinanciado');
@@ -890,12 +896,6 @@ function nextStep(){
       if(!v||v<=0){elTa?.classList.add('invalid');return;}
       form.taxaAnual=String(v);
     } else if(currentStep===5){
-      const v=document.getElementById('inp-mesEntrega').value;
-      if(!v){markError('inp-mesEntrega');return;}
-      const ini=parseMS(form.mesInicial),fin=parseMS(v);
-      if(mBetween(ini,fin)<1){markError('inp-mesEntrega');return;}
-      form.mesEntrega=v;
-    } else if(currentStep===6){
       const raw=sanitizeName(document.getElementById('inp-nome').value)||'Apto 101';
       const profiles=loadProfiles();
       const duplicado=profiles.find(p=>p.nome.toLowerCase()===raw.toLowerCase() && p.id!==currentProfileId);
@@ -955,18 +955,20 @@ function renderStep(){
   const ta=parseFloat(form.taxaAnual)||0;
 
   const steps=[
-    `<div class="step-num">01 / 07</div>
-    <div class="step-title">Quando inicia o pagamento de Juros de Evolução de Obra?</div>
-    <div class="step-hint">Verifique no seu contrato com a Caixa Econômica.</div>
-    <input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="this.classList.remove('invalid')">
-    <br><br>
-    <div class="step-title">Qual a data de entrega prevista?</div>
-    <div class="step-hint">A data de entrega define quantos meses de evolução serão simulados.</div>
-    <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMeses();this.classList.remove('invalid')">
+    `<div class="step-num">01 / 06</div>
+    <div class="step-title">Informe as datas de início e entrega da obra</div>
+    <div class="step-hint">Verifique no seu contrato com a Caixa Econômica. A data de entrega define quantos meses de evolução de obra serão simulados.</div>
+    <label class="field-label">Quando inicia o pagamento de Juros de obra?</label>
+    <div class="input-wrap"><input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="this.classList.remove('invalid')"></div>
+    <div class="field-group">
+      <label class="field-label">Qual a data de entrega prevista?</label>
+      <div class="input-wrap">
+        <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMeses();this.classList.remove('invalid')">
+      </div>
     <div id="badge-meses"></div>
     <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que necessário.</div>`,
 
-    `<div class="step-num">02 / 07</div>
+    `<div class="step-num">02 / 06</div>
     <div class="step-title">Qual o valor do seu imóvel?</div>
     <div class="step-hint">O valor total do apartamento conforme contrato.</div>
     <label class="field-label">Valor total</label>
@@ -983,7 +985,7 @@ function renderStep(){
       <div class="diff-row hl"><span class="d-label">Valor financiado</span><span class="d-val" id="val-fin">${fin_val>0?fmtBRL(fin_val):''}</span></div>
     </div>`,
 
-    `<div class="step-num">03 / 07</div>
+    `<div class="step-num">03 / 06</div>
     <div class="step-title">Qual o valor do terreno?</div>
     <div class="step-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
     <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTerreno" class="has-pre" placeholder="10.000,00" value="${form.valorTerreno}" min="0" step="100" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
@@ -997,7 +999,7 @@ function renderStep(){
     </div>
     <div class="info-box">💡 O valor do terreno é considerado como saldo devedor desde o primeiro mês. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
 
-    `<div class="step-num">04 / 07</div>
+    `<div class="step-num">04 / 06</div>
     <div class="step-title">Quais os seus encargos mensais?</div>
     <div class="step-hint">Valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
     <label class="field-label">1. Seguro</label>
@@ -1012,7 +1014,7 @@ function renderStep(){
       <div class="c-val" id="val-enc">${seg>0?fmtBRL(seg+25):''}</div>
     </div>`,
 
-    `<div class="step-num">05 / 07</div>
+    `<div class="step-num">05 / 06</div>
     <div class="step-title">Qual a Taxa de Juros anual do seu Financiamento?</div>
     <div class="step-hint">O app irá converter sua taxa anual para mensal abaixo. Já os juros das parcelas de Evolução de Obra são definidos pela soma da <strong>Taxa de Juros Mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês.</div>
     <div class="input-wrap"><input type="number" id="inp-taxaAnual" class="has-suf" placeholder="7,0000" value="${form.taxaAnual}" min="0" step="0.01" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
@@ -1025,14 +1027,7 @@ function renderStep(){
     </div>
     <div class="info-box">💡 Aqui utilizamos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tabela de parcelas para maior precisão.</div>`,
 
-    `<div class="step-num">06 / 07</div>
-    <div class="step-title">Qual a data de entrega prevista?</div>
-    <div class="step-hint">Sua 1ª parcela começa em <strong>${mLabelFull(form.mesInicial)}</strong>. A data de entrega define quantos meses de evolução serão simulados.</div>
-    <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMeses();this.classList.remove('invalid')">
-    <div id="badge-meses"></div>
-    <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que necessário.</div>`,
-
-    `<div class="step-num">07 / 07</div>
+    `<div class="step-num">06 / 06</div>
     <div class="step-title">Como quer chamar essa simulação?</div>
     <div class="step-hint">Máximo 30 caracteres. Ex: Apto Centro, Torre B, Meu apê...</div>
     <input type="text" id="inp-nome" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao||'')}" maxlength="30" oninput="updateCharCount(this)">
@@ -1391,12 +1386,28 @@ function renderResult(){
     </div>
 
     <div class="sticky-summary">
-      <div class="summary-grid">
-        <div class="summary-card"><div class="s-label">Valor Financiado</div><div class="s-val">${fmtBRL(fin)}</div></div>
-        <div class="summary-card"><div class="s-label">Média estimada</div><div class="s-val" id="sum-media">${fmtBRL(media)}</div></div>
-        <div class="summary-card accent"><div class="s-label">Soma das parcelas (Estimativa)</div><div class="s-val" id="sum-total">${fmtBRL(total)}</div></div>
-        <div class="summary-card paid"><div class="s-label">Total pago até agora</div><div class="s-val" id="sum-pago">${fmtBRL(pago)}</div></div>
-      </div>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="s-label">Valor Financiado</div>
+                <div class="s-val">${fmtBRL(fin)}</div>
+            </div>
+            <div class="summary-card">
+                <div class="s-label">Média estimada</div>
+                <div class="s-val" id="sum-media">${fmtBRL(media)}</div>
+            </div>
+
+            ${premium ? `
+            <div class="summary-card accent">
+                <div class="s-label">Soma das parcelas (Estimado)</div>
+                <div class="s-val" id="sum-total">${fmtBRL(total)}</div>
+            </div>
+
+            <div class="summary-card paid">
+                <div class="s-label">Total pago até agora</div>
+                <div class="s-val" id="sum-pago">${fmtBRL(pago)}</div>
+            </div>` : ''}
+
+        </div>
     </div>
 
     ${blocoTabela}
