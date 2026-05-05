@@ -1171,7 +1171,7 @@ function atualizaSlider(){
   const elVal=document.getElementById('slider-val');
   const elSaldo=document.getElementById('slider-saldo');
   if(elPerc) elPerc.textContent=perc+'%';
-  if(elVal)  elVal.textContent=fmtBRL(previsto);
+  if(elVal) elVal.innerHTML = `${fmtBRL(previsto)} <span> + TR Mensal</span>`;
   if(elSaldo) elSaldo.textContent=fmtBRL(saldo);
   // atualiza cor da track do slider
   const pct=(perc/100)*100;
@@ -1364,14 +1364,14 @@ function renderResult(){
         <div class="slider-perc-label" id="slider-perc">50%</div>
       </div>
       <div class="slider-result">
-        <div class="slider-result-row">
-          <span class="slider-result-label">Saldo devedor estimado</span>
-          <span class="slider-result-val" id="slider-saldo">—</span>
-        </div>
-        <div class="slider-result-row highlight">
-          <span class="slider-result-label">Parcela estimada</span>
-          <span class="slider-result-val accent" id="slider-val">—</span>
-        </div>
+        <dl class="slider-result-row">
+          <dt class="slider-result-label">Saldo devedor estimado</dt>
+          <dd class="slider-result-val" id="slider-saldo">—</dd>
+        </dl>
+        <dl class="slider-result-row highlight">
+          <dt class="slider-result-label">Parcela estimada</dt>
+          <dd class="slider-result-val accent" id="slider-val">—</dd>
+        </dl>
         <div class="slider-result-note">Edite a Taxa Referencial na versão completa</div>
       </div>
       <button class="free-preview-cta" onclick="showPaywall()">
@@ -1392,10 +1392,23 @@ function renderResult(){
 
     <div class="sticky-summary">
       <div class="summary-grid">
-        <div class="summary-card"><div class="s-label">Valor Financiado</div><div class="s-val">${fmtBRL(fin)}</div></div>
-        <div class="summary-card"><div class="s-label">Média estimada</div><div class="s-val" id="sum-media">${fmtBRL(media)}</div></div>
-        <div class="summary-card accent"><div class="s-label">Soma das parcelas (Estimativa)</div><div class="s-val" id="sum-total">${fmtBRL(total)}</div></div>
-        <div class="summary-card paid"><div class="s-label">Total pago até agora</div><div class="s-val" id="sum-pago">${fmtBRL(pago)}</div></div>
+        <div class="summary-card">
+          <div class="s-label">Valor Financiado</div>
+          <div class="s-val">${fmtBRL(fin)}</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Média estimada</div>
+          <div class="s-val" id="sum-media">${fmtBRL(media)}</div>
+        </div>
+        ${premium ? `
+        <div class="summary-card accent">
+            <div class="s-label">Soma das parcelas (Estimado)</div>
+            <div class="s-val" id="sum-total">${fmtBRL(total)}</div>
+        </div>
+        <div class="summary-card paid">
+            <div class="s-label">Total pago até agora</div>
+            <div class="s-val" id="sum-pago">${fmtBRL(pago)}</div>
+        </div>` : ''}
       </div>
     </div>
 
