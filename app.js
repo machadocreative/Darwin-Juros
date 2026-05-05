@@ -1,18 +1,32 @@
 const MAX_MESES = 48;
 const STORAGE_KEY = 'juros_obra_perfis';
 const TOTAL_STEPS = 7;
-const PREMIUM_KEY = 'darwin_premium';
 const CUPOM_VALIDO = 'DARWIN10';
 
 let currentStep = 0;
 let currentProfileId = null;
-let screen = 'onboarding'; // 'profiles' | 'onboarding' | 'result' | 'bifurcacao' | 'fluxoB' | 'confirmacaoB'
+let screen = 'onboarding'; // 'profiles' | 'onboarding' | 'result' | 'tabela' | 'bifurcacao' | 'fluxoB' | 'confirmacaoB'
 let hasUnsavedChanges = false;
 let fluxo = 'A'; // 'A' | 'B'
 
-// ── PREMIUM ──
-function isPremium(){ return localStorage.getItem(PREMIUM_KEY)==='1'; }
-function ativarPremium(){ localStorage.setItem(PREMIUM_KEY,'1'); }
+// ── PREMIUM (por perfil) ──
+// O status premium fica gravado dentro do próprio perfil no localStorage.
+// currentProfileId é a chave para saber qual perfil checar.
+function isPremium(){
+  if(!currentProfileId) return false;
+  const p=loadProfiles().find(p=>p.id===currentProfileId);
+  return p?.premium===true;
+}
+function ativarPremiumPerfil(){
+  if(!currentProfileId){
+    // perfil ainda não foi salvo — salva primeiro, depois ativa
+    saveProfile(true);
+    return;
+  }
+  const profiles=loadProfiles();
+  const idx=profiles.findIndex(p=>p.id===currentProfileId);
+  if(idx>=0){ profiles[idx].premium=true; saveProfiles(profiles); }
+}
 
 const form = {
   mesInicial:'', valorTotal:'', percFinanciado:80,
@@ -43,14 +57,17 @@ function ultimaPercPaga(mesArr){
   return null;
 }
 
-function saveProfile(){
+function saveProfile(premiumFlag){
   const profiles=loadProfiles();
+  const existente=profiles.find(p=>p.id===(currentProfileId||''));
   const data={
     id:currentProfileId||Date.now().toString(),
     nome:form.nomeSimulacao||'Apto 101',
     form:{...form},
     meses:JSON.parse(JSON.stringify(meses)),
-    savedAt:new Date().toISOString()
+    savedAt:new Date().toISOString(),
+    // preserva flag premium existente; aplica novo se passado
+    premium: premiumFlag===true ? true : (existente?.premium||false)
   };
   const idx=profiles.findIndex(p=>p.id===data.id);
   if(idx>=0) profiles[idx]=data; else profiles.push(data);
@@ -286,7 +303,7 @@ function removerLinha(){
 
 // ── NAVEGAÇÃO COM LEMBRETE DE SALVAR ──
 function goProfilesSafe(){
-  if(screen==='result' && hasUnsavedChanges){
+  if((screen==='result'||screen==='tabela') && hasUnsavedChanges){
     showSaveReminder(()=>{ hasUnsavedChanges=false; goProfiles(); });
   } else {
     goProfiles();
@@ -294,7 +311,7 @@ function goProfilesSafe(){
 }
 
 function novaSimulacaoSafe(){
-  if(screen==='result' && hasUnsavedChanges){
+  if((screen==='result'||screen==='tabela') && hasUnsavedChanges){
     showSaveReminder(()=>{ hasUnsavedChanges=false; novaSimulacao(); });
   } else {
     novaSimulacao();
@@ -491,10 +508,13 @@ function refreshTable(){
   if(btnAdd) btnAdd.disabled=meses.length>=MAX_MESES;
   if(btnRem){ const last=meses[meses.length-1]; btnRem.disabled=meses.length<=1||(last&&last.pago); }
   if(rcInfo) rcInfo.textContent=meses.length+' parcela(s) · máx. '+MAX_MESES;
-  // atualiza subtítulo com mês inicial e último mês ativo
+  // atualiza subtítulo — funciona tanto na tela result quanto na tela tabela
   const sub=document.getElementById('result-subtitle');
+  const subTabela=document.getElementById('tabela-sub-el');
   const ativasCount=meses.filter(r=>!r.bloqueado).length;
-  if(sub) sub.textContent=ativasCount+' parcelas · '+(meses[0]?.mes||'')+' → '+ultimoMesAtivo();
+  const subText=ativasCount+' parcelas · '+(meses[0]?.mes||'')+' → '+ultimoMesAtivo();
+  if(sub) sub.textContent=subText;
+  if(subTabela) subTabela.textContent=subText;
   updateSummary();
 }
 
@@ -520,7 +540,7 @@ function renderProfiles(){
         const percLabel=perc!==null?`✅ Última parcela paga: ${perc}% de obra`:'Nenhuma parcela paga ainda';
         return `<div class="profile-card" id="pc-${p.id}" onclick="loadProfile('${p.id}')">
           <div>
-            <div class="pc-name">${escHtml(p.nome)}</div>
+            <div class="pc-name">${escHtml(p.nome)}${p.premium?'<span class="pc-premium-badge">✦ Premium</span>':''}</div>
             <div class="pc-sub">Salvo em ${fmtDate(p.savedAt)} · ${p.meses.length} parcelas</div>
             <div class="pc-perc">${percLabel}</div>
           </div>
@@ -1163,8 +1183,8 @@ function showPaywall(){
   overlay.innerHTML=`
     <div class="paywall-card">
       <div class="paywall-icon">🔓</div>
-      <div class="paywall-title">Tabela completa de parcelas</div>
-      <div class="paywall-sub">Veja todas as parcelas mês a mês, edite % de obra e TR, e acompanhe o que já foi pago.</div>
+      <div class="paywall-title">Libere a tabela completa de parcelas</div>
+      <div class="paywall-sub">Veja todas as parcelas mês a mês, edite % de obra livremente, acrescente Taxa Referencial e acompanhe o que já foi pago.</div>
       <div class="paywall-price">
         <span class="paywall-amount">R$ 4,99</span>
         <span class="paywall-terms">Pagamento único · Sem assinatura</span>
@@ -1198,15 +1218,80 @@ function aplicarCupom(){
   if(!el) return;
   const val=(el.value||'').trim().toUpperCase();
   if(val===CUPOM_VALIDO){
-    ativarPremium();
     closePaywall();
+    // salva o perfil com flag premium=true (cria se ainda não existir)
+    ativarPremiumPerfil();
     showToast('✅ Cupom aplicado! Acesso completo liberado.');
-    renderResult(); // re-renderiza com tabela completa
+    renderTabela(); // vai direto para a tela de tabela completa
   } else {
     el.style.borderColor='var(--danger)';
     el.style.background='var(--danger-light)';
     showToast('⚠️ Cupom inválido. Tente novamente.');
   }
+}
+
+// ── TELA DE TABELA COMPLETA (premium) ──
+function renderTabela(){
+  aplicaBloqueio();
+  screen='tabela';
+  const lastPago=meses[meses.length-1]?.pago||false;
+  const ativas=meses.filter(r=>!r.bloqueado);
+
+  const tableRows=meses.map((r,i)=>`
+    <tr id="row-${i}" class="${r.bloqueado?'obra-done':r.pago?'pago-row':''}">
+      <td class="num-col">${i+1}</td>
+      <td class="td-mes">${escHtml(r.mes)}</td>
+      <td class="td-right">
+        <input id="pi-${i}" class="perc-input${r.pago?' perc-locked':''}" type="text" inputmode="decimal" value="${r.perc}"
+          ${r.bloqueado?'disabled':''}
+          onchange="updatePerc(${i},this.value)"
+          onblur="validatePercBlur(${i})">
+      </td>
+      <td id="rs-${i}" class="val-col">${r.bloqueado?'—':fmtBRL(r.saldo)}</td>
+      <td class="td-right">
+        <input id="ti-${i}" class="tr-input" type="text" inputmode="decimal" value="${(r.tr*100).toFixed(4)}"
+          ${r.bloqueado?'disabled':''}
+          onchange="updateTR(${i},this.value)"
+          onblur="validateTRBlur(${i})">
+      </td>
+      <td id="rp-${i}" class="val-col td-prev">${r.bloqueado?'—':fmtBRL(r.previsto)}</td>
+      <td class="td-center">
+        ${r.bloqueado?`<span id="bp-${i}" class="badge-blocked">—</span>`
+          :r.pago?`<button id="bp-${i}" class="badge-pago" onclick="togglePago(${i})">✓ Pago</button>`
+          :`<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`}
+      </td>
+    </tr>`).join('');
+
+  setHtml(`
+    <div class="tabela-header">
+      <button class="tabela-back-btn" onclick="voltarParaResultado()">← Resumo</button>
+      <div class="tabela-title">${escHtml(form.nomeSimulacao||'Apto 101')}</div>
+      <div class="tabela-sub" id="tabela-sub-el">${ativas.length} parcelas · ${meses[0]?.mes||''} → ${ultimoMesAtivo()}</div>
+    </div>
+    <div class="alert" style="margin-top:12px">💡 Edite % de obra e Taxa Referencial — <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a> o valor oficial mês a mês.</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th class="th-center">#</th><th>Mês</th>
+          <th class="th-right">% Obra</th><th class="th-right">Saldo dev.</th>
+          <th class="th-right">TR %</th><th class="th-right">Previsto</th>
+          <th class="th-center">Pago?</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+      <div class="row-controls">
+        <span class="rc-info" id="rc-info">Use + / − para ajustar o número de parcelas (máx. ${MAX_MESES})</span>
+        <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length<=1||lastPago?'disabled':''}>−</button>
+        <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>=MAX_MESES?'disabled':''}>+</button>
+      </div>
+    </div>
+    <button class="btn-reset" onclick="voltarParaResultado()">← Voltar ao resumo</button>
+  `);
+}
+
+function voltarParaResultado(){
+  screen='result';
+  renderResult();
 }
 
 // ── RESULTADO ──
@@ -1246,25 +1331,18 @@ function renderResult(){
       </td>
     </tr>`).join('');
 
-  // ── bloco central: tabela (premium) ou slider (free) ──
+  // ── bloco central: CTA tabela (premium) ou slider ──
   const blocoTabela = premium ? `
-    <div class="alert">💡 Nas linhas abaixo, edite % de obra e Taxa Referencial — <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a> o valor oficial mês a mês.</div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th class="th-center">#</th><th>Mês</th>
-          <th class="th-right">% Obra</th><th class="th-right">Saldo dev.</th>
-          <th class="th-right">TR %</th><th class="th-right">Previsto</th>
-          <th class="th-center">Pago?</th>
-        </tr></thead>
-        <tbody>${tableRows}</tbody>
-      </table>
-      <div class="row-controls">
-        <span class="rc-info" id="rc-info">Use + / − para ajustar o número de parcelas (máx. ${MAX_MESES})</span>
-        <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length<=1||lastPago?'disabled':''}>−</button>
-        <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length>=MAX_MESES?'disabled':''}>+</button>
+    <button class="cta-tabela-btn" onclick="renderTabela()">
+      <div class="cta-tabela-left">
+        <span class="cta-tabela-icon">📋</span>
+        <div>
+          <div class="cta-tabela-label">Ver tabela completa de parcelas</div>
+          <div class="cta-tabela-sub">${ativas.length} parcelas · edite % de obra e TR mês a mês</div>
+        </div>
       </div>
-    </div>` : `
+      <span class="cta-tabela-arrow">→</span>
+    </button>` : `
     <div class="free-preview-card">
       <div class="free-preview-header">
         <div class="free-preview-title">Simulador de parcela</div>
@@ -1310,17 +1388,16 @@ function renderResult(){
       <div class="summary-grid">
         <div class="summary-card"><div class="s-label">Valor Financiado</div><div class="s-val">${fmtBRL(fin)}</div></div>
         <div class="summary-card"><div class="s-label">Média estimada</div><div class="s-val" id="sum-media">${fmtBRL(media)}</div></div>
-        <div class="summary-card accent"><div class="s-label">Soma das parcelas</div><div class="s-val" id="sum-total">${fmtBRL(total)}</div></div>
-        <div class="summary-card paid"><div class="s-label">Pago até agora</div><div class="s-val" id="sum-pago">${fmtBRL(pago)}</div></div>
+        <div class="summary-card accent"><div class="s-label">Soma das parcelas (Estimativa)</div><div class="s-val" id="sum-total">${fmtBRL(total)}</div></div>
+        <div class="summary-card paid"><div class="s-label">Total pago até agora</div><div class="s-val" id="sum-pago">${fmtBRL(pago)}</div></div>
       </div>
     </div>
 
     ${blocoTabela}
-    <button class="btn-reset" onclick="goProfilesSafe()">← Voltar aos perfis</button>
   `);
 
-  // inicializa slider se free
-  if(!premium) setTimeout(()=>atualizaSlider(), 50);
+  // inicializa slider
+setTimeout(()=>atualizaSlider(), 50);
 }
 
 // ── INIT ──
