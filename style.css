@@ -1304,7 +1304,7 @@
     color: var(--accent);
 }
 
-span#slider-result-val.accent::after {
+span#slider-val.slider-result-val.accent span::after {
     content: ' + TR Mensal';
     font-size: 15px;
 }
@@ -1332,12 +1332,29 @@ span#slider-result-val.accent::after {
     transition: opacity .15s;
 }
 .free-preview-cta:hover { opacity: .88; }
+
 .cta-price {
     background: rgba(255,255,255,.15);
     padding: 3px 10px;
     border-radius: 20px;
     font-size: 13px;
 }
+
+.cta-tabela-btn {
+    background: var(--text);
+    color: #fff;
+    border: none;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+.btn-primary:hover {
+    opacity: .88;
+}
+
 
 /* ── FREEMIUM — PAYWALL DIALOG ── */
 .paywall-overlay {
