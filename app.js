@@ -861,22 +861,13 @@ function novaSimulacao(){
 function nextStep(){
   try{
     if(currentStep===0){
-      const inicio=document.getElementById('inp-mesInicial').value;
-      const entrega=document.getElementById('inp-mesEntrega').value;
-      if(!inicio){markError('inp-mesInicial'); return;}
-      if(!entrega){markError('inp-mesEntrega'); return;}
-      const ini=parseMS(inicio);
-      const fim=parseMS(entrega);
-      if(mBetween(ini,fim)<=0){markError('inp-mesEntrega'); return;}
-      form.mesInicial=inicio; form.mesEntrega=entrega;
-      const badge=document.getElementById('badge-meses');
-      if(!badge) return;
-      if(n>=1&&totalParcelas<=MAX_MESES)
-        badge.innerHTML=`<div class="months-badge">📅 ${mLabelFull(form.mesInicial)} → ${mLabelFull(v)} = <strong>${totalParcelas} parcela(s)</strong></div>`;
-      else if(totalParcelas>MAX_MESES)
-        badge.innerHTML=`<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
-      else
-        badge.innerHTML=`<div class="months-badge err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
+      const v=document.getElementById('inp-mesInicial').value;
+      if(!v){markError('inp-mesInicial');return;} form.mesInicial=v;}
+      const v=document.getElementById('inp-mesEntrega').value;
+      if(!v){markError('inp-mesEntrega');return;}
+      const ini=parseMS(form.mesInicial),fin=parseMS(v);
+      if(mBetween(ini,fin)<1){markError('inp-mesEntrega');return;}
+      form.mesEntrega=v;
     } else if(currentStep===1){
       const elVT=document.getElementById('inp-valorTotal');
       const elPF=document.getElementById('inp-percFinanciado');
