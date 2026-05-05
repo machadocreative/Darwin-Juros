@@ -957,12 +957,18 @@ function renderStep(){
   const steps=[
     `<div class="step-num">01 / 07</div>
     <div class="step-title">Quando inicia o pagamento de Juros de Evolução de Obra?</div>
-    <div class="step-hint">Consta no seu contrato com a Caixa Econômica.</div>
-    <input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="this.classList.remove('invalid')">`,
+    <div class="step-hint">Verifique no seu contrato com a Caixa Econômica.</div>
+    <input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="this.classList.remove('invalid')">
+    <br><br>
+    <div class="step-title">Qual a data de entrega prevista?</div>
+    <div class="step-hint">A data de entrega define quantos meses de evolução serão simulados.</div>
+    <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMeses();this.classList.remove('invalid')">
+    <div id="badge-meses"></div>
+    <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que necessário.</div>`,
 
     `<div class="step-num">02 / 07</div>
-    <div class="step-title">Qual o valor total do imóvel?</div>
-    <div class="step-hint">O valor cheio do apartamento conforme contrato.</div>
+    <div class="step-title">Qual o valor do seu imóvel?</div>
+    <div class="step-hint">O valor total do apartamento conforme contrato.</div>
     <label class="field-label">Valor total</label>
     <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTotal" class="has-pre" placeholder="300.000,00" value="${form.valorTotal}" min="0" step="100" oninput="atualizaFin()"></div>
     <div class="field-group">
