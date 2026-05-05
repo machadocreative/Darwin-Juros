@@ -1304,7 +1304,7 @@
     color: var(--accent);
 }
 
-span#slider-result-val accent::after {
+span#slider-result-val.accent::after {
     content: ' + TR Mensal';
     font-size: 15px;
 }
