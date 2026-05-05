@@ -1017,7 +1017,7 @@ function renderStep(){
       <hr class="diff-divider">
       <div class="diff-row hl"><span class="d-label">Estimativa de Juros Mensais</span><span class="d-val" id="val-taxa">${ta>0?fmtPerc(ta/12+0.1000,4):''}</span></div>
     </div>
-    <div class="info-box">💡 Utilizaremos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tela de resultados para maior precisão.</div>`,
+    <div class="info-box">💡 Aqui utilizamos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tabela de parcelas para maior precisão.</div>`,
 
     `<div class="step-num">06 / 07</div>
     <div class="step-title">Qual a data de entrega prevista?</div>
