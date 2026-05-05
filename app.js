@@ -869,6 +869,14 @@ function nextStep(){
       const fim=parseMS(entrega);
       if(mBetween(ini,fim)<=0){markError('inp-mesEntrega'); return;}
       form.mesInicial=inicio; form.mesEntrega=entrega;
+      const badge=document.getElementById('badge-meses');
+      if(!badge) return;
+      if(n>=1&&totalParcelas<=MAX_MESES)
+        badge.innerHTML=`<div class="months-badge">📅 ${mLabelFull(form.mesInicial)} → ${mLabelFull(v)} = <strong>${totalParcelas} parcela(s)</strong></div>`;
+      else if(totalParcelas>MAX_MESES)
+        badge.innerHTML=`<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
+      else
+        badge.innerHTML=`<div class="months-badge err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
     } else if(currentStep===1){
       const elVT=document.getElementById('inp-valorTotal');
       const elPF=document.getElementById('inp-percFinanciado');
