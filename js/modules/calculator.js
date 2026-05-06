@@ -97,9 +97,10 @@ function calcPreviewSlider(perc) {
   const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
   const ter = parseFloat(form.valorTerreno);
   const enc = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
-  const tm = parseFloat(form.taxaAnual) / 100 / 12;
+  const tm  = parseFloat(form.taxaAnual) / 100 / 12;
   const saldo = ter + (fin - ter) * (perc / 100);
-  const previsto = tm * saldo + enc; // Na previsão do slider NÃO é considerada a TR
+  // TR sempre zerada no slider — evita distorção, especialmente no fluxo B
+  const previsto = tm * saldo + enc;
   return { saldo, previsto };
 }
 
