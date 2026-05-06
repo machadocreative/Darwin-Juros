@@ -55,6 +55,29 @@
   </div>
 </div>
 
-<script src="app.js"></script>
+<!-- ── SCRIPTS: ordem importa (dependências primeiro) ── -->
+
+<!-- 1. Estado global e constantes -->
+<script src="js/core/state.js"></script>
+
+<!-- 2. Storage (depende de state) -->
+<script src="js/core/storage.js"></script>
+
+<!-- 3. Utilitários (dependem de state) -->
+<script src="js/utils/format.js"></script>
+<script src="js/utils/ui.js"></script>
+
+<!-- 4. Cálculo (depende de state + utils) -->
+<script src="js/modules/calculator.js"></script>
+
+<!-- 5. Módulos de tela (dependem de tudo acima) -->
+<script src="js/modules/onboarding.js"></script>
+<script src="js/modules/fluxoB.js"></script>
+<script src="js/modules/result.js"></script>
+<script src="js/modules/paywall.js"></script>
+
+<!-- 6. Inicialização (deve ser o último) -->
+<script src="js/main.js"></script>
+
 </body>
 </html>
