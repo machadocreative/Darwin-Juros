@@ -109,12 +109,22 @@ function atualizaSlider() {
   if (!slider) return;
   const perc = parseInt(slider.value);
   const { saldo, previsto } = calcPreviewSlider(perc);
-  const elPerc = document.getElementById('slider-perc');
-  const elVal = document.getElementById('slider-val');
+  const elPerc  = document.getElementById('slider-perc');
+  const elVal   = document.getElementById('slider-val');
   const elSaldo = document.getElementById('slider-saldo');
-  if (elPerc) elPerc.textContent = perc + '%';
-  if (elVal) elVal.innerHTML = `${fmtBRL(previsto)} <small> + TR Mensal</small>`;
+
+  if (elVal)   elVal.innerHTML = `${fmtBRL(previsto)} <small> + TR Mensal</small>`;
   if (elSaldo) elSaldo.textContent = fmtBRL(saldo);
-  const pct = (perc / 100) * 100;
-  slider.style.background = `linear-gradient(to right, var(--accent) ${pct}%, var(--border) ${pct}%)`;
+
+  if (isPremium()) {
+    // Faixa tricolor: [0, percPaga] pago · [percPaga, perc] simulação · [perc, 100] vazio
+    const percPaga = _ultimaPercPagaAtual();
+    if (elPerc) {
+      elPerc.textContent = perc + '%' + (percPaga > 0 && perc <= percPaga ? ' · já pago' : '');
+    }
+    _applySliderTrack(slider, percPaga, perc);
+  } else {
+    if (elPerc) elPerc.textContent = perc + '%';
+    slider.style.background = `linear-gradient(to right, var(--accent) ${perc}%, var(--border) ${perc}%)`;
+  }
 }

@@ -297,29 +297,6 @@ function confirmarB() {
   screen = 'result';
   hasUnsavedChanges = false;
   renderResult();
-
-  setTimeout(() => { perguntarMarcarPagas(linhasParaMarcar); }, 400);
-}
-
-function perguntarMarcarPagas(n) {
-  const banner      = document.createElement('div');
-  banner.id         = 'marcar-pagas-banner';
-  banner.className  = 'save-reminder';
-  banner.innerHTML  = `
-    <div class="save-reminder-title">📋 Você já pagou ${n} parcela(s)</div>
-    <div class="save-reminder-sub">Deseja marcá-las como pagas automaticamente na tabela?</div>
-    <div class="save-reminder-actions">
-      <button class="save-reminder-save" id="marcar-sim-btn">✓ Marcar como pagas</button>
-      <button class="save-reminder-discard" id="marcar-nao-btn">Deixar em branco</button>
-    </div>
-  `;
-  document.body.appendChild(banner);
-  document.getElementById('marcar-sim-btn').addEventListener('click', () => {
-    for (let i = 0; i < n; i++) { if (meses[i] && !meses[i].bloqueado) meses[i].pago = true; }
-    hasUnsavedChanges = true;
-    banner.remove();
-    refreshTable();
-    showToast('✅ ' + n + ' parcela(s) marcada(s) como pagas.');
-  });
-  document.getElementById('marcar-nao-btn').addEventListener('click', () => { banner.remove(); });
+  // O banner de "marcar pagas" é renderizado inline por renderResult()
+  // via _buildBannerPagas(), que detecta automaticamente parcelas pendentes.
 }

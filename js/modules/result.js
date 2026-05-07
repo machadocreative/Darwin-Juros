@@ -29,6 +29,33 @@ function renderProfiles() {
   `);
 }
 
+// ── EXCLUIR PERFIL A PARTIR DA TELA DE RESULTADO ──
+function deleteProfileFromResult() {
+  const btn = document.getElementById('rh-btn-del');
+  if (!btn) return;
+  if (btn.dataset.confirming === '1') {
+    if (currentProfileId) {
+      saveProfiles(loadProfiles().filter(p => p.id !== currentProfileId));
+      currentProfileId = null;
+      showToast('Perfil excluído.');
+    }
+    goProfiles();
+    return;
+  }
+  btn.dataset.confirming = '1';
+  btn.textContent = '⚠️ Confirmar?';
+  btn.style.color = 'var(--danger)';
+  btn.style.borderColor = 'var(--danger)';
+  setTimeout(() => {
+    if (btn && btn.dataset.confirming === '1') {
+      btn.dataset.confirming = '0';
+      btn.textContent = '🗑️ Excluir';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }
+  }, 4000);
+}
+
 // ── EDIÇÃO INLINE DA TABELA ──
 function togglePago(i) {
   const r = meses[i];
@@ -134,11 +161,13 @@ function refreshTable() {
   if (btnRem) { const last = meses[meses.length - 1]; btnRem.disabled = meses.length <= 1 || (last && last.pago); }
   if (rcInfo) rcInfo.textContent = meses.length + ' parcela(s) · máx. ' + MAX_MESES;
   const sub = document.getElementById('result-subtitle');
-  const subTabela = document.getElementById('tabela-sub-el');
   const ativasCount = meses.filter(r => !r.bloqueado).length;
   const subText = ativasCount + ' parcelas · ' + (meses[0]?.mes || '') + ' → ' + ultimoMesAtivo();
   if (sub) sub.textContent = subText;
-  if (subTabela) subTabela.textContent = subText;
+  // Atualiza banner de pagas pendentes
+  _refreshBannerPagas();
+  // Sincroniza faixa do slider premium
+  _syncSliderPremium();
   updateSummary();
 }
 
@@ -153,7 +182,7 @@ function updateSummary() {
   if (e('sum-media')) e('sum-media').textContent = fmtBRL(media);
 }
 
-// ── HELPER: linhas da tabela (reutilizado em result e tabela) ──
+// ── HELPER: linhas da tabela ──
 function _buildTableRows() {
   return meses.map((r, i) => `
     <tr id="row-${i}" class="${r.bloqueado ? 'obra-done' : r.pago ? 'pago-row' : ''}">
@@ -183,7 +212,95 @@ function _buildTableRows() {
     </tr>`).join('');
 }
 
-// ── TELA DE TABELA COMPLETA (premium) ──
+// ── BANNER INLINE: parcelas pendentes de confirmação ──
+// Aparece para qualquer perfil (fluxo A ou B) onde a última parcela ativa
+// paga tenha parcelas não-pagas antes dela — indica que o usuário marcou
+// apenas a mais recente mas não as anteriores.
+
+function _calcPagasPendentes() {
+  const ativas = meses.filter(r => !r.bloqueado);
+  const ultimaPagaIdx = ativas.reduce((acc, r, i) => r.pago ? i : acc, -1);
+  if (ultimaPagaIdx < 0) return 0;
+  return ativas.slice(0, ultimaPagaIdx).filter(r => !r.pago).length;
+}
+
+function _contarAteUltimaPaga() {
+  // Quantas parcelas ativas existem até (e incluindo) a última paga
+  const ativas = meses.filter(r => !r.bloqueado);
+  const ultimaPagaIdx = ativas.reduce((acc, r, i) => r.pago ? i : acc, -1);
+  return ultimaPagaIdx + 1;
+}
+
+function _buildBannerPagas() {
+  const pendentes = _calcPagasPendentes();
+  if (pendentes === 0) return '';
+  const ate = _contarAteUltimaPaga();
+  return `
+    <div class="marcar-pagas-bloco" id="marcar-pagas-bloco">
+      <div class="mp-icon">📋</div>
+      <div class="mp-content">
+        <div class="mp-title">Você tem ${pendentes} parcela(s) não marcada(s) como pagas</div>
+        <div class="mp-sub">Marque-as para manter o controle correto do que já foi pago.</div>
+      </div>
+      <div class="mp-actions">
+        <button class="mp-btn-sim" onclick="marcarPagasPendentes(${ate})">✓ Marcar todas</button>
+        <button class="mp-btn-nao" onclick="dispensarBannerPagas()">Ignorar</button>
+      </div>
+    </div>`;
+}
+
+function _refreshBannerPagas() {
+  const bloco = document.getElementById('marcar-pagas-bloco');
+  if (!bloco) return;
+  const pendentes = _calcPagasPendentes();
+  if (pendentes === 0) { bloco.remove(); return; }
+  const ate = _contarAteUltimaPaga();
+  bloco.querySelector('.mp-title').textContent = `Você tem ${pendentes} parcela(s) não marcada(s) como pagas`;
+  bloco.querySelector('.mp-btn-sim').setAttribute('onclick', `marcarPagasPendentes(${ate})`);
+}
+
+function marcarPagasPendentes(ate) {
+  // `ate` = número de parcelas ativas (da primeira até a última paga inclusive) a marcar
+  const ativas = meses.filter(r => !r.bloqueado);
+  ativas.slice(0, ate).forEach(r => { r.pago = true; });
+  hasUnsavedChanges = true;
+  refreshTable();
+  showToast('✅ Parcelas marcadas como pagas.');
+}
+
+function dispensarBannerPagas() {
+  const bloco = document.getElementById('marcar-pagas-bloco');
+  if (bloco) bloco.remove();
+}
+
+// ── SLIDER PREMIUM: faixa "já pago" vs "simulação futura" ──
+function _ultimaPercPagaAtual() {
+  const perc = ultimaPercPaga(meses);
+  return perc !== null ? perc : 0;
+}
+
+function _syncSliderPremium() {
+  const slider = document.getElementById('preview-slider');
+  if (!slider || !isPremium()) return;
+  const percPaga = _ultimaPercPagaAtual();
+  const val = parseInt(slider.value);
+  _applySliderTrack(slider, percPaga, val);
+}
+
+function _applySliderTrack(slider, percPaga, val) {
+  // [0, percPaga] = verde apagado (já pago), [percPaga, val] = verde vivo (simulação), [val, 100] = cinza
+  const p = percPaga;
+  const v = Math.max(val, p);
+  slider.style.background = [
+    `linear-gradient(to right,`,
+    `  var(--slider-pago, #a8d5b5) 0% ${p}%,`,
+    `  var(--accent) ${p}% ${v}%,`,
+    `  var(--border) ${v}% 100%`,
+    `)`
+  ].join(' ');
+}
+
+// ── TELA DE TABELA COMPLETA (mantida para compatibilidade/acesso direto) ──
 function renderTabela() {
   aplicaBloqueio();
   screen = 'tabela';
@@ -232,30 +349,26 @@ function renderResult() {
   const media   = ativas.length ? total / ativas.length : 0;
   const premium = isPremium();
 
-  const blocoTabela = premium ? `
-    <button class="cta-tabela-btn" onclick="renderTabela()">
-      <div class="cta-tabela-left">
-        <span class="cta-tabela-icon">📋</span>
-        <div>
-          <div class="cta-tabela-label">Ver tabela completa de parcelas</div>
-          <div class="cta-tabela-sub">${ativas.length} parcelas · edite % de obra e TR mês a mês</div>
-        </div>
-      </div>
-      <span class="cta-tabela-arrow">→</span>
-    </button>` : `
-    <div class="free-preview-card">
+  // Slider: premium parte da última % paga; free parte de 50%
+  const percPaga     = premium ? _ultimaPercPagaAtual() : 50;
+  const sliderInicio = percPaga;
+
+  const blocoSlider = `
+    <div class="${premium ? 'premium-preview-card' : 'free-preview-card'}">
       <div class="free-preview-header">
         <div class="free-preview-title">Simulador de parcela</div>
-        <div class="free-preview-sub">Arraste para ver a previsão em qualquer % de obra</div>
+        <div class="free-preview-sub">${premium
+          ? 'Arraste para simular cenários futuros · faixa verde = já pago'
+          : 'Arraste para ver a previsão em qualquer % de obra'}</div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
           <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="preview-slider" class="preview-slider"
-          min="0" max="100" step="10" value="50"
+          min="0" max="100" step="1" value="${sliderInicio}"
           oninput="atualizaSlider()">
-        <div class="slider-perc-label" id="slider-perc">50%</div>
+        <div class="slider-perc-label" id="slider-perc">${sliderInicio}%${premium && percPaga > 0 ? ' · última paga' : ''}</div>
       </div>
       <div class="slider-result">
         <dl class="slider-result-row">
@@ -266,13 +379,47 @@ function renderResult() {
           <dt class="slider-result-label">Parcela estimada</dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
-        <div class="slider-result-note">Edite a Taxa Referencial na versão completa</div>
+        <div class="slider-result-note">${premium
+          ? '💡 Edite % de obra e TR diretamente na tabela abaixo'
+          : 'Edite a Taxa Referencial na versão completa'}</div>
       </div>
+      ${!premium ? `
       <button class="free-preview-cta" onclick="showPaywall()">
         🔓 Ver tabela completa de parcelas
         <span class="cta-price">R$ 4,99</span>
-      </button>
+      </button>` : ''}
     </div>`;
+
+  // Tabela inline — premium only
+  const blocoTabelaInline = premium ? `
+    <div class="tabela-inline-wrap">
+      <div class="tabela-inline-header">
+        <span class="tabela-inline-title">📋 Parcelas mês a mês</span>
+        <span class="tabela-inline-sub">${ativas.length} parcelas · ${meses[0]?.mes || ''} → ${ultimoMesAtivo()}</span>
+      </div>
+      <div class="alert" style="margin:8px 0 4px">💡 Edite % de obra e Taxa Referencial — <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a> o valor oficial.</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th class="th-center">#</th><th>Mês</th>
+            <th class="th-right">% Obra</th><th class="th-right">Saldo dev.</th>
+            <th class="th-right">TR %</th><th class="th-right">Previsto</th>
+            <th class="th-center">Pago?</th>
+          </tr></thead>
+          <tbody>${_buildTableRows()}</tbody>
+        </table>
+        <div class="row-controls">
+          <span class="rc-info" id="rc-info">${meses.length} parcela(s) · máx. ${MAX_MESES}</span>
+          <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela"
+            ${meses.length <= 1 || (meses[meses.length - 1]?.pago) ? 'disabled' : ''}>−</button>
+          <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela"
+            ${meses.length >= MAX_MESES ? 'disabled' : ''}>+</button>
+        </div>
+      </div>
+    </div>` : '';
+
+  // Banner inline de pagas pendentes (universal — fluxo A e B)
+  const blocoBannerPagas = _buildBannerPagas();
 
   setHtml(`
     <div class="result-header">
@@ -281,6 +428,7 @@ function renderResult() {
       <div class="rh-actions">
         <button class="rh-btn save" onclick="saveProfile()">💾 Salvar</button>
         <button class="rh-btn" onclick="editarSimulacao()">✏️ Editar</button>
+        <button class="rh-btn del" id="rh-btn-del" onclick="deleteProfileFromResult()">🗑️ Excluir</button>
       </div>
     </div>
 
@@ -306,7 +454,9 @@ function renderResult() {
       </div>
     </div>
 
-    ${blocoTabela}
+    ${blocoSlider}
+    ${blocoBannerPagas}
+    ${blocoTabelaInline}
   `);
 
   setTimeout(() => atualizaSlider(), 50);
