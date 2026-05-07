@@ -1487,3 +1487,136 @@ dl dd.slider-result-val.accent span {
     margin-top: 4px;
 }
 .paywall-btn-voltar:hover { background: var(--bg); }
+
+/* ── BOTÃO EXCLUIR NO HEADER DE RESULTADO ── */
+.rh-btn.del {
+  color: var(--muted);
+  border-color: var(--border);
+}
+.rh-btn.del:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-light);
+}
+ 
+/* ── BANNER INLINE: PARCELAS PAGAS PENDENTES ── */
+.marcar-pagas-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--warn-bg);
+  border: 1px solid #F6E0A0;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin: 12px 0;
+  animation: fadeUp .2s ease;
+}
+ 
+.mp-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+ 
+.mp-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+ 
+.mp-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warn);
+}
+ 
+.mp-sub {
+  font-size: 12px;
+  color: var(--warn);
+  opacity: .8;
+  line-height: 1.5;
+}
+ 
+.mp-actions {
+  display: flex;
+  gap: 8px;
+}
+ 
+.mp-btn-sim {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: var(--warn);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.mp-btn-sim:hover { opacity: .88; }
+ 
+.mp-btn-nao {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #D4A820;
+  background: transparent;
+  color: var(--warn);
+  font-family: var(--font);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.mp-btn-nao:hover { background: #FFF0C0; }
+ 
+/* ── SLIDER PREMIUM ── */
+/* Variável da faixa "já pago" — tom de verde mais apagado que o accent */
+:root {
+  --slider-pago: #7fbfa0;
+}
+ 
+/* Card do slider premium: visual igual ao free mas sem o botão CTA escuro no rodapé */
+.premium-preview-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+ 
+/* Reutiliza os filhos de .free-preview-card — nenhum estilo adicional necessário */
+.premium-preview-card .free-preview-header { padding: 18px 20px 0; }
+.premium-preview-card .slider-wrap { padding: 0 20px; margin-bottom: 16px; }
+.premium-preview-card .slider-result {
+  background: var(--bg);
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  /* sem border-bottom — não há botão CTA abaixo */
+}
+ 
+/* ── TABELA INLINE (premium, dentro da tela de resultado) ── */
+.tabela-inline-wrap {
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+ 
+.tabela-inline-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+ 
+.tabela-inline-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+ 
+.tabela-inline-sub {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
