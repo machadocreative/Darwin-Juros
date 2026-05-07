@@ -56,8 +56,8 @@ function renderBifurcacao() {
   screen = 'bifurcacao';
   setHtml(`
     <div class="step-card">
-      <div class="step-title">Em que fase você está?</div>
-      <div class="step-hint">Escolha a opção que melhor descreve o seu momento.</div>
+      <div class="step-title">Qual dessas opções você mais se identifica?</div>
+      <div class="step-hint">Escolha a opção que melhor descreve a sua situação.</div>
       <div class="bifurcacao-grid">
         <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('A')">
           <span class="bifurc-icon">💰</span>
