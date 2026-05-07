@@ -283,8 +283,9 @@ function _syncSliderPremium() {
   const slider = document.getElementById('preview-slider');
   if (!slider || !isPremium()) return;
   const percPaga = _ultimaPercPagaAtual();
-  const val = parseInt(slider.value);
-  _applySliderTrack(slider, percPaga, val);
+  slider.value = percPaga;                        // ← linha nova
+  _applySliderTrack(slider, percPaga, percPaga);
+  atualizaSlider();                               // ← linha nova (atualiza label e valores)
 }
 
 function _applySliderTrack(slider, percPaga, val) {
@@ -311,7 +312,6 @@ function renderTabela() {
     <div class="tabela-header">
       <button class="tabela-back-btn" onclick="voltarParaResultado()">← Resumo</button>
       <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
-      <div class="tabela-sub" id="tabela-sub-el">${ativas.length} parcelas · ${meses[0]?.mes || ''} → ${ultimoMesAtivo()}</div>
     </div>
     <div class="alert" style="margin-top:12px">💡 Edite % de obra e Taxa Referencial — <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a> o valor oficial mês a mês.</div>
     <div class="table-wrap">
@@ -356,10 +356,10 @@ function renderResult() {
   const blocoSlider = `
     <div class="${premium ? 'premium-preview-card' : 'free-preview-card'}">
       <div class="free-preview-header">
-        <div class="free-preview-title">Simulador de parcela</div>
+        <div class="free-preview-title">Simulador Rápido</div>
         <div class="free-preview-sub">${premium
-          ? 'Arraste para simular cenários futuros · faixa verde = já pago'
-          : 'Arraste para ver a previsão em qualquer % de obra'}</div>
+          ? 'O slider marca quanto de % já foi pago de acordo com a tabela abaixo.'
+          : 'Arraste para simular cenários futuros em qualquer % de obra'}</div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
@@ -380,7 +380,7 @@ function renderResult() {
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
         <div class="slider-result-note">${premium
-          ? '💡 Edite % de obra e TR diretamente na tabela abaixo'
+          ? 'Edite % de obra e TR diretamente na tabela abaixo'
           : 'Edite a Taxa Referencial na versão completa'}</div>
       </div>
       ${!premium ? `
@@ -394,8 +394,7 @@ function renderResult() {
   const blocoTabelaInline = premium ? `
     <div class="tabela-inline-wrap">
       <div class="tabela-inline-header">
-        <span class="tabela-inline-title">📋 Parcelas mês a mês</span>
-        <span class="tabela-inline-sub">${ativas.length} parcelas · ${meses[0]?.mes || ''} → ${ultimoMesAtivo()}</span>
+        <span class="tabela-inline-title">📅 Parcelas mês a mês</span>
       </div>
       <div class="alert" style="margin:8px 0 4px">💡 Edite % de obra e Taxa Referencial — <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a> o valor oficial.</div>
       <div class="table-wrap">
