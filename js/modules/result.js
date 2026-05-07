@@ -366,7 +366,7 @@ function renderResult() {
           <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="preview-slider" class="preview-slider"
-          min="0" max="100" step="1" value="${sliderInicio}"
+          min="0" max="100" step="${premium ? 1 : 10}" value="${sliderInicio}"
           oninput="atualizaSlider()">
         <div class="slider-perc-label" id="slider-perc">${sliderInicio}%${premium && percPaga > 0 ? ' · última paga' : ''}</div>
       </div>
