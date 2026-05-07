@@ -13,15 +13,30 @@ O Darwin Juros resolve isso com uma calculadora transparente, de fácil uso, dir
 
 ---
 
-## ✨ Funcionalidades
+## 🧮 A Fórmula
 
-- **Fluxo A** — Para quem ainda não começou a pagar: insere os dados do contrato e obtém a projeção completa de parcelas
-- **Fluxo B** — Para quem já está pagando: infere os dados automaticamente a partir das últimas parcelas
+```
+A fórmula oficial da Caixa Econômica Federal usa calcula a evolução de obra usando a Taxa Mensal de Juros, a Taxa Referencial do mês corrente, o Saldo Devedor atual (valor liberado da Caixa Econômica para a Construtora, de acordo com a % de evolução da obra do mês em questão) e por fim, os encargos de cada comprador (Seguro e taxa administrativa).
+
+Chega de papel de caneta ou de planilhas confusas no Excel!
+```
+
+---
+
+## ✨ O que você pode fazer com Darwin:
+
+
+- **Fluxo de telas inicial** — Você insere os dados necessários referentes ao seu financiamento imobiliário em uma sequência de telas rápidas e bem didáticas. Não demora 5 minutos!
+- **Simulador Rápido em slider** — Visualize estimativas sem precisar pagar nada a mais por isso.
+- **Não precisa de conexão com a internet** — Instale como app no seu celular uma vez e use offline sempre!
+- **Múltiplos perfis** — Salve e gerencie vários imóveis gratuitamente.
+
+```
+A versão premium contará com um preço bastante atrativo, pensado para atender beneficiários de programas habitacionais — como o Minha Casa Minha Vida. Por um valor simbólico, libere as seguintes funcionalidades extras:
+```
+
 - **Tabela de parcelas** (Premium) — Edite % de obra e Taxa Referencial mês a mês
-- **Simulador slider** (Free) — Visualize estimativas sem precisar da tabela completa
-- **Múltiplos perfis** — Salve e gerencie vários imóveis
-- **Acompanhamento de pagamentos** — Marque parcelas como pagas e veja o total já pago
-- **PWA** — Funciona offline e pode ser instalado como app no celular
+- **Acompanhamento de parcelas pagas** (Premium) — Marque seus pagamentos e veja os totais pagos até o momento (Inclusive no simulador slider!)
 
 ---
 
@@ -65,47 +80,9 @@ state.js → storage.js → format.js → ui.js
 
 ---
 
-## 🧮 A Fórmula
-
-```
-Parcela = (Taxa Mensal + TR) × Saldo Devedor + Encargos
-```
-
-Onde:
-- **Taxa Mensal** = Taxa Anual / 12
-- **TR** = Taxa Referencial do mês (divulgada pelo Banco Central)
-- **Saldo Devedor** = Terreno + (Financiado − Terreno) × (% Obra / 100)
-- **Encargos** = Seguro + Taxa Administrativa
-
----
-
-## 🚀 Como Rodar Localmente
-
-Basta servir os arquivos estáticos. Com Python:
-
-```bash
-python3 -m http.server 8080
-```
-
-Ou com Node.js (npx):
-
-```bash
-npx serve .
-```
-
-Acesse `http://localhost:8080`.
-
----
-
 ## 🔧 Tech Stack
 
 - Vanilla JavaScript (sem frameworks)
 - HTML5 + CSS3
 - LocalStorage para persistência
 - PWA (manifest + meta tags)
-
----
-
-## 📄 Licença
-
-MIT © Darwin Juros
