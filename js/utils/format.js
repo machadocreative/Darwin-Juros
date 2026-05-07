@@ -41,6 +41,12 @@ function maskApply(rawDigits, tipo) {
     const dec = n % 10;
     return inteiro.toLocaleString('pt-BR') + ',' + dec;
   }
+  if (tipo === 'perc2') {
+    const n = parseInt(d, 10);
+    const inteiro = Math.floor(n / 100);
+    const dec = String(n % 100).padStart(2, '0');
+    return inteiro.toLocaleString('pt-BR') + ',' + dec;
+  }
   if (tipo === 'perc4') {
     const n = parseInt(d, 10);
     const inteiro = Math.floor(n / 10000);
@@ -71,6 +77,9 @@ function maskInit(el, tipo, initialNumeric) {
   } else if (tipo === 'perc1') {
     const tenths = Math.round(num * 10);
     el.dataset.rawDigits = String(tenths);
+  } else if (tipo === 'perc2') {
+    const hundredths = Math.round(num * 100);
+    el.dataset.rawDigits = String(hundredths);
   } else if (tipo === 'perc4') {
     const ten4 = Math.round(num * 10000);
     el.dataset.rawDigits = String(ten4);
@@ -87,6 +96,7 @@ function maskRead(el) {
   const n = parseInt(digits, 10) || 0;
   if (tipo === 'brl')   return n / 100;
   if (tipo === 'perc1') return n / 10;
+  if (tipo === 'perc2') return n / 100;
   if (tipo === 'perc4') return n / 10000;
   if (tipo === 'int')   return n;
   return NaN;
