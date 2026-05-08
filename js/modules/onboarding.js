@@ -56,8 +56,8 @@ function renderBifurcacao() {
   screen = 'bifurcacao';
   setHtml(`
     <div class="step-card">
-      <div class="step-title">Qual dessas opções você mais se identifica?</div>
-      <div class="step-hint">Escolha a opção que melhor descreve a sua situação.</div>
+      <div class="step-title">Em que fase você está?</div>
+      <div class="step-hint">Escolha a opção que melhor descreve o seu momento.</div>
       <div class="bifurcacao-grid">
         <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('A')">
           <span class="bifurc-icon">💰</span>
@@ -100,10 +100,12 @@ function nextStep() {
     } else if (currentStep === 1) {
       const elVT = document.getElementById('inp-valorTotal');
       const elPF = document.getElementById('inp-percFinanciado');
-      const v = maskRead(elVT);
-      if (!v || v <= 0) { elVT?.classList.add('invalid'); return; }
-      form.valorTotal = String(v);
-      form.percFinanciado = maskRead(elPF) || 80;
+      const v  = maskRead(elVT);
+      const pf = maskRead(elPF);
+      if (!v || v <= 0)          { elVT?.classList.add('invalid'); return; }
+      if (!pf || pf <= 0 || pf > 100) { elPF?.classList.add('invalid'); showToast('⚠️ O percentual financiado deve ser entre 0,01% e 100%.'); return; }
+      form.valorTotal     = String(v);
+      form.percFinanciado = pf;
     } else if (currentStep === 2) {
       const elTer = document.getElementById('inp-valorTerreno');
       const v = maskRead(elTer);
@@ -124,12 +126,6 @@ function nextStep() {
       if (!v || v <= 0) { elTa?.classList.add('invalid'); return; }
       form.taxaAnual = String(v);
     } else if (currentStep === 5) {
-      const v = document.getElementById('inp-mesEntrega').value;
-      if (!v) { markError('inp-mesEntrega'); return; }
-      const ini = parseMS(form.mesInicial), fin = parseMS(v);
-      if (mBetween(ini, fin) < 1) { markError('inp-mesEntrega'); return; }
-      form.mesEntrega = v;
-    } else if (currentStep === 6) {
       const raw = sanitizeName(document.getElementById('inp-nome').value) || 'Apto 101';
       const profiles = loadProfiles();
       const duplicado = profiles.find(p => p.nome.toLowerCase() === raw.toLowerCase() && p.id !== currentProfileId);
@@ -139,7 +135,7 @@ function nextStep() {
 
     currentStep++;
 
-    if (currentStep >= TOTAL_STEPS) {
+    if (currentStep >= 6) {
       _finalizarOnboarding();
     } else {
       renderStep();
@@ -194,44 +190,44 @@ function renderStep() {
   const ter = parseFloat(form.valorTerreno) || 0;
   const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
   const seg = parseFloat(form.seguro) || 0;
-  const ta = parseFloat(form.taxaAnual) || 0;
+  const ta  = parseFloat(form.taxaAnual) || 0;
 
   const steps = [
-    // Passo 0 — Datas
-    `<div class="step-num">01 / 07</div>
+    // Passo 0 — Datas (início + término juntos)
+    `<div class="step-num">01 / 06</div>
     <div class="step-title">Quando inicia o pagamento de Juros de Evolução de Obra?</div>
     <div class="step-hint">Verifique no seu contrato com a Caixa Econômica.</div>
-    <input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="this.classList.remove('invalid')">
+    <input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="atualizaMesesStep0();this.classList.remove('invalid')">
     <br><br>
     <div class="step-title">Qual a data de entrega prevista?</div>
     <div class="step-hint">A data de entrega define quantos meses de evolução serão simulados.</div>
-    <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMeses();this.classList.remove('invalid')">
+    <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMesesStep0();this.classList.remove('invalid')">
     <div id="badge-meses"></div>
     <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que necessário.</div>`,
 
     // Passo 1 — Valor do imóvel
-    `<div class="step-num">02 / 07</div>
+    `<div class="step-num">02 / 06</div>
     <div class="step-title">Qual o valor do seu imóvel?</div>
     <div class="step-hint">O valor total do apartamento conforme contrato.</div>
     <label class="field-label">Valor total</label>
-    <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTotal" class="has-pre" placeholder="300.000,00" value="${form.valorTotal}" min="0" step="100" oninput="atualizaFin()"></div>
+    <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-valorTotal" class="has-pre" placeholder="300.000,00" inputmode="numeric" oninput="atualizaFin()"></div>
     <div class="field-group">
       <label class="field-label">Percentual financiado</label>
-      <div class="input-wrap"><input type="number" id="inp-percFinanciado" class="has-suf" placeholder="80" value="${form.percFinanciado}" min="1" max="100" step="1" oninput="atualizaFin()"><span class="suf">%</span></div>
+      <div class="input-wrap"><input type="text" id="inp-percFinanciado" class="has-suf" placeholder="80,00" inputmode="numeric" oninput="atualizaFin()"><span class="suf">%</span></div>
     </div>
     <div class="diff-box" id="box-fin" style="${fin_val > 0 ? '' : 'display:none'}">
       <div class="d-title">Composição dos valores</div>
       <div class="diff-row"><span class="d-label">Valor total do imóvel</span><span class="d-val" id="val-total">${fin_val > 0 ? fmtBRL(parseFloat(form.valorTotal)) : ''}</span></div>
-      <div class="diff-row"><span class="d-label">(−) Valor não financiado (<span id="val-perc-label">${form.percFinanciado || 80}</span>% → <span id="val-nfin-perc">${100 - parseFloat(form.percFinanciado || 80)}</span>%)</span><span class="d-val" id="val-nfin">${fin_val > 0 ? fmtBRL(parseFloat(form.valorTotal) - fin_val) : ''}</span></div>
+      <div class="diff-row"><span class="d-label">(−) Valor não financiado (<span id="val-perc-label">${form.percFinanciado || 80}</span>% → <span id="val-nfin-perc">${parseFloat((100 - parseFloat(form.percFinanciado || 80)).toFixed(2))}</span>%)</span><span class="d-val" id="val-nfin">${fin_val > 0 ? fmtBRL(parseFloat(form.valorTotal) - fin_val) : ''}</span></div>
       <hr class="diff-divider">
       <div class="diff-row hl"><span class="d-label">Valor financiado</span><span class="d-val" id="val-fin">${fin_val > 0 ? fmtBRL(fin_val) : ''}</span></div>
     </div>`,
 
     // Passo 2 — Valor do terreno
-    `<div class="step-num">03 / 07</div>
+    `<div class="step-num">03 / 06</div>
     <div class="step-title">Qual o valor do terreno?</div>
     <div class="step-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
-    <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-valorTerreno" class="has-pre" placeholder="10.000,00" value="${form.valorTerreno}" min="0" step="100" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
+    <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-valorTerreno" class="has-pre" placeholder="10.000,00" inputmode="numeric" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
     <div class="error-msg" id="err-terreno">O valor do terreno deve ser menor que o total financiado (${fmtBRL(fin)}).</div>
     <div class="diff-box" id="box-ter" style="${ter > 0 ? '' : 'display:none'}">
       <div class="d-title">Composição do financiamento</div>
@@ -243,14 +239,14 @@ function renderStep() {
     <div class="info-box">💡 O valor do terreno é considerado como saldo devedor desde o primeiro mês. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
 
     // Passo 3 — Encargos
-    `<div class="step-num">04 / 07</div>
+    `<div class="step-num">04 / 06</div>
     <div class="step-title">Quais os seus encargos mensais?</div>
     <div class="step-hint">Valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
     <label class="field-label">1. Seguro</label>
-    <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-seguro" class="has-pre" placeholder="00,00" value="${form.seguro}" min="0" step="0.01" oninput="atualizaEncargos();this.classList.remove('invalid')"></div>
+    <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-seguro" class="has-pre" placeholder="00,00" inputmode="numeric" oninput="atualizaEncargos();this.classList.remove('invalid')"></div>
     <div class="field-group">
       <label class="field-label">2. Taxa Administrativa</label>
-      <div class="input-wrap"><span class="pre">R$</span><input type="number" id="inp-taxaAdm" class="has-pre" placeholder="25,00" value="${form.taxaAdm || ''}" min="0" step="0.01" oninput="atualizaEncargos()"></div>
+      <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-taxaAdm" class="has-pre" placeholder="25,00" inputmode="numeric" oninput="atualizaEncargos()"></div>
       <div class="info-box">💡 O valor de seguro é único para cada comprador — Verifique no seu contrato. Já a Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
     </div>
     <div class="confirm-box" id="box-enc" style="${seg > 0 ? '' : 'display:none'}">
@@ -259,36 +255,28 @@ function renderStep() {
     </div>`,
 
     // Passo 4 — Taxa de juros
-    `<div class="step-num">05 / 07</div>
+    `<div class="step-num">05 / 06</div>
     <div class="step-title">Qual a Taxa de Juros anual do seu Financiamento?</div>
     <div class="step-hint">O app irá converter sua taxa anual para mensal abaixo. Já os juros das parcelas de Evolução de Obra são definidos pela soma da <strong>Taxa de Juros Mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês.</div>
-    <div class="input-wrap"><input type="number" id="inp-taxaAnual" class="has-suf" placeholder="7,0000" value="${form.taxaAnual}" min="0" step="0.01" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
+    <div class="input-wrap"><input type="text" id="inp-taxaAnual" class="has-suf" placeholder="7,0000" inputmode="numeric" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
     <div class="diff-box" id="box-taxa" style="${ta > 0 ? '' : 'display:none'}">
       <div class="d-title">Composição dos juros mensais</div>
       <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${ta > 0 ? fmtPerc(ta / 12, 4) : ''}</span></div>
       <div class="diff-row"><span class="d-label">(+) Taxa Referencial</span><span class="d-val">0,1000%</span></div>
       <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Estimativa de Juros Mensais</span><span class="d-val" id="val-taxa">${ta > 0 ? fmtPerc(ta / 12 + 0.1000, 4) : ''}</span></div>
+      <div class="diff-row hl"><span class="d-label">Estimativa de Juros Mensais</span><span class="d-val" id="val-taxa">${ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : ''}</span></div>
     </div>
     <div class="info-box">💡 Aqui utilizamos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tabela de parcelas para maior precisão.</div>`,
 
-    // Passo 5 — Data de entrega
-    `<div class="step-num">06 / 07</div>
-    <div class="step-title">Qual a data de entrega prevista?</div>
-    <div class="step-hint">Sua 1ª parcela começa em <strong>${mLabelFull(form.mesInicial)}</strong>. A data de entrega define quantos meses de evolução serão simulados.</div>
-    <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMeses();this.classList.remove('invalid')">
-    <div id="badge-meses"></div>
-    <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que necessário.</div>`,
-
-    // Passo 6 — Nome da simulação
-    `<div class="step-num">07 / 07</div>
+    // Passo 5 — Nome da simulação
+    `<div class="step-num">06 / 06</div>
     <div class="step-title">Como quer chamar essa simulação?</div>
     <div class="step-hint">Máximo 30 caracteres. Ex: Apto Centro, Torre B, Meu apê...</div>
     <input type="text" id="inp-nome" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao || '')}" maxlength="30" oninput="updateCharCount(this)">
     <div class="char-count" id="char-count">0 / 30</div>`
   ];
 
-  const btnLabel = currentStep === 6 ? 'Ver resultados →' : (currentStep === 1 ? 'Confirmar e continuar →' : 'Continuar →');
+  const btnLabel = currentStep === 5 ? 'Ver resultados →' : (currentStep === 1 ? 'Confirmar e continuar →' : 'Continuar →');
   setHtml(`
     ${renderProgress()}
     <div class="step-card">
@@ -297,20 +285,23 @@ function renderStep() {
       ${currentStep > 0 ? '<button class="btn btn-back" onclick="prevStep()">← Voltar</button>' : ''}
     </div>`);
 
-  if (currentStep === 5) setTimeout(() => { if (form.mesEntrega) atualizaMeses(); }, 50);
-  if (currentStep === 6) setTimeout(() => { const el = document.getElementById('inp-nome'); if (el) updateCharCount(el); }, 50);
+  // Inicializações pós-render
+  if (currentStep === 0) setTimeout(() => {
+    // Badge de meses se ambas as datas já estiverem preenchidas (ex: edição)
+    if (form.mesInicial && form.mesEntrega) atualizaMesesStep0();
+  }, 50);
   if (currentStep === 2) setTimeout(() => { if (ter > 0) atualizaTer(); }, 50);
+  if (currentStep === 5) setTimeout(() => { const el = document.getElementById('inp-nome'); if (el) updateCharCount(el); }, 50);
 
-  // aplica máscaras após render
+  // Aplica máscaras após render
   setTimeout(() => {
     if (currentStep === 1) {
-      attachMask('inp-valorTotal', 'brl', form.valorTotal || '');
-      attachMask('inp-percFinanciado', 'perc1', form.percFinanciado || 80);
-      // re-bind atualizaFin depois de aplicar máscara
+      attachMask('inp-valorTotal',     'brl',   form.valorTotal || '');
+      attachMask('inp-percFinanciado', 'perc2', form.percFinanciado || 80);
       const vt = document.getElementById('inp-valorTotal');
       const pf = document.getElementById('inp-percFinanciado');
-      if (vt) vt.oninput = () => { maskValue(vt, 'brl'); vt.classList.remove('invalid'); atualizaFin(); };
-      if (pf) pf.oninput = () => { maskValue(pf, 'perc1'); pf.classList.remove('invalid'); atualizaFin(); };
+      if (vt) vt.oninput = () => { maskValue(vt, 'brl');   vt.classList.remove('invalid'); atualizaFin(); };
+      if (pf) pf.oninput = () => { maskValue(pf, 'perc2'); pf.classList.remove('invalid'); atualizaFin(); };
     }
     if (currentStep === 2) {
       attachMask('inp-valorTerreno', 'brl', form.valorTerreno || '');
@@ -318,7 +309,7 @@ function renderStep() {
       if (vt) vt.oninput = () => { maskValue(vt, 'brl'); vt.classList.remove('invalid'); document.getElementById('err-terreno').style.display = 'none'; atualizaTer(); };
     }
     if (currentStep === 3) {
-      attachMask('inp-seguro', 'brl', form.seguro || '');
+      attachMask('inp-seguro',  'brl', form.seguro  || '');
       attachMask('inp-taxaAdm', 'brl', form.taxaAdm || 25);
       const seg = document.getElementById('inp-seguro');
       const adm = document.getElementById('inp-taxaAdm');
@@ -328,7 +319,10 @@ function renderStep() {
     if (currentStep === 4) {
       attachMask('inp-taxaAnual', 'perc4', form.taxaAnual || '');
       const ta = document.getElementById('inp-taxaAnual');
+      // Fix bug: re-bind oninput via maskValue para que atualizaTaxa leia via maskRead
       if (ta) ta.oninput = () => { maskValue(ta, 'perc4'); ta.classList.remove('invalid'); atualizaTaxa(); };
+      // Dispara uma vez para exibir o box se o valor já estava salvo no form
+      if (form.taxaAnual) atualizaTaxa();
     }
     const f = document.querySelector('.step-card input');
     if (f) f.focus();
@@ -336,6 +330,33 @@ function renderStep() {
 }
 
 // ── ATUALIZAÇÕES INLINE DOS CAMPOS ──
+
+// Badge de meses na tela 0 — lê ambos os campos da mesma tela
+function atualizaMesesStep0() {
+  const elIni = document.getElementById('inp-mesInicial');
+  const elFim = document.getElementById('inp-mesEntrega');
+  if (!elIni || !elFim) return;
+  const ini = elIni.value;
+  const fim = elFim.value;
+  // Atualiza form.mesInicial em tempo real para que mLabelFull funcione nas telas seguintes
+  if (ini) form.mesInicial = ini;
+  _renderBadgeMeses(ini, fim);
+}
+
+// Badge de meses genérico (reutilizado em atualizaMeses se necessário)
+function _renderBadgeMeses(ini, fim) {
+  const badge = document.getElementById('badge-meses');
+  if (!badge || !ini || !fim) return;
+  const iniParsed = parseMS(ini), fimParsed = parseMS(fim);
+  const n = mBetween(iniParsed, fimParsed);
+  const totalParcelas = n + 1;
+  if (n >= 1 && totalParcelas <= MAX_MESES)
+    badge.innerHTML = `<div class="months-badge">📅 ${mLabelFull(ini)} → ${mLabelFull(fim)} = <strong>${totalParcelas} parcela(s)</strong></div>`;
+  else if (totalParcelas > MAX_MESES)
+    badge.innerHTML = `<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
+  else
+    badge.innerHTML = `<div class="months-badge err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
+}
 function atualizaFin() {
   const elVT = document.getElementById('inp-valorTotal');
   const elPF = document.getElementById('inp-percFinanciado');
@@ -376,13 +397,15 @@ function atualizaEncargos() {
 }
 
 function atualizaTaxa() {
-  const ta = parseFloat(document.getElementById('inp-taxaAnual')?.value) || 0;
+  const el = document.getElementById('inp-taxaAnual');
+  // Lê via maskRead para garantir que a máscara já foi aplicada
+  const ta = maskRead(el) || 0;
   const box = document.getElementById('box-taxa');
   if (box) box.style.display = ta > 0 ? 'block' : 'none';
-  const elMensal = document.getElementById('val-taxa-mensal');
+  const elMensal    = document.getElementById('val-taxa-mensal');
   const elCombinada = document.getElementById('val-taxa');
-  if (elMensal)    elMensal.textContent = fmtPerc(ta / 12, 4);
-  if (elCombinada) elCombinada.textContent = fmtPerc(ta / 12 + 0.001, 4);
+  if (elMensal)    elMensal.textContent    = fmtPerc(ta / 12, 4);
+  if (elCombinada) elCombinada.textContent = fmtPerc(ta / 12 + 0.1, 4);
 }
 
 function atualizaMeses() {
