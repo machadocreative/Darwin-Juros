@@ -1,13 +1,15 @@
-// ── ONBOARDING (Fluxo A — 7 passos) ──
+// ── ONBOARDING (Simulação Completa — 7 passos) ──
 
 function novaSimulacao() {
   currentProfileId = null;
   window._editMode = null;
-  window._inferidoB = null;
-  fluxo = 'A';
+  fluxo = 'complete';
   Object.keys(form).forEach(k => { form[k] = ''; });
-  Object.keys(formB).forEach(k => { formB[k] = ''; });
-  form.percFinanciado = 80; form.trInicial = 0.001;
+  form.percFinanciado      = 80;
+  form.trInicial           = 0.001;
+  form.historicoPagamentos = [];
+  Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
+  formQuick.percObra = 50;
   meses = []; currentStep = 0;
   renderBifurcacao();
 }
@@ -40,10 +42,8 @@ function editarSimulacao() {
 }
 
 function _iniciarEdicao() {
-  // fluxo B sempre redireciona para o onboarding A completo (com dados pré-preenchidos)
-  fluxo = 'A';
-  window._inferidoB = null;
-  const mesesBackup = JSON.parse(JSON.stringify(meses));
+  fluxo = 'complete';
+  const mesesBackup    = JSON.parse(JSON.stringify(meses));
   const profileIdBackup = currentProfileId;
   screen = 'onboarding';
   currentStep = 0;
@@ -56,21 +56,21 @@ function renderBifurcacao() {
   screen = 'bifurcacao';
   setHtml(`
     <div class="step-card">
-      <div class="step-title">Em que fase você está?</div>
-      <div class="step-hint">Escolha a opção que melhor descreve o seu momento.</div>
+      <div class="step-title">O que você precisa agora?</div>
+      <div class="step-hint">Escolha o tipo de simulação.</div>
       <div class="bifurcacao-grid">
-        <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('A')">
-          <span class="bifurc-icon">💰</span>
+        <button class="btn-bifurc bifurc-b" onclick="escolherFluxo('quick')">
+          <span class="bifurc-icon">⚡</span>
           <div>
-            <div class="bifurc-label">Ainda não comecei a pagar</div>
-            <div class="bifurc-sub">Meu contrato foi assinado recentemente ou as parcelas ainda não começaram</div>
+            <div class="bifurc-label">Simulação rápida</div>
+            <div class="bifurc-sub">Descubra quanto vai pagar agora com apenas 5 perguntas. Totalmente gratuito.</div>
           </div>
         </button>
-        <button class="btn-bifurc bifurc-b" onclick="escolherFluxo('B')">
-          <span class="bifurc-icon">💸</span>
+        <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('complete')">
+          <span class="bifurc-icon">📋</span>
           <div>
-            <div class="bifurc-label">Já estou pagando juros de obra</div>
-            <div class="bifurc-sub">Já paguei algumas parcelas e quero acompanhar as próximas</div>
+            <div class="bifurc-label">Simulação completa</div>
+            <div class="bifurc-sub">Veja todas as parcelas mês a mês e acompanhe o que já foi pago.</div>
           </div>
         </button>
       </div>
@@ -80,10 +80,10 @@ function renderBifurcacao() {
 
 function escolherFluxo(f) {
   fluxo = f;
-  if (f === 'A') {
-    screen = 'onboarding'; currentStep = 0; renderStep();
+  if (f === 'quick') {
+    screen = 'quick'; currentStep = 0; renderQuickStep();
   } else {
-    screen = 'fluxoB'; currentStep = 0; renderFluxoB();
+    screen = 'onboarding'; currentStep = 0; renderStep();
   }
 }
 
@@ -91,21 +91,25 @@ function escolherFluxo(f) {
 function nextStep() {
   try {
     if (currentStep === 0) {
-      const v = document.getElementById('inp-mesInicial').value;
-      if (!v) { markError('inp-mesInicial'); return; }
-      form.mesInicial = v;
-      // Captura mesEntrega já na tela 0 (campo duplo)
-      const ve = document.getElementById('inp-mesEntrega');
-      if (ve && ve.value) form.mesEntrega = ve.value;
+      const elIni = document.getElementById('inp-mesInicial');
+      const elFim = document.getElementById('inp-mesEntrega');
+      if (!elIni.value) { markError('inp-mesInicial'); return; }
+      if (!elFim.value) { markError('inp-mesEntrega'); return; }
+      const ini = parseMS(elIni.value), fim = parseMS(elFim.value);
+      if (mBetween(ini, fim) < 1) { markError('inp-mesEntrega'); showToast('⚠️ A data de entrega deve ser após a 1ª parcela.'); return; }
+      form.mesInicial = elIni.value;
+      form.mesEntrega = elFim.value;
+
     } else if (currentStep === 1) {
       const elVT = document.getElementById('inp-valorTotal');
       const elPF = document.getElementById('inp-percFinanciado');
       const v  = maskRead(elVT);
       const pf = maskRead(elPF);
-      if (!v || v <= 0)          { elVT?.classList.add('invalid'); return; }
+      if (!v || v <= 0)               { elVT?.classList.add('invalid'); return; }
       if (!pf || pf <= 0 || pf > 100) { elPF?.classList.add('invalid'); showToast('⚠️ O percentual financiado deve ser entre 0,01% e 100%.'); return; }
       form.valorTotal     = String(v);
       form.percFinanciado = pf;
+
     } else if (currentStep === 2) {
       const elTer = document.getElementById('inp-valorTerreno');
       const v = maskRead(elTer);
@@ -113,19 +117,34 @@ function nextStep() {
       if (!v || v <= 0) { elTer?.classList.add('invalid'); return; }
       if (v >= fin) { elTer?.classList.add('invalid'); document.getElementById('err-terreno').style.display = 'block'; return; }
       form.valorTerreno = String(v);
+
     } else if (currentStep === 3) {
       const elSeg = document.getElementById('inp-seguro');
       const elAdm = document.getElementById('inp-taxaAdm');
       const s = maskRead(elSeg);
       if (!s || s <= 0) { elSeg?.classList.add('invalid'); return; }
-      form.seguro = String(s);
+      form.seguro  = String(s);
       form.taxaAdm = String(maskRead(elAdm) || 25);
+
     } else if (currentStep === 4) {
       const elTa = document.getElementById('inp-taxaAnual');
       const v = maskRead(elTa);
       if (!v || v <= 0) { elTa?.classList.add('invalid'); return; }
       form.taxaAnual = String(v);
+
     } else if (currentStep === 5) {
+      // Coleta histórico de pagamentos da mini-tabela (opcional)
+      const rows = [];
+      let i = 0;
+      while (document.getElementById(`hist-val-${i}`)) {
+        const el = document.getElementById(`hist-val-${i}`);
+        const v  = maskRead(el);
+        rows.push({ valor: isNaN(v) || v < 0 ? 0 : v });
+        i++;
+      }
+      form.historicoPagamentos = rows;
+
+    } else if (currentStep === 6) {
       const raw = sanitizeName(document.getElementById('inp-nome').value) || 'Apto 101';
       const profiles = loadProfiles();
       const duplicado = profiles.find(p => p.nome.toLowerCase() === raw.toLowerCase() && p.id !== currentProfileId);
@@ -134,8 +153,7 @@ function nextStep() {
     }
 
     currentStep++;
-
-    if (currentStep >= 6) {
+    if (currentStep >= 7) {
       _finalizarOnboarding();
     } else {
       renderStep();
@@ -147,7 +165,7 @@ function _finalizarOnboarding() {
   const edit = window._editMode;
   if (edit) {
     const newTable = calcTable();
-    const backup = edit.mesesBackup;
+    const backup   = edit.mesesBackup;
 
     const novoTotal = newTable.length;
     const linhasPagasASerPerdidas = backup.slice(novoTotal).filter(r => r.pago && !r.bloqueado);
@@ -169,11 +187,20 @@ function _finalizarOnboarding() {
     });
     meses.forEach((_, i) => recalcRow(i));
     aplicaBloqueio();
-    currentProfileId = edit.profileIdBackup;
-    window._editMode = null;
+    currentProfileId  = edit.profileIdBackup;
+    window._editMode  = null;
     hasUnsavedChanges = true;
   } else {
     meses = calcTable();
+    // Aplica histórico de pagamentos (tela 6) se o usuário preencheu
+    const hist = form.historicoPagamentos || [];
+    const ativas = meses.filter(r => !r.bloqueado);
+    hist.forEach((entry, i) => {
+      if (i < ativas.length && entry.valor > 0) {
+        ativas[i].pago = true;
+      }
+    });
+    aplicaBloqueio();
     hasUnsavedChanges = false;
   }
   screen = 'result';
@@ -192,9 +219,35 @@ function renderStep() {
   const seg = parseFloat(form.seguro) || 0;
   const ta  = parseFloat(form.taxaAnual) || 0;
 
+  // Tela 5: gera linhas da mini-tabela de histórico
+  // Usa os dados já salvos em form.historicoPagamentos, ou começa vazia com 1 linha
+  const histRows = (form.historicoPagamentos && form.historicoPagamentos.length > 0)
+    ? form.historicoPagamentos
+    : [{ valor: 0 }];
+
+  function _buildHistRows(rows) {
+    return rows.map((r, i) => {
+      const mesLabel = form.mesInicial
+        ? mLabel(addM(parseMS(form.mesInicial), i))
+        : `Parcela ${i + 1}`;
+      return `<tr>
+        <td class="num-col">${i + 1}</td>
+        <td class="td-mes" style="font-size:12px">${mesLabel}</td>
+        <td class="td-right">
+          <div class="input-wrap">
+            <span class="pre" style="font-size:12px">R$</span>
+            <input type="text" id="hist-val-${i}" class="has-pre hist-val-input"
+              placeholder="0,00" inputmode="numeric"
+              oninput="maskOnInput(this)">
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
   const steps = [
-    // Passo 0 — Datas (início + término juntos)
-    `<div class="step-num">01 / 06</div>
+    // Passo 0 — Datas
+    `<div class="step-num">01 / 07</div>
     <div class="step-title">Quando inicia o pagamento de Juros de Evolução de Obra?</div>
     <div class="step-hint">Verifique no seu contrato com a Caixa Econômica.</div>
     <input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="atualizaMesesStep0();this.classList.remove('invalid')">
@@ -206,7 +259,7 @@ function renderStep() {
     <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que necessário.</div>`,
 
     // Passo 1 — Valor do imóvel
-    `<div class="step-num">02 / 06</div>
+    `<div class="step-num">02 / 07</div>
     <div class="step-title">Qual o valor do seu imóvel?</div>
     <div class="step-hint">O valor total do apartamento conforme contrato.</div>
     <label class="field-label">Valor total</label>
@@ -223,8 +276,8 @@ function renderStep() {
       <div class="diff-row hl"><span class="d-label">Valor financiado</span><span class="d-val" id="val-fin">${fin_val > 0 ? fmtBRL(fin_val) : ''}</span></div>
     </div>`,
 
-    // Passo 2 — Valor do terreno
-    `<div class="step-num">03 / 06</div>
+    // Passo 2 — Terreno
+    `<div class="step-num">03 / 07</div>
     <div class="step-title">Qual o valor do terreno?</div>
     <div class="step-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
     <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-valorTerreno" class="has-pre" placeholder="10.000,00" inputmode="numeric" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
@@ -239,7 +292,7 @@ function renderStep() {
     <div class="info-box">💡 O valor do terreno é considerado como saldo devedor desde o primeiro mês. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
 
     // Passo 3 — Encargos
-    `<div class="step-num">04 / 06</div>
+    `<div class="step-num">04 / 07</div>
     <div class="step-title">Quais os seus encargos mensais?</div>
     <div class="step-hint">Valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
     <label class="field-label">1. Seguro</label>
@@ -255,7 +308,7 @@ function renderStep() {
     </div>`,
 
     // Passo 4 — Taxa de juros
-    `<div class="step-num">05 / 06</div>
+    `<div class="step-num">05 / 07</div>
     <div class="step-title">Qual a Taxa de Juros anual do seu Financiamento?</div>
     <div class="step-hint">O app irá converter sua taxa anual para mensal abaixo. Já os juros das parcelas de Evolução de Obra são definidos pela soma da <strong>Taxa de Juros Mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês.</div>
     <div class="input-wrap"><input type="text" id="inp-taxaAnual" class="has-suf" placeholder="7,0000" inputmode="numeric" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
@@ -268,15 +321,36 @@ function renderStep() {
     </div>
     <div class="info-box">💡 Aqui utilizamos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tabela de parcelas para maior precisão.</div>`,
 
-    // Passo 5 — Nome da simulação
-    `<div class="step-num">06 / 06</div>
+    // Passo 5 — Histórico de pagamentos (opcional)
+    `<div class="step-num">06 / 07</div>
+    <div class="step-title">Você já pagou alguma parcela?</div>
+    <div class="step-hint">Opcional. Informe os valores que já foram debitados para acompanhar o que foi pago. Use + / − para adicionar ou remover linhas.</div>
+    <div class="table-wrap" id="hist-table-wrap">
+      <table>
+        <thead><tr>
+          <th class="th-center">#</th>
+          <th>Mês</th>
+          <th class="th-right">Valor pago</th>
+        </tr></thead>
+        <tbody id="hist-tbody">${_buildHistRows(histRows)}</tbody>
+      </table>
+      <div class="row-controls">
+        <span class="rc-info" id="hist-rc-info">${histRows.length} parcela(s)</span>
+        <button class="rc-btn" id="hist-btn-rem" onclick="histRemoverLinha()" ${histRows.length <= 1 ? 'disabled' : ''}>−</button>
+        <button class="rc-btn" id="hist-btn-add" onclick="histAdicionarLinha()">+</button>
+      </div>
+    </div>
+    <div class="info-box">💡 Deixe em branco se ainda não pagou nenhuma parcela — você poderá marcar pagamentos na tabela depois.</div>`,
+
+    // Passo 6 — Nome
+    `<div class="step-num">07 / 07</div>
     <div class="step-title">Como quer chamar essa simulação?</div>
     <div class="step-hint">Máximo 30 caracteres. Ex: Apto Centro, Torre B, Meu apê...</div>
     <input type="text" id="inp-nome" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao || '')}" maxlength="30" oninput="updateCharCount(this)">
     <div class="char-count" id="char-count">0 / 30</div>`
   ];
 
-  const btnLabel = currentStep === 5 ? 'Ver resultados →' : (currentStep === 1 ? 'Confirmar e continuar →' : 'Continuar →');
+  const btnLabel = currentStep === 6 ? 'Ver resultados →' : (currentStep === 1 ? 'Confirmar e continuar →' : 'Continuar →');
   setHtml(`
     ${renderProgress()}
     <div class="step-card">
@@ -287,11 +361,11 @@ function renderStep() {
 
   // Inicializações pós-render
   if (currentStep === 0) setTimeout(() => {
-    // Badge de meses se ambas as datas já estiverem preenchidas (ex: edição)
     if (form.mesInicial && form.mesEntrega) atualizaMesesStep0();
   }, 50);
   if (currentStep === 2) setTimeout(() => { if (ter > 0) atualizaTer(); }, 50);
-  if (currentStep === 5) setTimeout(() => { const el = document.getElementById('inp-nome'); if (el) updateCharCount(el); }, 50);
+  if (currentStep === 5) setTimeout(() => { _initHistMasks(); }, 80);
+  if (currentStep === 6) setTimeout(() => { const el = document.getElementById('inp-nome'); if (el) updateCharCount(el); }, 50);
 
   // Aplica máscaras após render
   setTimeout(() => {
@@ -319,13 +393,13 @@ function renderStep() {
     if (currentStep === 4) {
       attachMask('inp-taxaAnual', 'perc4', form.taxaAnual || '');
       const ta = document.getElementById('inp-taxaAnual');
-      // Fix bug: re-bind oninput via maskValue para que atualizaTaxa leia via maskRead
       if (ta) ta.oninput = () => { maskValue(ta, 'perc4'); ta.classList.remove('invalid'); atualizaTaxa(); };
-      // Dispara uma vez para exibir o box se o valor já estava salvo no form
       if (form.taxaAnual) atualizaTaxa();
     }
-    const f = document.querySelector('.step-card input');
-    if (f) f.focus();
+    if (currentStep !== 5) {
+      const f = document.querySelector('.step-card input');
+      if (f) f.focus();
+    }
   }, 80);
 }
 
