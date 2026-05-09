@@ -482,18 +482,64 @@ function atualizaTaxa() {
   if (elCombinada) elCombinada.textContent = fmtPerc(ta / 12 + 0.1, 4);
 }
 
-function atualizaMeses() {
-  const v = document.getElementById('inp-mesEntrega')?.value;
-  if (!v || !form.mesInicial) return;
-  const ini = parseMS(form.mesInicial), fin = parseMS(v);
-  const n = mBetween(ini, fin);
-  const totalParcelas = n + 1;
-  const badge = document.getElementById('badge-meses');
-  if (!badge) return;
-  if (n >= 1 && totalParcelas <= MAX_MESES)
-    badge.innerHTML = `<div class="months-badge">📅 ${mLabelFull(form.mesInicial)} → ${mLabelFull(v)} = <strong>${totalParcelas} parcela(s)</strong></div>`;
-  else if (totalParcelas > MAX_MESES)
-    badge.innerHTML = `<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
-  else
-    badge.innerHTML = `<div class="months-badge err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
+
+// ── MINI-TABELA DE HISTÓRICO (tela 5) ──
+
+// Inicializa máscaras de todos os inputs de histórico presentes no DOM
+function _initHistMasks() {
+  const hist = form.historicoPagamentos || [];
+  let i = 0;
+  while (document.getElementById(`hist-val-${i}`)) {
+    const savedVal = hist[i]?.valor || 0;
+    attachMask(`hist-val-${i}`, 'brl', savedVal > 0 ? savedVal : '');
+    i++;
+  }
+  _updateHistControls();
+}
+
+function _updateHistControls() {
+  let count = 0;
+  while (document.getElementById(`hist-val-${count}`)) count++;
+  const info   = document.getElementById('hist-rc-info');
+  const btnRem = document.getElementById('hist-btn-rem');
+  if (info)   info.textContent = count + ' parcela(s)';
+  if (btnRem) btnRem.disabled  = count <= 1;
+}
+
+function histAdicionarLinha() {
+  const tbody = document.getElementById('hist-tbody');
+  if (!tbody) return;
+  // Conta linhas existentes
+  let i = 0;
+  while (document.getElementById(`hist-val-${i}`)) i++;
+  if (i >= MAX_MESES) { showToast(`⚠️ Máximo ${MAX_MESES} parcelas.`); return; }
+  const mesLabel = form.mesInicial
+    ? mLabel(addM(parseMS(form.mesInicial), i))
+    : `Parcela ${i + 1}`;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="num-col">${i + 1}</td>
+    <td class="td-mes" style="font-size:12px">${mesLabel}</td>
+    <td class="td-right">
+      <div class="input-wrap">
+        <span class="pre" style="font-size:12px">R$</span>
+        <input type="text" id="hist-val-${i}" class="has-pre hist-val-input"
+          placeholder="0,00" inputmode="numeric"
+          oninput="maskOnInput(this)">
+      </div>
+    </td>`;
+  tbody.appendChild(tr);
+  attachMask(`hist-val-${i}`, 'brl', '');
+  _updateHistControls();
+  document.getElementById(`hist-val-${i}`)?.focus();
+}
+
+function histRemoverLinha() {
+  const tbody = document.getElementById('hist-tbody');
+  if (!tbody) return;
+  let count = 0;
+  while (document.getElementById(`hist-val-${count}`)) count++;
+  if (count <= 1) return;
+  tbody.removeChild(tbody.lastElementChild);
+  _updateHistControls();
 }

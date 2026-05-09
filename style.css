@@ -1620,3 +1620,137 @@ dl dd.slider-result-val.accent span {
   color: var(--muted);
   white-space: nowrap;
 }
+
+/* ── RESULTADO RÁPIDO: cards de parcela estimada ── */
+.quick-result-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.quick-result-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quick-result-card.accent {
+  background: var(--accent-light);
+  border-color: #B2D8C4;
+}
+
+.qrc-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.qrc-perc {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.quick-result-card.accent .qrc-perc {
+  color: var(--accent);
+  opacity: .8;
+}
+
+.qrc-val {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.quick-result-card.accent .qrc-val {
+  color: var(--accent);
+}
+
+.qrc-note {
+  font-size: 10px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── RESULTADO RÁPIDO: disclaimer e CTA ── */
+.quick-disclaimer {
+  background: var(--warn-bg);
+  border: 1px solid #F6E0A0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--warn);
+  margin: 12px 0;
+  line-height: 1.5;
+}
+
+.quick-cta-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 18px 18px;
+  margin-bottom: 8px;
+}
+
+.quick-cta-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.quick-cta-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+/* ── TELA DE HISTÓRICO: input compacto na tabela ── */
+.hist-val-input {
+  width: 120px;
+  padding: 5px 6px 5px 32px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: right;
+  background: var(--bg);
+  outline: none;
+  transition: border .15s;
+}
+
+.hist-val-input:focus {
+  border-color: var(--accent);
+}
+
+/* ── QUICK PERC: layout do slider + input manual na tela 4 da sim rápida ── */
+.quick-perc-wrap {
+  margin-bottom: 4px;
+}
+
+.quick-perc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.quick-perc-label {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.quick-perc-input-wrap {
+  flex: 1;
+  max-width: 120px;
+}
