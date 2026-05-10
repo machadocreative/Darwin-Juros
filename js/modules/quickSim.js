@@ -30,20 +30,6 @@ const STEPS_QUICK = [
   }
 ];
 
-// ── TR: tenta carregar do JSON histórico; fallback 0,1000% ──
-async function _getTRAtual() {
-  try {
-    const res = await fetch('data/tr-historico.json');
-    if (!res.ok) throw new Error('not found');
-    const json = await res.json();
-    const chaves = Object.keys(json).sort();
-    const ultima = chaves[chaves.length - 1];
-    return { valor: json[ultima], mes: ultima };
-  } catch {
-    return { valor: 0.1, mes: null };
-  }
-}
-
 // ── RENDER PRINCIPAL ──
 function renderQuickStep() {
   screen = 'quick';
@@ -115,13 +101,19 @@ function renderQuickStep() {
 
   } else if (currentStep === 4) {
     inputsHtml = `
-      <div class="input-wrap">
-        <span class="pre">R$</span>
-        <input type="text" id="qinp-ultima" class="has-pre" placeholder="1.283,33" inputmode="numeric"
-          oninput="maskOnInput(this);this.classList.remove('invalid')">
+      <label class="field-label">Mês da última parcela paga</label>
+      <input type="month" id="qinp-mes-parcela" value="${formQuick.mesParcela || ''}"
+        oninput="this.classList.remove('invalid')">
+      <div class="field-group">
+        <label class="field-label">Valor pago</label>
+        <div class="input-wrap">
+          <span class="pre">R$</span>
+          <input type="text" id="qinp-ultima" class="has-pre" placeholder="1.283,33" inputmode="numeric"
+            oninput="maskOnInput(this);this.classList.remove('invalid')">
+        </div>
       </div>
-      <div id="qbox-tr" class="info-box" style="margin-top:8px">
-        💡 Carregando TR do mês mais recente…
+      <div class="info-box" style="margin-top:8px">
+        💡 Consulte seu extrato bancário — é o débito total incluindo juros e encargos.
       </div>`;
   }
 
@@ -161,24 +153,12 @@ function renderQuickStep() {
     }
     if (currentStep === 4) {
       attachMask('qinp-ultima', 'brl', formQuick.ultimaParcela || '');
-      _getTRAtual().then(({ valor, mes }) => {
-        formQuick._trAtual = valor;
-        const el = document.getElementById('qbox-tr');
-        if (el) {
-          el.textContent = mes
-            ? `💡 TR de ${_fmtMesISOQuick(mes)} carregada: ${fmtPerc(valor, 4)} · Será usada no cálculo.`
-            : `💡 TR não encontrada — usando 0,1000% como estimativa.`;
-        }
-      });
+      const elMes = document.getElementById('qinp-mes-parcela');
+      if (elMes && formQuick.mesParcela) elMes.value = formQuick.mesParcela;
     }
     const f = document.querySelector('.step-card input:not([type=range])');
     if (f && currentStep !== 3) f.focus();
   }, 80);
-}
-
-function _fmtMesISOQuick(iso) {
-  if (!iso) return '';
-  return mLabel(parseMS(iso));
 }
 
 function _renderProgressQuick() {
@@ -263,10 +243,14 @@ function nextStepQuick() {
     }
 
   } else if (currentStep === 4) {
-    const el = document.getElementById('qinp-ultima');
-    const v  = maskRead(el);
-    if (!v || v <= 0) { el?.classList.add('invalid'); showToast('⚠️ Informe o valor da última parcela.'); return; }
-    formQuick.ultimaParcela = v;
+    const elMes    = document.getElementById('qinp-mes-parcela');
+    const elValor  = document.getElementById('qinp-ultima');
+    const mes      = elMes?.value;
+    const valor    = maskRead(elValor);
+    if (!mes)           { elMes?.classList.add('invalid');   showToast('⚠️ Informe o mês da última parcela.'); return; }
+    if (!valor || valor <= 0) { elValor?.classList.add('invalid'); showToast('⚠️ Informe o valor da última parcela.'); return; }
+    formQuick.mesParcela    = mes;
+    formQuick.ultimaParcela = valor;
     renderResultQuick();
     return;
   }
@@ -279,19 +263,26 @@ function prevStepQuick() {
   if (currentStep > 0) { currentStep--; renderQuickStep(); }
 }
 
+function reiniciarSimulacaoRapida() {
+  Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
+  formQuick.percObra = 50;
+  currentStep = 0;
+  renderQuickStep();
+}
+
 // ── CÁLCULO ──
 function _calcQuick() {
   const tm   = (parseFloat(formQuick.taxaAnual) / 100) / 12;
-  const tr   = (formQuick._trAtual || 0.1) / 100;
   const enc  = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
   const sd   = parseFloat(formQuick.saldoDevedor || 0);
   const perc = parseFloat(formQuick.percObra || 0);
 
-  const parcelaAtual = (tm + tr) * sd + enc;
+  // TR = 0 na simulação rápida (sliders e cards)
+  const parcelaAtual = tm * sd + enc;
 
   const percProxima = Math.min(perc + 10, 100);
   const sdProxima   = perc > 0 ? sd * (percProxima / perc) : sd * 1.05;
-  const parcelaProxima = (tm + tr) * sdProxima + enc;
+  const parcelaProxima = tm * sdProxima + enc;
 
   return { parcelaAtual, parcelaProxima, percProxima };
 }
@@ -300,8 +291,8 @@ function _calcQuick() {
 function renderResultQuick() {
   screen = 'resultQuick';
   const { parcelaAtual, parcelaProxima, percProxima } = _calcQuick();
-  const perc    = parseFloat(formQuick.percObra || 0);
-  const trUsada = formQuick._trAtual || 0.1;
+  const perc     = parseFloat(formQuick.percObra || 0);
+  const mesLabel = formQuick.mesParcela ? mLabel(parseMS(formQuick.mesParcela)) : '—';
 
   setHtml(`
     <div class="result-header">
@@ -312,7 +303,7 @@ function renderResultQuick() {
     <div class="quick-result-cards">
       <div class="quick-result-card accent">
         <div class="qrc-label">Parcela estimada agora</div>
-        <div class="qrc-perc">${perc}% de obra · TR ${fmtPerc(trUsada, 4)}</div>
+        <div class="qrc-perc">${perc}% de obra · ref. ${mesLabel}</div>
         <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
         <div class="qrc-note">+ TR Mensal</div>
       </div>
@@ -348,7 +339,7 @@ function renderResultQuick() {
     </div>
 
     <div class="quick-disclaimer">
-      ⚠️ Estimativa simplificada. Os valores reais dependem do saldo devedor atualizado, da TR divulgada pelo Banco Central e do percentual exato de evolução de obra.
+      ⚠️ Estimativa simplificada sem TR. Os valores reais dependem do saldo devedor atualizado, da TR divulgada pelo Banco Central e do percentual exato de evolução de obra.
     </div>
 
     <div class="quick-cta-card">
@@ -357,7 +348,7 @@ function renderResultQuick() {
       <button class="btn btn-primary" onclick="irParaSimulacaoCompleta()">
         📋 Fazer simulação completa →
       </button>
-      <button class="btn btn-back" onclick="prevStepQuick(); currentStep = STEPS_QUICK.length - 1; renderQuickStep();">
+      <button class="btn btn-back" onclick="reiniciarSimulacaoRapida()"">
         ← Refazer simulação rápida
       </button>
     </div>
@@ -399,7 +390,6 @@ function irParaSimulacaoCompleta() {
   form.percFinanciado      = 80;
   form.nomeSimulacao       = '';
   form.historicoPagamentos = [];
-  form.trInicial           = 0.001;
 
   fluxo = 'complete';
   currentStep = 0;

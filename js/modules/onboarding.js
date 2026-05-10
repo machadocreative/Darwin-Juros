@@ -323,8 +323,8 @@ function renderStep() {
 
     // Passo 5 — Histórico de pagamentos (opcional)
     `<div class="step-num">06 / 07</div>
-    <div class="step-title">Você já pagou alguma parcela?</div>
-    <div class="step-hint">Opcional. Informe os valores que já foram debitados para acompanhar o que foi pago. Use + / − para adicionar ou remover linhas.</div>
+    <div class="step-title">Você já pagou alguma parcela? — Opcional</div>
+    <div class="step-hint">Informe os valores de meses já debitados para acompanhamento. Deixe em branco se ainda não pagou nenhuma parcela.<br>Use + / − para adicionar ou remover linhas.</div>
     <div class="table-wrap" id="hist-table-wrap">
       <table>
         <thead><tr>
@@ -340,7 +340,7 @@ function renderStep() {
         <button class="rc-btn" id="hist-btn-add" onclick="histAdicionarLinha()">+</button>
       </div>
     </div>
-    <div class="info-box">💡 Deixe em branco se ainda não pagou nenhuma parcela — você poderá marcar pagamentos na tabela depois.</div>`,
+    <div class="info-box">💡 Para um acompanhamento mais detalhado, adquira a versão premium — Apenas R$ 4,99.</div>`,
 
     // Passo 6 — Nome
     `<div class="step-num">07 / 07</div>

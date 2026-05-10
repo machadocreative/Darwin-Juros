@@ -301,36 +301,73 @@ function _applySliderTrack(slider, percPaga, val) {
   ].join(' ');
 }
 
-// ── TELA DE TABELA COMPLETA (mantida para compatibilidade/acesso direto) ──
-function renderTabela() {
+// ── GERAR A TABELA COMPLETA - Sugerido por GPT ──
+function buildTabela() {
   aplicaBloqueio();
-  screen = 'tabela';
   const lastPago = meses[meses.length - 1]?.pago || false;
   const ativas   = meses.filter(r => !r.bloqueado);
 
-  setHtml(`
-    <div class="tabela-header">
-      <button class="tabela-back-btn" onclick="voltarParaResultado()">← Resumo</button>
-      <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
-    </div>
-    <div class="alert" style="margin-top:12px">💡 Edite % de obra e Taxa Referencial — <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a> o valor oficial mês a mês.</div>
+return `
+    ${inline ? `
+      <div class="tabela-inline-header">
+        <span class="tabela-inline-title">📅 Acompanhamento mês a mês</span>
+      </div>
+    ` : `
+      <div class="tabela-header">
+        <button class="tabela-back-btn" onclick="voltarParaResultado()">← Resumo</button>
+        <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
+      </div>
+    `}
+
+    <div class="alert" style="margin-top:12px">💡 Edite % de obra mês a mês.</div>
+
     <div class="table-wrap">
       <table>
-        <thead><tr>
-          <th class="th-center">#</th><th>Mês</th>
-          <th class="th-right">% Obra</th><th class="th-right">Saldo dev.</th>
-          <th class="th-right">TR %</th><th class="th-right">Previsto</th>
-          <th class="th-center">Pago?</th>
-        </tr></thead>
+        <thead>
+          <tr>
+           <th class="th-center">#</th><th>Mês</th>
+           <th class="th-right">% Obra</th><th class="th-right">Saldo dev.</th>
+            <th class="th-right">TR %</th><th class="th-right">Previsto</th>
+            <th class="th-center">Pago?</th>
+          </tr>
+        </thead>
         <tbody>${_buildTableRows()}</tbody>
       </table>
+
       <div class="row-controls">
         <span class="rc-info" id="rc-info">Use + / − para ajustar o número de parcelas (máx. ${MAX_MESES})</span>
         <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length <= 1 || lastPago ? 'disabled' : ''}>−</button>
         <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length >= MAX_MESES ? 'disabled' : ''}>+</button>
       </div>
     </div>
-    <button class="btn-reset" onclick="voltarParaResultado()">← Voltar ao resumo</button>
+
+    ${inline ? '' : `
+    `}    
+  `;
+}
+
+// ── TELA DE TABELA COMPLETA (mantida para compatibilidade/acesso direto) ──
+function buildTabela {
+  aplicaBloqueio();
+  screen = 'tabela';
+  const lastPago = meses[meses.length - 1]?.pago || false;
+  const ativas   = meses.filter(r => !r.bloqueado);
+    return `
+      ${inline ? `
+        <div class="tabela-header">
+          <button class="tabela-back-btn" onclick="voltarParaResultado()">← Resumo</button>
+          <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
+        </div>
+        <div class="alert" style="margin-top:12px">💡 Edite % de obra e Taxa Referencial.</div>
+      `}
+
+      setHtml(`
+        ${_buildTable()}
+      `);
+
+    return `
+      ${inline ? ` 
+    <button class="btn-reset" onclick="voltarParaResultado()">← Voltar à tela de resultados</button>
   `);
 }
 
@@ -380,8 +417,8 @@ function renderResult() {
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
         <div class="slider-result-note">${premium
-          ? 'Edite % de obra e TR diretamente na tabela abaixo'
-          : 'Edite a Taxa Referencial na versão completa'}</div>
+          ? ''
+          : 'Exibição da Taxa Referencial na versão completa'}</div>
       </div>
       ${!premium ? `
       <button class="free-preview-cta" onclick="showPaywall()">
@@ -394,9 +431,9 @@ function renderResult() {
   const blocoTabelaInline = premium ? `
     <div class="tabela-inline-wrap">
       <div class="tabela-inline-header">
-        <span class="tabela-inline-title">📅 Parcelas mês a mês</span>
+        <span class="tabela-inline-title">📅 Acompanhamento mês a mês</span>
       </div>
-      <div class="alert" style="margin:8px 0 4px">💡 Edite % de obra e Taxa Referencial — <a href="https://www.debit.com.br/tabelas/tr-bacen" target="_blank">Consulte aqui</a> o valor oficial.</div>
+      <div class="alert" style="margin:8px 0 4px">💡 Não esqueça de editar % de evolução da obra.</div>
       <div class="table-wrap">
         <table>
           <thead><tr>
@@ -408,7 +445,7 @@ function renderResult() {
           <tbody>${_buildTableRows()}</tbody>
         </table>
         <div class="row-controls">
-          <span class="rc-info" id="rc-info">${meses.length} parcela(s) · máx. ${MAX_MESES}</span>
+          <span class="rc-info" id="rc-info">Utilize +/- para acrescentar/remover linhas · máx. ${MAX_MESES}</span>
           <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela"
             ${meses.length <= 1 || (meses[meses.length - 1]?.pago) ? 'disabled' : ''}>−</button>
           <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela"
@@ -438,16 +475,16 @@ function renderResult() {
           <div class="s-val">${fmtBRL(fin)}</div>
         </div>
         <div class="summary-card">
-          <div class="s-label">Média estimada</div>
+          <div class="s-label">Valor médio estimado</div>
           <div class="s-val" id="sum-media">${fmtBRL(media)}</div>
         </div>
         ${premium ? `
         <div class="summary-card accent">
-          <div class="s-label">Soma das parcelas (Estimado)</div>
+          <div class="s-label">Total estimado de Juros de Obra</div>
           <div class="s-val" id="sum-total">${fmtBRL(total)}</div>
         </div>
         <div class="summary-card paid">
-          <div class="s-label">Total pago até agora</div>
+          <div class="s-label">Pago até o momento</div>
           <div class="s-val" id="sum-pago">${fmtBRL(pago)}</div>
         </div>` : ''}
       </div>

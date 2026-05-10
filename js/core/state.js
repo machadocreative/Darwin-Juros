@@ -17,20 +17,20 @@ const form = {
   valorTotal: '', percFinanciado: 80,
   valorTerreno: '',
   seguro: '', taxaAdm: '',
-  taxaAnual: '', trInicial: 0.001,
+  taxaAnual: '',
   nomeSimulacao: '',
-  historicoPagamentos: []  // [{ valor: Number }] — uma entrada por parcela paga (tela 5)
+  historicoPagamentos: []  // [{ valor: Number }] — uma entrada por parcela paga (tela 6)
 };
 
 // ── DADOS DO FORMULÁRIO (simulação rápida) ──
 const formQuick = {
-  seguro:        '',   // R$
-  taxaAdm:       '',   // R$
-  saldoDevedor:  '',   // R$
-  taxaAnual:     '',   // % a.a.
-  percObra:      50,   // % — posição do slider / input manual
-  ultimaParcela: '',   // R$ — valor da última parcela paga
-  _trAtual:      null  // carregado assincronamente via _getTRAtual()
+  seguro:         '',   // R$
+  taxaAdm:        '',   // R$
+  saldoDevedor:   '',   // R$
+  taxaAnual:      '',   // % a.a.
+  percObra:       50,   // % — posição do slider / input manual
+  ultimaParcela:  '',   // R$ — valor da última parcela paga (tela 5)
+  mesParcela:     ''    // YYYY-MM — mês da última parcela paga (tela 5)
 };
 
 let meses = [];

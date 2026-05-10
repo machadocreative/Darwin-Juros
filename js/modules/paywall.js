@@ -10,7 +10,7 @@ function showPaywall() {
     <div class="paywall-card">
       <div class="paywall-icon">🔓</div>
       <div class="paywall-title">Libere a tabela completa de parcelas</div>
-      <div class="paywall-sub">Veja todas as parcelas mês a mês, edite % de obra livremente, acrescente Taxa Referencial e acompanhe o que já foi pago.</div>
+      <div class="paywall-sub">Veja todas as parcelas já com o valor da Taxa Referencial mês a mês · Edite % de obra livremente · Acompanhe o que já foi pago</div>
       <div class="paywall-price">
         <span class="paywall-amount">R$ 4,99</span>
         <span class="paywall-terms">Pagamento único · Sem assinatura</span>
@@ -46,7 +46,7 @@ function aplicarCupom() {
     closePaywall();
     ativarPremiumPerfil();
     showToast('✅ Cupom aplicado! Acesso completo liberado.');
-    renderTabela();
+    renderResult();
   } else {
     el.style.borderColor  = 'var(--danger)';
     el.style.background   = 'var(--danger-light)';

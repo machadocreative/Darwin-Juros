@@ -22,30 +22,37 @@ function calcTable() {
   const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
   const ter = parseFloat(form.valorTerreno);
   const enc = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
-  const tm = parseFloat(form.taxaAnual) / 100 / 12;
+  const tm  = parseFloat(form.taxaAnual) / 100 / 12;
   const sMax = fin - ter;
-  const ini = parseMS(form.mesInicial), ent = parseMS(form.mesEntrega);
-  // total de parcelas = diferença de meses + 1 (inclui o mês inicial)
+  const ini  = parseMS(form.mesInicial), ent = parseMS(form.mesEntrega);
   const totalParcelas = Math.min(mBetween(ini, ent) + 1, MAX_MESES);
   const rows = [];
   for (let i = 0; i < totalParcelas; i++) {
-    const ym = addM(ini, i);
-    // parcela 1 (i=0): 0% de obra, saldo = terreno
-    // últimas parcelas chegam a 100%
-    const perc = totalParcelas === 1 ? 0 : parseFloat(((i / (totalParcelas - 1)) * 100).toFixed(1));
+    const ym    = addM(ini, i);
+    const tr    = getTRParaMes(ym); // 0 se mês futuro (null no JSON) ou ausente
+    const perc  = totalParcelas === 1 ? 0 : parseFloat(((i / (totalParcelas - 1)) * 100).toFixed(1));
     const saldo = ter + sMax * (perc / 100);
-    rows.push({ mes: mLabel(ym), perc, saldo, tr: form.trInicial, previsto: (tm + form.trInicial) * saldo + enc, pago: false, bloqueado: false });
+    rows.push({
+      mes: mLabel(ym),
+      perc,
+      saldo,
+      tr,
+      previsto: (tm + tr) * saldo + enc,
+      pago: false,
+      bloqueado: false
+    });
   }
   return rows;
 }
 
 function recalcRow(i) {
-  const r = meses[i];
+  const r   = meses[i];
   const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
   const ter = parseFloat(form.valorTerreno);
   const enc = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
-  const tm = parseFloat(form.taxaAnual) / 100 / 12;
-  r.saldo = ter + (fin - ter) * (r.perc / 100);
+  const tm  = parseFloat(form.taxaAnual) / 100 / 12;
+  r.saldo   = ter + (fin - ter) * (r.perc / 100);
+  // Mantém a TR que já está na linha (editada pelo usuário ou vinda do JSON)
   r.previsto = (tm + r.tr) * r.saldo + enc;
 }
 
@@ -58,9 +65,9 @@ function aplicaBloqueio() {
   });
 }
 
-function proximoMes() {
+function _proximoMesYM() {
   const ini = parseMS(form.mesInicial);
-  return mLabel(addM(ini, meses.length));
+  return addM(ini, meses.length); // retorna {y, m}
 }
 
 // Retorna o mês/ano da última parcela ativa (não bloqueada)
@@ -71,13 +78,23 @@ function ultimoMesAtivo() {
 
 function adicionarLinha() {
   if (meses.length >= MAX_MESES) return;
-  const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
-  const ter = parseFloat(form.valorTerreno);
-  const enc = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
-  const tm = parseFloat(form.taxaAnual) / 100 / 12;
-  const perc = Math.min(meses[meses.length - 1]?.perc || 0, 100);
+  const fin   = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const ter   = parseFloat(form.valorTerreno);
+  const enc   = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
+  const tm    = parseFloat(form.taxaAnual) / 100 / 12;
+  const perc  = Math.min(meses[meses.length - 1]?.perc || 0, 100);
   const saldo = ter + (fin - ter) * (perc / 100);
-  meses.push({ mes: proximoMes(), perc, saldo, tr: form.trInicial, previsto: (tm + form.trInicial) * saldo + enc, pago: false, bloqueado: false });
+  const ym    = _proximoMesYM();
+  const tr    = getTRParaMes(ym); // 0 se mês futuro/null/ausente
+  meses.push({
+    mes: mLabel(ym),
+    perc,
+    saldo,
+    tr,
+    previsto: (tm + tr) * saldo + enc,
+    pago: false,
+    bloqueado: false
+  });
   aplicaBloqueio();
   hasUnsavedChanges = true;
   renderResult();
@@ -92,15 +109,15 @@ function removerLinha() {
   renderResult();
 }
 
-// ── SLIDER DE % DE EVOLUÇÃO (versão free) ──
+// ── SLIDER DE % DE EVOLUÇÃO ──
+// TR sempre zerada em todos os sliders (free, premium, rápido)
 function calcPreviewSlider(perc) {
-  const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
-  const ter = parseFloat(form.valorTerreno);
-  const enc = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
-  const tm  = parseFloat(form.taxaAnual) / 100 / 12;
+  const fin   = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const ter   = parseFloat(form.valorTerreno);
+  const enc   = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
+  const tm    = parseFloat(form.taxaAnual) / 100 / 12;
   const saldo = ter + (fin - ter) * (perc / 100);
-  // TR sempre zerada no slider — evita distorção, especialmente no fluxo B
-  const previsto = tm * saldo + enc;
+  const previsto = tm * saldo + enc; // TR = 0
   return { saldo, previsto };
 }
 
@@ -113,11 +130,10 @@ function atualizaSlider() {
   const elVal   = document.getElementById('slider-val');
   const elSaldo = document.getElementById('slider-saldo');
 
-  if (elVal)   elVal.innerHTML = `${fmtBRL(previsto)} <small> + TR Mensal</small>`;
+  if (elVal)   elVal.innerHTML = `${fmtBRL(previsto)} <small>+ TR Mensal</small>`;
   if (elSaldo) elSaldo.textContent = fmtBRL(saldo);
 
   if (isPremium()) {
-    // Faixa tricolor: [0, percPaga] pago · [percPaga, perc] simulação · [perc, 100] vazio
     const percPaga = _ultimaPercPagaAtual();
     if (elPerc) {
       elPerc.textContent = perc + '%' + (percPaga > 0 && perc <= percPaga ? ' · já pago' : '');

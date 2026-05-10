@@ -1,0 +1,106 @@
+Correções 09052026
+
+rápida = sem TR real
+completa = TR histórica se possível
+premium = tabela real/híbrida
+onboarding = TR didática
+
+TR real -> number
+TR futura -> null
+source -> historical/future/manual
+
+• Quando o app deve trazer dados do tr-historico.json?
+> Quando o app possuir a informação exata de mês de início
+> Quando a tabela premium estiver habilitada (A tabela premium só é possível para quem faz a simulação completa free primeiro, logo, o app tem a informação de mês inicial) 
+Logo, o tr-historico.json é usado em:
+1. O usuário informou parcelas pagas na tela 6 da simulação completa. Guardar os valores com juntamente com a TR de cada mês do JSON nos dados do perfil, de forma "oculta", CASO o usuário venha a adquirir o premium mais à frente
+2. O usuário preencheu dados a tela 6 na simulação completa e adquiriu a versão premium. Surge tabela premium pré-preenchida e app pede confirmação para marcar PAGO nos meses passados. Se a TR não está disponível devido à fallback do JSON, usar 0 ou null para que o usuário preencha (ou até que o app seja atualizado) essa TR como campo obrigatório para pagar PAGO.
+
+• Quando o app deve usar TR = 0 ?
+> No slider da simulação rápida gratuita
+> No slider da simulação completa gratuita
+> No slider PREMIUM para parcelas de meses futuros
+
+• Quando o app deve usar TR "padrão" de 0,1000?
+> SOMENTE para fins didáticos, nas telas em que se pede a taxa de juros anual do financiamento. Demonstrar a soma da taxa mensal + 0,1000% de TR na diff-box, mas não utilizar isso para cálculos reais dos perfis/simulações.
+(Nesse sentido, a variável trInicial seria removida do código?)
+
+• Novo comportamento: TR = null
+> Na tabela PREMIUM para parcelas de para meses futuros o
+
+
+===============
+
+SIMULAÇÃO RÁPIDA
+1. Precisa da box com somatório
+Seguro + Taxa Adm
+
+2. Corrigir o texto da info-box de encargos mensais na simulação rápida. Precisa ser o mesmo texto da simulação completa
+
+
+
+
+TELA DE RESULTADOS SIMULAÇÃO RÁPIDA
+1. Verificar comportamento exato do slider, conferir se as fórmulas estão corretas.
+
+2. Botão "Refazer simulação rápida"
+Volta para a tela 5 com dados já preenchidos. Precisa iniciar a simulação rápida da tela 1 com dados em branco.
+
+
+
+===============
+
+SIMULAÇÃO COMPLETA
+
+1. Corrigir o texto sobre a TR na tela 5/7 da simulação completa
+O usuário não deve precisar digitar a TR
+
+2. Corrigir o texto sobre parcelas pagas
+"você poderá marcar pagamentos na tabela depois."
+Para maior controle de pagamentos feitos, adquira a versão premium.
+
+3. Após fazer uma simulação completa, salvar e criar outro perfil, está persistindo o nome da última simulação? conferir
+
+4. incluir validação de pagamento finalizado na tela 6
+SE usuário marcar que o mês final é (inicial + n) E
+parcelas já pagas igual a (inicial + n), pagamento de evolução concluído?
+chegou em 100%? como resolver?
+
+
+TELA DE RESULTADOS COMPLETA
+
+*Lembrete Botão editar volta para o passo 1 corretamente
+(Esse deveria ser o mesmo comportamento em "refazer simulação rápida)
+
+1. Slider 
+Verificar que SEMPRE deve mostrar a frase "+ TR Mensal" Talvez diminuir a fonte.
+
+Captura valores corretos informados pelo usuário na tela 6 (você já pagou parcelas?).
+MAS
+
+2. Tabela completa premium - MUITOS ERROS
+2.1. Ainda está abrindo uma tela separada após o CTA Premium, NÃO é necessário. Ao clicar em voltar para a tela de resultados a tabela está lá, sendo esse o comportamento esperado correto.
+
+2.2. App não mostrou pergunta de confirmação sobre preencher automaticamente as parcelas já pagas (informado de forma opcional na tela 6)
+
+2.3. Inferiu valores automáticos de % de obra baseado na quantidade de parcelas -- isso seria um erro ou não? (Acho que é apenas o fato de que não foi informado ao Claude para atualizar a funcionalidade da tabela após mudar o onboarding). SE usuário trouxer dados na tela 6, precisa inferir qual a % pelo valor de parcela, juros e saldo devedor. 
+Se for muito complexo resolver a inferência, então apenas pedir a confirmação do "Pago" pode ser o bastante.
+
+2.4. Trouxe o valor padrão de TR% na tabela completa. Se a versão premium possui a simulação completa com mês de início, precisa buscar o valor real de TR-histórico.json.
+
+2.5. Texto incorreto no final da tabela (?)
+Precisa de informação de +/- para adicionar/remover linhas.
+
+2.6. Texto redundante abaixo do slider premium
+"Edite % de obra e TR diretamente na tabela abaixo"
+
+3. Atualizar caixinha amarela - 💡 Edite % de obra e Taxa Referencial — Consulte aqui o valor oficial.
+O app sempre vai ter a série histórica da TR no JSON, e se não encontrar os dados, trazer 0,1000
+
+4. Vou inserir valores de parcelas com TR diferente do histórico na tela 6 para ver o que ele faz.
+(GOSTEI, resultados contaminados NÃO BUGAM o slider, permanece calculando ok), MAS... não marcou nenhuma como paga (???)
+Que inconsistencia da porra T_T
+
+
+
+
