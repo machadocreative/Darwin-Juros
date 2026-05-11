@@ -30,7 +30,7 @@ Chega de papel de caneta ou de planilhas confusas no Excel!
 
 A versão premium contará com um preço bastante atrativo, pensado para atender beneficiários de programas habitacionais — como o Minha Casa Minha Vida. Por um valor simbólico, libere as seguintes funcionalidades extras:
 
-- **Tabela de parcelas** (Premium) — Edite % de obra e Taxa Referencial mês a mês
+- **Tabela de parcelas** (Premium) — Edite % de obra e acompanhe o valor mais preciso com a taxa referencial mês a mês
 - **Acompanhamento de parcelas pagas** (Premium) — Marque seus pagamentos e veja os totais pagos até o momento (Inclusive no simulador slider!)
 
 ---
@@ -44,6 +44,9 @@ darwin/
 ├── manifest.json           ← Configuração do PWA
 ├── style.css               ← Estilos globais
 │
+├── data/
+│    └── tr-histórico.json   ← Série histórica da taxa referencial dos últimos 6 anos
+│
 └── js/
     ├── main.js             ← Inicialização do app
     │
@@ -53,8 +56,8 @@ darwin/
     │
     ├── modules/
     │   ├── calculator.js   ← Fórmula dos juros de obra, recálculo, premium
-    │   ├── onboarding.js   ← Fluxo A: 7 passos de coleta de dados
-    │   ├── fluxoB.js       ← Fluxo B: 4 perguntas + inferência automática
+    │   ├── onboarding.js   ← Simulação completa: 7 passos de coleta de dados
+    │   ├── quickSim.js     ← Simulação rápida: 7
     │   ├── result.js       ← Telas de resultado, tabela e perfis
     │   └── paywall.js      ← Paywall + validação de cupom
     │
@@ -69,7 +72,7 @@ Os scripts são carregados em ordem no `index.html`, respeitando as dependência
 
 ```
 state.js → storage.js → format.js → ui.js
-→ calculator.js → onboarding.js → fluxoB.js → result.js → paywall.js
+→ calculator.js → onboarding.js → quickSim.js → result.js → paywall.js
 → main.js
 ```
 
