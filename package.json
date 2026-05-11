@@ -1,0 +1,25 @@
+{
+  "name": "darwin-juros",
+  "version": "1.0.0",
+  "description": "Calculadora de juros de evolução de obra para imóveis",
+  "type": "module",
+  "scripts": {
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint js/",
+    "lint:fix": "eslint js/ --fix",
+    "serve": "http-server -p 8000"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@testing-library/dom": "^9.3.4",
+    "eslint": "^8.53.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.0",
+    "http-server": "^14.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
