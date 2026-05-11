@@ -6,8 +6,14 @@ window.addEventListener('load', async () => {
   await _carregarTRHistorico();
 
   const profiles = loadProfiles();
-  if (profiles.length > 0) { screen = 'profiles'; renderProfiles(); }
-  else { screen = 'onboarding'; renderStep(); }
+  if (profiles.length > 0) {
+    screen = 'profiles';
+    renderProfiles();
+  } else {
+    // Sem perfis: exibe bifurcação (rápida vs completa) — não o onboarding direto
+    screen = 'bifurcacao';
+    renderBifurcacao();
+  }
 });
 
 // ── CARREGAMENTO DO JSON DE TR ──

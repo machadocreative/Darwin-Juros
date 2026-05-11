@@ -5,8 +5,7 @@ function novaSimulacao() {
   window._editMode = null;
   fluxo = 'complete';
   Object.keys(form).forEach(k => { form[k] = ''; });
-  form.percFinanciado      = 80;
-  form.trInicial           = 0.001;
+  form.percFinanciado      = 80.00;
   form.historicoPagamentos = [];
   Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
   formQuick.percObra = 50;
@@ -106,7 +105,7 @@ function nextStep() {
       const v  = maskRead(elVT);
       const pf = maskRead(elPF);
       if (!v || v <= 0)               { elVT?.classList.add('invalid'); return; }
-      if (!pf || pf <= 0 || pf > 100) { elPF?.classList.add('invalid'); showToast('⚠️ O percentual financiado deve ser entre 0,01% e 100%.'); return; }
+      if (!pf || pf <= 10 || pf > 80) { elPF?.classList.add('invalid'); showToast('⚠️ O percentual financiado deve ser entre 10% e 80%.'); return; }
       form.valorTotal     = String(v);
       form.percFinanciado = pf;
 
@@ -249,14 +248,14 @@ function renderStep() {
     // Passo 0 — Datas
     `<div class="step-num">01 / 07</div>
     <div class="step-title">Quando inicia o pagamento de Juros de Evolução de Obra?</div>
-    <div class="step-hint">Verifique no seu contrato com a Caixa Econômica.</div>
+    <div class="step-hint">Mês da sua primeira prestação.</div>
     <input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="atualizaMesesStep0();this.classList.remove('invalid')">
     <br><br>
     <div class="step-title">Qual a data de entrega prevista?</div>
     <div class="step-hint">A data de entrega define quantos meses de evolução serão simulados.</div>
     <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMesesStep0();this.classList.remove('invalid')">
     <div id="badge-meses"></div>
-    <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que necessário.</div>`,
+    <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que for necessário.</div>`,
 
     // Passo 1 — Valor do imóvel
     `<div class="step-num">02 / 07</div>
@@ -291,40 +290,44 @@ function renderStep() {
     </div>
     <div class="info-box">💡 O valor do terreno é considerado como saldo devedor desde o primeiro mês. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
 
-    // Passo 3 — Encargos
+    // Passo 3 — Taxa de juros
     `<div class="step-num">04 / 07</div>
+    <div class="step-title">Qual a Taxa de Juros anual do seu Financiamento?</div>
+    <div class="step-hint">O app irá converter sua taxa anual para mensal abaixo.</div>
+    <div class="input-wrap"><input type="text" id="inp-taxaAnual" class="has-suf" placeholder="5,4321" inputmode="numeric" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
+    <div class="diff-box" id="box-taxa" style="${ta > 0 ? '' : 'display:none'}">
+    
+      <div class="d-title">Como funcionam os juros na prestação de Evolução de Obra?</div>
+      <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${ta > 0 ? fmtPerc(ta / 12, 4) : ''}</span></div>
+      <div class="diff-row"><span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span></div>
+      <hr class="diff-divider">
+      <div class="diff-row hl"><span class="d-label">Taxa de Juros no cálculo</span><span class="d-val" id="val-taxa">${ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : ''}</span></div>
+    </div>
+    <div class="info-box">💡 Aqui utilizamos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tabela de parcelas para maior precisão.</div>`,
+
+    // Passo 4 — Encargos
+    `<div class="step-num">05 / 07</div>
     <div class="step-title">Quais os seus encargos mensais?</div>
     <div class="step-hint">Valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
     <label class="field-label">1. Seguro</label>
+    <div class="label-hint">O valor de seguro é único para cada comprador — Verifique no seu contrato.</div>
     <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-seguro" class="has-pre" placeholder="00,00" inputmode="numeric" oninput="atualizaEncargos();this.classList.remove('invalid')"></div>
+
     <div class="field-group">
       <label class="field-label">2. Taxa Administrativa</label>
+      <div class="label-hint">A Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
       <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-taxaAdm" class="has-pre" placeholder="25,00" inputmode="numeric" oninput="atualizaEncargos()"></div>
-      <div class="info-box">💡 O valor de seguro é único para cada comprador — Verifique no seu contrato. Já a Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
     </div>
+
     <div class="confirm-box" id="box-enc" style="${seg > 0 ? '' : 'display:none'}">
       <div><div class="c-label">Total de encargos mensais</div></div>
       <div class="c-val" id="val-enc">${seg > 0 ? fmtBRL(seg + 25) : ''}</div>
     </div>`,
 
-    // Passo 4 — Taxa de juros
-    `<div class="step-num">05 / 07</div>
-    <div class="step-title">Qual a Taxa de Juros anual do seu Financiamento?</div>
-    <div class="step-hint">O app irá converter sua taxa anual para mensal abaixo. Já os juros das parcelas de Evolução de Obra são definidos pela soma da <strong>Taxa de Juros Mensal</strong> do seu financiamento com a <strong>Taxa Referencial (TR)</strong>, divulgada pelo Banco Central todo mês.</div>
-    <div class="input-wrap"><input type="text" id="inp-taxaAnual" class="has-suf" placeholder="7,0000" inputmode="numeric" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
-    <div class="diff-box" id="box-taxa" style="${ta > 0 ? '' : 'display:none'}">
-      <div class="d-title">Composição dos juros mensais</div>
-      <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${ta > 0 ? fmtPerc(ta / 12, 4) : ''}</span></div>
-      <div class="diff-row"><span class="d-label">(+) Taxa Referencial</span><span class="d-val">0,1000%</span></div>
-      <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Estimativa de Juros Mensais</span><span class="d-val" id="val-taxa">${ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : ''}</span></div>
-    </div>
-    <div class="info-box">💡 Aqui utilizamos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tabela de parcelas para maior precisão.</div>`,
-
     // Passo 5 — Histórico de pagamentos (opcional)
     `<div class="step-num">06 / 07</div>
     <div class="step-title">Você já pagou alguma parcela? — Opcional</div>
-    <div class="step-hint">Informe os valores de meses já debitados para acompanhamento. Deixe em branco se ainda não pagou nenhuma parcela.<br>Use + / − para adicionar ou remover linhas.</div>
+    <div class="step-hint">Informe os valores de meses já debitados para acompanhamento. Deixe em branco se quiser pular ou se ainda não pagou nenhuma parcela.<br></div>
     <div class="table-wrap" id="hist-table-wrap">
       <table>
         <thead><tr>
@@ -335,16 +338,15 @@ function renderStep() {
         <tbody id="hist-tbody">${_buildHistRows(histRows)}</tbody>
       </table>
       <div class="row-controls">
-        <span class="rc-info" id="hist-rc-info">${histRows.length} parcela(s)</span>
+        <span class="rc-info" id="hist-rc-info">Use + / − para adicionar ou remover parcelas.</span>
         <button class="rc-btn" id="hist-btn-rem" onclick="histRemoverLinha()" ${histRows.length <= 1 ? 'disabled' : ''}>−</button>
         <button class="rc-btn" id="hist-btn-add" onclick="histAdicionarLinha()">+</button>
       </div>
-    </div>
-    <div class="info-box">💡 Para um acompanhamento mais detalhado, adquira a versão premium — Apenas R$ 4,99.</div>`,
+    </div>`,
 
-    // Passo 6 — Nome
+    // Passo 6 — Nome do Perfil
     `<div class="step-num">07 / 07</div>
-    <div class="step-title">Como quer chamar essa simulação?</div>
+    <div class="step-title">Como quer chamar essa simulação?</div> 
     <div class="step-hint">Máximo 30 caracteres. Ex: Apto Centro, Torre B, Meu apê...</div>
     <input type="text" id="inp-nome" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao || '')}" maxlength="30" oninput="updateCharCount(this)">
     <div class="char-count" id="char-count">0 / 30</div>`
@@ -383,18 +385,18 @@ function renderStep() {
       if (vt) vt.oninput = () => { maskValue(vt, 'brl'); vt.classList.remove('invalid'); document.getElementById('err-terreno').style.display = 'none'; atualizaTer(); };
     }
     if (currentStep === 3) {
+      attachMask('inp-taxaAnual', 'perc4', form.taxaAnual || '');
+      const ta = document.getElementById('inp-taxaAnual');
+      if (ta) ta.oninput = () => { maskValue(ta, 'perc4'); ta.classList.remove('invalid'); atualizaTaxa(); };
+      if (form.taxaAnual) atualizaTaxa();      
+    }
+    if (currentStep === 4) {
       attachMask('inp-seguro',  'brl', form.seguro  || '');
       attachMask('inp-taxaAdm', 'brl', form.taxaAdm || 25);
       const seg = document.getElementById('inp-seguro');
       const adm = document.getElementById('inp-taxaAdm');
       if (seg) seg.oninput = () => { maskValue(seg, 'brl'); seg.classList.remove('invalid'); atualizaEncargos(); };
       if (adm) adm.oninput = () => { maskValue(adm, 'brl'); atualizaEncargos(); };
-    }
-    if (currentStep === 4) {
-      attachMask('inp-taxaAnual', 'perc4', form.taxaAnual || '');
-      const ta = document.getElementById('inp-taxaAnual');
-      if (ta) ta.oninput = () => { maskValue(ta, 'perc4'); ta.classList.remove('invalid'); atualizaTaxa(); };
-      if (form.taxaAnual) atualizaTaxa();
     }
     if (currentStep !== 5) {
       const f = document.querySelector('.step-card input');
@@ -463,13 +465,6 @@ function atualizaTer() {
   if (ds) ds.textContent = fmtBRL(Math.max(0, fin - ter));
 }
 
-function atualizaEncargos() {
-  const s = maskRead(document.getElementById('inp-seguro')) || 0;
-  const a = maskRead(document.getElementById('inp-taxaAdm')) || 25;
-  const box = document.getElementById('box-enc'), val = document.getElementById('val-enc');
-  if (box && val) { box.style.display = s > 0 ? 'flex' : 'none'; val.textContent = fmtBRL(s + a); }
-}
-
 function atualizaTaxa() {
   const el = document.getElementById('inp-taxaAnual');
   // Lê via maskRead para garantir que a máscara já foi aplicada
@@ -482,6 +477,12 @@ function atualizaTaxa() {
   if (elCombinada) elCombinada.textContent = fmtPerc(ta / 12 + 0.1, 4);
 }
 
+function atualizaEncargos() {
+  const s = maskRead(document.getElementById('inp-seguro')) || 0;
+  const a = maskRead(document.getElementById('inp-taxaAdm')) || 25;
+  const box = document.getElementById('box-enc'), val = document.getElementById('val-enc');
+  if (box && val) { box.style.display = s > 0 ? 'flex' : 'none'; val.textContent = fmtBRL(s + a); }
+}
 
 // ── MINI-TABELA DE HISTÓRICO (tela 5) ──
 

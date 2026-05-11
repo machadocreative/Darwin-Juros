@@ -1,5 +1,6 @@
 Correções 09052026
 
+TESTAR SE OS COMPORTAMENTOS ABAIXO FORAM RESOLVIDOS:
 rápida = sem TR real
 completa = TR histórica se possível
 premium = tabela real/híbrida
@@ -79,7 +80,7 @@ Captura valores corretos informados pelo usuário na tela 6 (você já pagou par
 MAS
 
 2. Tabela completa premium - MUITOS ERROS
-2.1. Ainda está abrindo uma tela separada após o CTA Premium, NÃO é necessário. Ao clicar em voltar para a tela de resultados a tabela está lá, sendo esse o comportamento esperado correto.
+2.1. Ainda está abrindo uma tela separada após o CTA Premium, NÃO é necessário (ACHO que resolvi esse). Ao clicar em voltar para a tela de resultados a tabela está lá, sendo esse o comportamento esperado correto.
 
 2.2. App não mostrou pergunta de confirmação sobre preencher automaticamente as parcelas já pagas (informado de forma opcional na tela 6)
 
