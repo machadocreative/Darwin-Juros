@@ -118,18 +118,18 @@ function nextStep() {
       form.valorTerreno = String(v);
 
     } else if (currentStep === 3) {
+      const elTa = document.getElementById('inp-taxaAnual');
+      const v = maskRead(elTa);
+      if (!v || v <= 0) { elTa?.classList.add('invalid'); return; }
+      form.taxaAnual = String(v);
+
+    } else if (currentStep === 4) {
       const elSeg = document.getElementById('inp-seguro');
       const elAdm = document.getElementById('inp-taxaAdm');
       const s = maskRead(elSeg);
       if (!s || s <= 0) { elSeg?.classList.add('invalid'); return; }
       form.seguro  = String(s);
       form.taxaAdm = String(maskRead(elAdm) || 25);
-
-    } else if (currentStep === 4) {
-      const elTa = document.getElementById('inp-taxaAnual');
-      const v = maskRead(elTa);
-      if (!v || v <= 0) { elTa?.classList.add('invalid'); return; }
-      form.taxaAnual = String(v);
 
     } else if (currentStep === 5) {
       // Coleta histórico de pagamentos da mini-tabela (opcional)
@@ -301,9 +301,9 @@ function renderStep() {
       <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${ta > 0 ? fmtPerc(ta / 12, 4) : ''}</span></div>
       <div class="diff-row"><span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span></div>
       <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Taxa de Juros no cálculo</span><span class="d-val" id="val-taxa">${ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : ''}</span></div>
+      <div class="diff-row hl"><span class="d-label">Taxa de Juros no cálculo da Evolução</span><span class="d-val" id="val-taxa">${ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : ''}</span></div>
     </div>
-    <div class="info-box">💡 Aqui utilizamos 0,1000% de TR como valor inicial — Você poderá editar esse valor mês a mês na sua tabela de parcelas para maior precisão.</div>`,
+    <div class="info-box">💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.</div>`,
 
     // Passo 4 — Encargos
     `<div class="step-num">05 / 07</div>
@@ -388,7 +388,7 @@ function renderStep() {
       attachMask('inp-taxaAnual', 'perc4', form.taxaAnual || '');
       const ta = document.getElementById('inp-taxaAnual');
       if (ta) ta.oninput = () => { maskValue(ta, 'perc4'); ta.classList.remove('invalid'); atualizaTaxa(); };
-      if (form.taxaAnual) atualizaTaxa();      
+      if (form.taxaAnual) atualizaTaxa();
     }
     if (currentStep === 4) {
       attachMask('inp-seguro',  'brl', form.seguro  || '');
