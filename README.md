@@ -44,6 +44,9 @@ darwin/
 ├── manifest.json           ← Configuração do PWA
 ├── style.css               ← Estilos globais
 │
+├── data/
+│    └── tr-histórico.json   ← Série histórica da taxa referencial dos últimos 6 anos
+│
 └── js/
     ├── main.js             ← Inicialização do app
     │
@@ -53,8 +56,8 @@ darwin/
     │
     ├── modules/
     │   ├── calculator.js   ← Fórmula dos juros de obra, recálculo, premium
-    │   ├── onboarding.js   ← Fluxo A: 7 passos de coleta de dados
-    │   ├── fluxoB.js       ← Fluxo B: 4 perguntas + inferência automática
+    │   ├── onboarding.js   ← Simulação completa: 7 passos de coleta de dados
+    │   ├── quickSim.js     ← Simulação rápida: 7
     │   ├── result.js       ← Telas de resultado, tabela e perfis
     │   └── paywall.js      ← Paywall + validação de cupom
     │
@@ -69,7 +72,7 @@ Os scripts são carregados em ordem no `index.html`, respeitando as dependência
 
 ```
 state.js → storage.js → format.js → ui.js
-→ calculator.js → onboarding.js → fluxoB.js → result.js → paywall.js
+→ calculator.js → onboarding.js → quickSim.js → result.js → paywall.js
 → main.js
 ```
 
