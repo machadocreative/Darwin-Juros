@@ -30,7 +30,7 @@ Chega de papel de caneta ou de planilhas confusas no Excel!
 
 A versão premium contará com um preço bastante atrativo, pensado para atender beneficiários de programas habitacionais — como o Minha Casa Minha Vida. Por um valor simbólico, libere as seguintes funcionalidades extras:
 
-- **Tabela de parcelas** (Premium) — Edite % de obra e Taxa Referencial mês a mês
+- **Tabela de parcelas** (Premium) — Edite % de obra e acompanhe o valor mais preciso com a taxa referencial mês a mês
 - **Acompanhamento de parcelas pagas** (Premium) — Marque seus pagamentos e veja os totais pagos até o momento (Inclusive no simulador slider!)
 
 ---
