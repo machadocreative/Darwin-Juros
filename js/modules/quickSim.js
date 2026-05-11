@@ -1,32 +1,36 @@
 // ── SIMULAÇÃO RÁPIDA ──
-// 5 telas: encargos → saldo devedor → taxa de juros → % obra → última parcela
-// Resultado simplificado gratuito + CTA para simulação completa
+// 6 telas: encargos → saldo devedor → taxa de juros → % obra → última parcela → parcela de financiamento
 
 const STEPS_QUICK = [
   {
-    num: '01 / 05',
+    num: '01 / 06',
     title: 'Quais os seus encargos mensais?',
     hint: 'Valores cobrados mensalmente pela Caixa, independente do andamento da obra.',
   },
   {
-    num: '02 / 05',
+    num: '02 / 06',
     title: 'Qual o seu saldo devedor atual?',
     hint: 'Consulte o extrato do seu financiamento no app Habitação Caixa ou no internet banking da Caixa.',
   },
   {
-    num: '03 / 05',
+    num: '03 / 06',
     title: 'Qual a taxa de juros anual do seu financiamento?',
     hint: 'Consta no item 1.4 do seu contrato com a Caixa Econômica Federal.',
   },
   {
-    num: '04 / 05',
+    num: '04 / 06',
     title: 'Qual o percentual atual de evolução de obra?',
     hint: 'Consulte o app Habitação Caixa ou o último comunicado da construtora.',
   },
   {
-    num: '05 / 05',
+    num: '05 / 06',
     title: 'Quanto você pagou na sua última parcela?',
     hint: 'Valor total debitado, incluindo juros e encargos. Consulte seu extrato bancário.',
+  },
+  {
+    num: '06 / 06',
+    title: 'Qual o valor da sua parcela de financiamento?',
+    hint: 'Valor fixo mensal do financiamento, sem os juros de obra. Campo opcional — pule se não souber.',
   }
 ];
 
@@ -115,6 +119,17 @@ function renderQuickStep() {
       <div class="info-box" style="margin-top:8px">
         💡 Consulte seu extrato bancário — é o débito total incluindo juros e encargos.
       </div>`;
+
+  } else if (currentStep === 5) {
+    inputsHtml = `
+      <div class="input-wrap">
+        <span class="pre">R$</span>
+        <input type="text" id="qinp-parcela-fin" class="has-pre" placeholder="2.450,00" inputmode="numeric"
+          oninput="maskOnInput(this)">
+      </div>
+      <div class="info-box" style="margin-top:8px">
+        💡 É o valor fixo do financiamento — diferente das parcelas de juros de obra. Consta no seu extrato mensal separadamente.
+      </div>`;
   }
 
   const isFirst = currentStep === 0;
@@ -130,7 +145,10 @@ function renderQuickStep() {
       <button class="btn btn-primary" onclick="nextStepQuick()">
         ${isLast ? 'Ver resultado →' : 'Continuar →'}
       </button>
-      <button class="btn btn-back" onclick="${isFirst ? 'renderBifurcacao()' : 'prevStepQuick()'}">← Voltar</button>
+      ${isLast ? `<button class="btn btn-back" onclick="nextStepQuick()" style="display:none"></button>` : ''}
+      <button class="btn btn-back" onclick="${isFirst ? 'renderBifurcacao()' : 'prevStepQuick()'}">
+        ${isLast ? '⏭ Pular esta pergunta' : '← Voltar'}
+      </button>
     </div>`);
 
   setTimeout(() => {
@@ -155,6 +173,9 @@ function renderQuickStep() {
       attachMask('qinp-ultima', 'brl', formQuick.ultimaParcela || '');
       const elMes = document.getElementById('qinp-mes-parcela');
       if (elMes && formQuick.mesParcela) elMes.value = formQuick.mesParcela;
+    }
+    if (currentStep === 5) {
+      attachMask('qinp-parcela-fin', 'brl', formQuick.parcelaFinanciamento || '');
     }
     const f = document.querySelector('.step-card input:not([type=range])');
     if (f && currentStep !== 3) f.focus();
@@ -243,14 +264,20 @@ function nextStepQuick() {
     }
 
   } else if (currentStep === 4) {
-    const elMes    = document.getElementById('qinp-mes-parcela');
-    const elValor  = document.getElementById('qinp-ultima');
-    const mes      = elMes?.value;
-    const valor    = maskRead(elValor);
-    if (!mes)           { elMes?.classList.add('invalid');   showToast('⚠️ Informe o mês da última parcela.'); return; }
+    const elMes   = document.getElementById('qinp-mes-parcela');
+    const elValor = document.getElementById('qinp-ultima');
+    const mes     = elMes?.value;
+    const valor   = maskRead(elValor);
+    if (!mes)              { elMes?.classList.add('invalid');   showToast('⚠️ Informe o mês da última parcela.'); return; }
     if (!valor || valor <= 0) { elValor?.classList.add('invalid'); showToast('⚠️ Informe o valor da última parcela.'); return; }
     formQuick.mesParcela    = mes;
     formQuick.ultimaParcela = valor;
+
+  } else if (currentStep === 5) {
+    // Opcional — salva se preenchido, null se pulado
+    const el = document.getElementById('qinp-parcela-fin');
+    const v  = maskRead(el);
+    formQuick.parcelaFinanciamento = (!isNaN(v) && v > 0) ? v : null;
     renderResultQuick();
     return;
   }
@@ -263,13 +290,6 @@ function prevStepQuick() {
   if (currentStep > 0) { currentStep--; renderQuickStep(); }
 }
 
-function reiniciarSimulacaoRapida() {
-  Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
-  formQuick.percObra = 50;
-  currentStep = 0;
-  renderQuickStep();
-}
-
 // ── CÁLCULO ──
 function _calcQuick() {
   const tm   = (parseFloat(formQuick.taxaAnual) / 100) / 12;
@@ -277,22 +297,41 @@ function _calcQuick() {
   const sd   = parseFloat(formQuick.saldoDevedor || 0);
   const perc = parseFloat(formQuick.percObra || 0);
 
-  // TR = 0 na simulação rápida (sliders e cards)
+  // TR = 0 na simulação rápida
   const parcelaAtual = tm * sd + enc;
 
-  const percProxima = Math.min(perc + 10, 100);
-  const sdProxima   = perc > 0 ? sd * (percProxima / perc) : sd * 1.05;
-  const parcelaProxima = tm * sdProxima + enc;
+  return { parcelaAtual, tm, enc, sd, perc };
+}
 
-  return { parcelaAtual, parcelaProxima, percProxima };
+// TR da última parcela em % e R$ (do JSON histórico)
+function _calcTRUltimaParcela() {
+  if (!formQuick.mesParcela) return { trPerc: null, trReais: null };
+  const ym   = parseMS(formQuick.mesParcela);
+  const trDec = getTRParaMes(ym); // já em decimal (ex: 0.001687)
+  const sd   = parseFloat(formQuick.saldoDevedor || 0);
+  const trPerc  = trDec * 100;          // volta para % (ex: 0.1687)
+  const trReais = trDec * sd;           // valor em R$
+  return { trPerc, trReais };
 }
 
 // ── TELA DE RESULTADO SIMPLIFICADO ──
 function renderResultQuick() {
   screen = 'resultQuick';
-  const { parcelaAtual, parcelaProxima, percProxima } = _calcQuick();
-  const perc     = parseFloat(formQuick.percObra || 0);
-  const mesLabel = formQuick.mesParcela ? mLabel(parseMS(formQuick.mesParcela)) : '—';
+  const { parcelaAtual, tm, enc, sd, perc } = _calcQuick();
+  const { trPerc, trReais } = _calcTRUltimaParcela();
+  const mesLabel  = formQuick.mesParcela ? mLabel(parseMS(formQuick.mesParcela)) : '—';
+  const temTR     = trPerc !== null && trPerc > 0;
+  const temFin    = formQuick.parcelaFinanciamento > 0;
+  const sliderMin = Math.max(1, perc); // slider começa no % atual, mínimo 1
+
+  // Card 2: TR
+  const card2Html = `
+    <div class="quick-result-card">
+      <div class="qrc-label">TR de ${mesLabel}</div>
+      <div class="qrc-perc">${temTR ? fmtPerc(trPerc, 4) : '—'}</div>
+      <div class="qrc-val">${temTR ? fmtBRL(trReais) : '—'}</div>
+      <div class="qrc-note">Aplicada ao saldo devedor</div>
+    </div>`;
 
   setHtml(`
     <div class="result-header">
@@ -302,17 +341,12 @@ function renderResultQuick() {
 
     <div class="quick-result-cards">
       <div class="quick-result-card accent">
-        <div class="qrc-label">Parcela estimada agora</div>
+        <div class="qrc-label">Última parcela paga</div>
         <div class="qrc-perc">${perc}% de obra · ref. ${mesLabel}</div>
-        <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
-        <div class="qrc-note">+ TR Mensal</div>
+        <div class="qrc-val">${fmtBRL(formQuick.ultimaParcela)}</div>
+        <div class="qrc-note">valor informado</div>
       </div>
-      <div class="quick-result-card">
-        <div class="qrc-label">Previsão próxima parcela</div>
-        <div class="qrc-perc">estimado em ${percProxima}% de obra</div>
-        <div class="qrc-val">${fmtBRL(parcelaProxima)}</div>
-        <div class="qrc-note">+ TR Mensal</div>
-      </div>
+      ${card2Html}
     </div>
 
     <div class="free-preview-card" style="margin-top:12px">
@@ -322,20 +356,28 @@ function renderResultQuick() {
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
-          <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+          <span>1%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="preview-slider" class="preview-slider"
-          min="0" max="100" step="10" value="${perc}"
+          min="${sliderMin}" max="100" step="10" value="${perc}"
           oninput="atualizaSliderQuick()">
         <div class="slider-perc-label" id="slider-perc">${perc}%</div>
       </div>
       <div class="slider-result">
+        <dl class="slider-result-row">
+          <dt class="slider-result-label">Saldo devedor estimado</dt>
+          <dd class="slider-result-val" id="slider-saldo">—</dd>
+        </dl>
         <dl class="slider-result-row highlight">
           <dt class="slider-result-label">Parcela estimada</dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
         <div class="slider-result-note">Estimativa sem TR · valores reais podem variar</div>
       </div>
+      ${temFin ? `
+      <div id="slider-fin-aviso" style="padding:10px 20px 14px">
+        <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
+      </div>` : ''}
     </div>
 
     <div class="quick-disclaimer">
@@ -348,7 +390,7 @@ function renderResultQuick() {
       <button class="btn btn-primary" onclick="irParaSimulacaoCompleta()">
         📋 Fazer simulação completa →
       </button>
-      <button class="btn btn-back" onclick="reiniciarSimulacaoRapida()"">
+      <button class="btn btn-back" onclick="reiniciarSimulacaoRapida()">
         ← Refazer simulação rápida
       </button>
     </div>
@@ -357,7 +399,7 @@ function renderResultQuick() {
   setTimeout(() => atualizaSliderQuick(), 50);
 }
 
-// Slider da tela de resultado rápido (usa formQuick, não form)
+// ── SLIDER DO RESULTADO RÁPIDO ──
 function atualizaSliderQuick() {
   const slider = document.getElementById('preview-slider');
   if (!slider) return;
@@ -366,23 +408,46 @@ function atualizaSliderQuick() {
   const enc       = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
   const sd        = parseFloat(formQuick.saldoDevedor || 0);
   const percAtual = parseFloat(formQuick.percObra || 1) || 1;
-  const sdProj    = perc > 0 ? sd * (perc / percAtual) : sd;
-  const previsto  = tm * sdProj + enc; // TR zerada no slider
 
-  const elPerc = document.getElementById('slider-perc');
-  const elVal  = document.getElementById('slider-val');
-  if (elPerc) elPerc.textContent = perc + '%';
-  if (elVal)  elVal.innerHTML = `${fmtBRL(previsto)} <small>+ TR Mensal</small>`;
+  // Projeta saldo proporcionalmente ao % do slider vs % atual
+  const sdProj   = sd * (perc / percAtual);
+  const previsto = tm * sdProj + enc; // TR = 0
+
+  const elPerc  = document.getElementById('slider-perc');
+  const elVal   = document.getElementById('slider-val');
+  const elSaldo = document.getElementById('slider-saldo');
+  if (elPerc)  elPerc.textContent  = perc + '%';
+  if (elVal)   elVal.innerHTML     = `${fmtBRL(previsto)} <small>+ TR Mensal</small>`;
+  if (elSaldo) elSaldo.textContent = fmtBRL(sdProj);
+
   slider.style.background = `linear-gradient(to right, var(--accent) ${perc}%, var(--border) ${perc}%)`;
+
+  // Aviso de ultrapassagem da parcela de financiamento (tempo real)
+  const bloco = document.getElementById('slider-fin-bloco');
+  if (bloco && formQuick.parcelaFinanciamento > 0) {
+    const fin   = parseFloat(formQuick.parcelaFinanciamento);
+    const diff  = fin - previsto;
+    const ultrapassou = diff < 0;
+    bloco.className = 'slider-fin-bloco' + (ultrapassou ? ' slider-fin-danger' : '');
+    bloco.innerHTML = ultrapassou
+      ? `⚠️ Parcela de obra ultrapassou o financiamento em <strong>${fmtBRL(Math.abs(diff))}</strong>`
+      : `Faltam <strong>${fmtBRL(diff)}</strong> para igualar a parcela de financiamento`;
+  }
+}
+
+// ── REINICIAR ──
+function reiniciarSimulacaoRapida() {
+  Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
+  formQuick.percObra = 50;
+  currentStep = 0;
+  renderQuickStep();
 }
 
 // ── CTA: migrar para simulação completa ──
 function irParaSimulacaoCompleta() {
-  // Pré-preenche campos já coletados
   form.seguro    = String(formQuick.seguro   || '');
   form.taxaAdm   = String(formQuick.taxaAdm  || 25);
   form.taxaAnual = String(formQuick.taxaAnual || '');
-  // Demais campos ficam em branco para o usuário preencher
   form.mesInicial          = '';
   form.mesEntrega          = '';
   form.valorTotal          = '';

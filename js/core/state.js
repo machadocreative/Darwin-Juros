@@ -24,13 +24,14 @@ const form = {
 
 // ── DADOS DO FORMULÁRIO (simulação rápida) ──
 const formQuick = {
-  seguro:         '',   // R$
-  taxaAdm:        '',   // R$
-  saldoDevedor:   '',   // R$
-  taxaAnual:      '',   // % a.a.
-  percObra:       50,   // % — posição do slider / input manual
-  ultimaParcela:  '',   // R$ — valor da última parcela paga (tela 5)
-  mesParcela:     ''    // YYYY-MM — mês da última parcela paga (tela 5)
+  seguro:                '',   // R$
+  taxaAdm:               '',   // R$
+  saldoDevedor:          '',   // R$
+  taxaAnual:             '',   // % a.a.
+  percObra:              50,   // % — posição do slider / input manual
+  ultimaParcela:         '',   // R$ — valor da última parcela paga (tela 5)
+  mesParcela:            '',   // YYYY-MM — mês da última parcela paga (tela 5)
+  parcelaFinanciamento:  null  // R$ — parcela de financiamento (tela 6, opcional)
 };
 
 let meses = [];

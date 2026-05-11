@@ -1754,3 +1754,21 @@ dl dd.slider-result-val.accent span {
   flex: 1;
   max-width: 120px;
 }
+
+/* ── AVISO INLINE: parcela de obra vs financiamento ── */
+.slider-fin-bloco {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--accent-light);
+  border: 1px solid #B2D8C4;
+  color: var(--accent);
+  transition: background .2s, border-color .2s, color .2s;
+}
+
+.slider-fin-bloco.slider-fin-danger {
+  background: var(--danger-light);
+  border-color: #F5C6C6;
+  color: var(--danger);
+}
