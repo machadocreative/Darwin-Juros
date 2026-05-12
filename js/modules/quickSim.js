@@ -93,13 +93,13 @@ function renderQuickStep() {
         <span class="suf">% a.a.</span>
       </div>
 
-      <div class="diff-box" id="box-taxa" style="${qinp-taxa > 0 ? '' : 'display:none'}">
+      <div class="diff-box" id="box-taxa" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
     
       <div class="d-title">Como funcionam os juros na prestação de Evolução de Obra?</div>
-      <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${qinp-taxa > 0 ? fmtPerc(qinp-taxa / 12, 4) : ''}</span></div>
+      <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span></div>
       <div class="diff-row"><span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span></div>
       <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Taxa de Juros no cálculo da Evolução</span><span class="d-val" id="val-taxa">${qinp-taxa > 0 ? fmtPerc(qinp-taxa / 12 + 0.1, 4) : ''}</span></div>
+      <div class="diff-row hl"><span class="d-label">Taxa de Juros no cálculo da Evolução</span><span class="d-val" id="val-taxa">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4) : ''}</span></div>
     </div>
     <div class="info-box">💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.</div>`;
 
@@ -231,8 +231,8 @@ function _atualizaTaxaQuick() {
   const elMensal    = document.getElementById('qval-taxa-mensal');
   const elCombinada = document.getElementById('qval-taxa');
   if (box) box.style.display = ta > 0 ? 'block' : 'none';
-  if (elMensal)    elMensal.textContent    = fmtPerc(ta / 12, 4);
-  if (elCombinada) elCombinada.textContent = fmtPerc(ta / 12 + 0.1, 4);
+  if (elMensal)    elMensal.textContent    = fmtPerc(formQuick.taxaAnual / 12, 4);
+  if (elCombinada) elCombinada.textContent = fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4);
 }
 
 // ── NAVEGAÇÃO ──
