@@ -42,15 +42,17 @@ function renderQuickStep() {
 
   if (currentStep === 0) {
     const perc = formQuick.percObra ?? 50;
+    const sliderMin = 1;
+    const sliderStart = Math.max(1, perc);
     inputsHtml = `
       <div class="quick-perc-wrap">
         <div class="slider-labels">
           <span>1%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="qinp-slider" class="preview-slider"
-          min="${sliderMin}" max="100" step="5" value="${perc}"
+          min="${sliderMin}" max="100" step="1" value="${sliderStart}"
           oninput="_syncPercQuick(this.value)">
-        <div class="slider-perc-label" id="qslider-perc">${perc}%</div>
+        <div class="slider-perc-label" id="qslider-perc">${sliderStart}%</div>
         <div class="quick-perc-row">
           <span class="quick-perc-label">Ou digite:</span>
           <div class="input-wrap quick-perc-input-wrap">
@@ -329,12 +331,12 @@ function renderResultQuick() {
       <div class="qrc-label">TR de ${mesLabel}</div>
       <div class="qrc-perc">${temTR ? fmtPerc(trPerc, 4) : '—'}</div>
       <div class="qrc-val">${temTR ? fmtBRL(trReais) : '—'}</div>
-      <div class="qrc-note">Aplicada ao saldo devedor</div>
+      <div class="qrc-note">Aplicada para o cálculo da prestação</div>
     </div>`;
 
   setHtml(`
     <div class="result-header">
-      <h2>Simulação Rápida</h2>
+      <h2>Resultado da sua Simulação Rápida</h2>
 
       <div class="quick-disclaimer">
         ⚠️ Os valores reais dependem do saldo devedor atualizado, da TR divulgada pelo Banco Central e do percentual exato de evolução de obra. As estimativas serão sempre apresentadas sem a TR oficial.
@@ -361,7 +363,7 @@ function renderResultQuick() {
           <span>1%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="preview-slider" class="preview-slider"
-          min="${sliderMin}" max="100" step="5" value="${sliderStart}"
+          min="${sliderMin}" max="100" step="1" value="${sliderStart}"
           oninput="atualizaSliderQuick()">
         <div class="slider-perc-label" id="slider-perc">${sliderStart}%</div>
       </div>
@@ -394,7 +396,7 @@ function renderResultQuick() {
       </button>
     </div>
 
-    <p>Darwin é uma ferramenta de cálculo não preditiva. Não nos responsabilizamos se resultados futuros não corresponderem à realidade. As estimativas apresentadas funcionam melhor quando os dados inseridos são mais precisos, mas podem haver variações sutis.</p>
+    <p>Darwin é uma ferramenta de cálculo não preditiva. Não nos responsabilizamos se previsões futuras não corresponderem à realidade. As estimativas apresentadas funcionam melhor quando os dados inseridos são mais precisos, mas podem haver variações sutis, uma vez que a instutição financeira é a responsável final pelos valores cobrados.</p>
   `);
 
   setTimeout(() => atualizaSliderQuick(), 50);
