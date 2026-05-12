@@ -302,32 +302,35 @@ function _applySliderTrack(slider, percPaga, val) {
 }
 
 // ── GERAR A TABELA COMPLETA - Sugerido por GPT ──
-function buildTabela() {
-  aplicaBloqueio();
-  const lastPago = meses[meses.length - 1]?.pago || false;
-  const ativas   = meses.filter(r => !r.bloqueado);
+function renderTabela() { screen = 'tabela'; setHtml(buildTabela(false)); }
 
-return `
-    ${inline ? `
-      <div class="tabela-inline-header">
-        <span class="tabela-inline-title">📅 Acompanhamento mês a mês</span>
-      </div>
-    ` : `
+// ── CONSTUIR A TABELA COMO PÁGINA INDEPENDENTE - Sugerido por GPT ──
+function buildTabela(inline = false) {
+  aplicaBloqueio();
+
+  const lastPago = meses[meses.length - 1]?.pago || false;
+
+  return `
+    ${!inline ? `
       <div class="tabela-header">
         <button class="tabela-back-btn" onclick="voltarParaResultado()">← Resumo</button>
         <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
       </div>
-    `}
-
-    <div class="alert" style="margin-top:12px">💡 Edite % de obra mês a mês.</div>
+      <div class="alert" style="margin-top:12px">
+        💡 Edite % de obra e Taxa Referencial.
+      </div>
+    ` : ''}
 
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-           <th class="th-center">#</th><th>Mês</th>
-           <th class="th-right">% Obra</th><th class="th-right">Saldo dev.</th>
-            <th class="th-right">TR %</th><th class="th-right">Previsto</th>
+            <th class="th-center">#</th>
+            <th>Mês</th>
+            <th class="th-right">% Obra</th>
+            <th class="th-right">Saldo dev.</th>
+            <th class="th-right">TR %</th>
+            <th class="th-right">Previsto</th>
             <th class="th-center">Pago?</th>
           </tr>
         </thead>
@@ -335,40 +338,32 @@ return `
       </table>
 
       <div class="row-controls">
-        <span class="rc-info" id="rc-info">Use + / − para ajustar o número de parcelas (máx. ${MAX_MESES})</span>
-        <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela" ${meses.length <= 1 || lastPago ? 'disabled' : ''}>−</button>
-        <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela" ${meses.length >= MAX_MESES ? 'disabled' : ''}>+</button>
+        <span class="rc-info" id="rc-info">
+          Utilize +/- para acrescentar/remover linhas · máx. ${MAX_MESES}
+        </span>
+
+        <button class="rc-btn" id="btn-rem"
+          onclick="removerLinha()"
+          title="Remover última parcela"
+          ${meses.length <= 1 || lastPago ? 'disabled' : ''}>
+          −
+        </button>
+
+        <button class="rc-btn" id="btn-add"
+          onclick="adicionarLinha()"
+          title="Adicionar parcela"
+          ${meses.length >= MAX_MESES ? 'disabled' : ''}>
+          +
+        </button>
       </div>
     </div>
 
-    ${inline ? '' : `
-    `}    
+    ${!inline ? `
+      <button class="btn-reset" onclick="voltarParaResultado()">
+        ← Voltar à tela de resultados
+      </button>
+    ` : ''}
   `;
-}
-
-// ── TELA DE TABELA COMPLETA (mantida para compatibilidade/acesso direto) ──
-function buildTabela {
-  aplicaBloqueio();
-  screen = 'tabela';
-  const lastPago = meses[meses.length - 1]?.pago || false;
-  const ativas   = meses.filter(r => !r.bloqueado);
-    return `
-      ${inline ? `
-        <div class="tabela-header">
-          <button class="tabela-back-btn" onclick="voltarParaResultado()">← Resumo</button>
-          <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
-        </div>
-        <div class="alert" style="margin-top:12px">💡 Edite % de obra e Taxa Referencial.</div>
-      `}
-
-      setHtml(`
-        ${_buildTable()}
-      `);
-
-    return `
-      ${inline ? ` 
-    <button class="btn-reset" onclick="voltarParaResultado()">← Voltar à tela de resultados</button>
-  `);
 }
 
 function voltarParaResultado() {
@@ -427,32 +422,8 @@ function renderResult() {
       </button>` : ''}
     </div>`;
 
-  // Tabela inline — premium only
-  const blocoTabelaInline = premium ? `
-    <div class="tabela-inline-wrap">
-      <div class="tabela-inline-header">
-        <span class="tabela-inline-title">📅 Acompanhamento mês a mês</span>
-      </div>
-      <div class="alert" style="margin:8px 0 4px">💡 Não esqueça de editar % de evolução da obra.</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th class="th-center">#</th><th>Mês</th>
-            <th class="th-right">% Obra</th><th class="th-right">Saldo dev.</th>
-            <th class="th-right">TR %</th><th class="th-right">Previsto</th>
-            <th class="th-center">Pago?</th>
-          </tr></thead>
-          <tbody>${_buildTableRows()}</tbody>
-        </table>
-        <div class="row-controls">
-          <span class="rc-info" id="rc-info">Utilize +/- para acrescentar/remover linhas · máx. ${MAX_MESES}</span>
-          <button class="rc-btn" id="btn-rem" onclick="removerLinha()" title="Remover última parcela"
-            ${meses.length <= 1 || (meses[meses.length - 1]?.pago) ? 'disabled' : ''}>−</button>
-          <button class="rc-btn" id="btn-add" onclick="adicionarLinha()" title="Adicionar parcela"
-            ${meses.length >= MAX_MESES ? 'disabled' : ''}>+</button>
-        </div>
-      </div>
-    </div>` : '';
+// ── CHAMAR A TABELA INLINE DENTRO DO PREMIUM
+  const blocoTabelaInline = premium ? buildTabela(true) : '';
 
   // Banner inline de pagas pendentes (universal — fluxo A e B)
   const blocoBannerPagas = _buildBannerPagas();

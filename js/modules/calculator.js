@@ -1,3 +1,37 @@
+// ── TR HISTÓRICO ──
+// Cache do JSON carregado uma vez
+let _trCache = null;
+
+async function _loadTRCache() {
+  if (_trCache) return _trCache;
+  try {
+    const res = await fetch('tr-historico.json');
+    _trCache = await res.json();
+  } catch (e) {
+    _trCache = {};
+  }
+  return _trCache;
+}
+
+// Retorna TR para um mês {y, m} em decimal (ex: 0.001687)
+// Se o JSON não tiver o mês ou o valor for null → retorna 0
+function getTRParaMes(ym) {
+  if (!ym) return 0;
+  const key = ym.y + '-' + String(ym.m).padStart(2, '0');
+  if (!_trCache) return 0;
+  const val = _trCache[key];
+  if (val === null || val === undefined) return 0;
+  // Os valores no JSON já estão em % (ex: 0.1687 = 0,1687%)
+  // Precisamos em decimal para multiplicar pelo saldo: dividir por 100
+  return val / 100;
+}
+
+// Inicializa o cache do JSON antes de qualquer cálculo
+// Chamada uma vez no main.js
+function initTRCache(data) {
+  _trCache = data;
+}
+
 // ── PREMIUM ──
 // O status premium fica gravado dentro do próprio perfil no localStorage.
 function isPremium() {
@@ -67,7 +101,7 @@ function aplicaBloqueio() {
 
 function _proximoMesYM() {
   const ini = parseMS(form.mesInicial);
-  return addM(ini, meses.length); // retorna {y, m}
+  return addM(ini, meses.length);
 }
 
 // Retorna o mês/ano da última parcela ativa (não bloqueada)
@@ -85,7 +119,7 @@ function adicionarLinha() {
   const perc  = Math.min(meses[meses.length - 1]?.perc || 0, 100);
   const saldo = ter + (fin - ter) * (perc / 100);
   const ym    = _proximoMesYM();
-  const tr    = getTRParaMes(ym); // 0 se mês futuro/null/ausente
+  const tr    = getTRParaMes(ym);
   meses.push({
     mes: mLabel(ym),
     perc,

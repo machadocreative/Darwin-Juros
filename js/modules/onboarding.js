@@ -294,7 +294,7 @@ function renderStep() {
     `<div class="step-num">04 / 07</div>
     <div class="step-title">Qual a Taxa de Juros anual do seu Financiamento?</div>
     <div class="step-hint">O app irá converter sua taxa anual para mensal abaixo.</div>
-    <div class="input-wrap"><input type="text" id="inp-taxaAnual" class="has-suf" placeholder="5,4321" inputmode="numeric" oninput="atualizaTaxa()"><span class="suf">% a.a.</span></div>
+    <div class="input-wrap"><input type="text" id="inp-taxaAnual" class="has-suf" placeholder="5,4321" inputmode="numeric" oninput="maskOnInput(this);this.classList.remove('invalid');atualizaTaxa()"><span class="suf">% a.a.</span></div>
     <div class="diff-box" id="box-taxa" style="${ta > 0 ? '' : 'display:none'}">
     
       <div class="d-title">Como funcionam os juros na prestação de Evolução de Obra?</div>

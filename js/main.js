@@ -8,11 +8,11 @@ window.addEventListener('load', async () => {
   const profiles = loadProfiles();
   if (profiles.length > 0) {
     screen = 'profiles';
-    renderProfiles();
+    goProfiles();
   } else {
     // Sem perfis: exibe bifurcação (rápida vs completa) — não o onboarding direto
     screen = 'bifurcacao';
-    renderBifurcacao();
+    renderBifurcacao();https://machadocreative.github.io/Darwin-Juros/#
   }
 });
 

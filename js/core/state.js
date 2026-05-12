@@ -1,13 +1,13 @@
 // ── CONSTANTES ──
 const MAX_MESES = 48;
 const STORAGE_KEY = 'juros_obra_perfis';
-const TOTAL_STEPS = 7; // simulação completa: 7 passos (0–6)
+const TOTAL_STEPS = 6; // simulação completa: 7 passos (0–6)
 const CUPOM_VALIDO = 'DARWIN10';
 
 // ── ESTADO GLOBAL ──
 let currentStep = 0;
 let currentProfileId = null;
-let screen = 'onboarding'; // 'profiles' | 'bifurcacao' | 'onboarding' | 'result' | 'tabela' | 'quick' | 'resultQuick'
+let screen = 'profiles'; // 'profiles' | 'bifurcacao' | 'onboarding' | 'result' | 'tabela' | 'quick' | 'resultQuick'
 let hasUnsavedChanges = false;
 let fluxo = 'complete'; // 'quick' | 'complete'
 
