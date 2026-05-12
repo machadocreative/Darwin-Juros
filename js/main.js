@@ -12,7 +12,7 @@ window.addEventListener('load', async () => {
   } else {
     // Sem perfis: exibe bifurcação (rápida vs completa) — não o onboarding direto
     screen = 'bifurcacao';
-    renderBifurcacao();https://machadocreative.github.io/Darwin-Juros/#
+    renderBifurcacao();
   }
 });
 
