@@ -50,9 +50,9 @@ function renderQuickStep() {
           <span>1%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="qinp-slider" class="preview-slider"
-          min="${sliderMin}" max="100" step="1" value="${sliderStart}"
+          min="1" max="100" step="1" value="${sliderStart}"
           oninput="_syncPercQuick(this.value)">
-        <div class="slider-perc-label" id="qslider-perc">${sliderStart}%</div>
+        <div class="slider-perc-label" id="qslider-perc">${perc}%<</div>
         <div class="quick-perc-row">
           <span class="quick-perc-label">Ou digite:</span>
           <div class="input-wrap quick-perc-input-wrap">
@@ -363,7 +363,7 @@ function renderResultQuick() {
           <span>1%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="preview-slider" class="preview-slider"
-          min="${sliderMin}" max="100" step="1" value="${sliderStart}"
+          min="1" max="100" step="1" value="${sliderStart}"
           oninput="atualizaSliderQuick()">
         <div class="slider-perc-label" id="slider-perc">${sliderStart}%</div>
       </div>
