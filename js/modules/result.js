@@ -19,7 +19,7 @@ function renderProfiles() {
           </div>
         </div>`;
       }).join('')
-    : `<div class="empty-state"><div class="es-icon">📭</div><p>Nenhum perfil salvo ainda.<br>Faça uma simulação e clique em <strong>Salvar</strong>.</p></div>`;
+    : `<div class="empty-state"><div class="es-icon">🏢</div><p>Nenhum perfil salvo ainda.<br>Você pode salvar um perfil na tela de resultados após concluir a <strong>Simulação Completa</strong>.</p></div>`;
 
   setHtml(`
     <div class="screen-title">Meus Imóveis</div>
