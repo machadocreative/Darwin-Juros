@@ -91,12 +91,11 @@ function renderQuickStep() {
         <input type="text" id="qinp-taxa" class="has-suf" placeholder="5,4321" inputmode="numeric"
           oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaTaxaQuick()">
         <span class="suf">% a.a.</span>
-      </div>0
+      </div>
 
       <div class="diff-box" id="box-taxa" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
-    
-      <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
-      <div class="diff-row">
+        <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
+        <div class="diff-row">
         <span class="d-label">Taxa de Juros Mensal</span>
         <span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span>
       </div>
@@ -129,9 +128,9 @@ function renderQuickStep() {
         </div>
       </div>
 
-      <div class="confirm-box" id="box-enc" style="${seg > 0 ? '' : 'display:none'}">
+      <div class="confirm-box" id="box-enc" style="${qseg > 0 ? '' : 'display:none'}">
         <div><div class="c-label">Total de encargos mensais</div></div>
-        <div class="c-val" id="val-enc">${seg > 0 ? fmtBRL(seg + 25) : ''}</div>
+        <div class="c-val" id="val-enc">${qseg > 0 ? fmtBRL(qseg + 25) : ''}</div>
       </div>`;
 
   } else if (currentStep === 5) {
@@ -183,6 +182,10 @@ function renderQuickStep() {
     if (currentStep === 4) {
       attachMask('qinp-seguro',  'brl', formQuick.seguro  || '');
       attachMask('qinp-taxaAdm', 'brl', formQuick.taxaAdm || 25);
+      const qseg = document.getElementById('qinp-seguro');
+      const qadm = document.getElementById('qinp-taxaAdm');
+      if (qseg) qseg.oninput = () => { maskValue(qseg, 'brl'); qseg.classList.remove('invalid'); atualizaEncargos(); };
+      if (qadm) qadm.oninput = () => { maskValue(qadm, 'brl'); atualizaEncargos(); };
     }
     if (currentStep === 5) {
       attachMask('qinp-parcela-fin', 'brl', formQuick.parcelaFinanciamento || '');
@@ -433,7 +436,7 @@ function atualizaSliderQuick() {
   const elVal   = document.getElementById('slider-val');
   const elSaldo = document.getElementById('slider-saldo');
   if (elPerc)  elPerc.textContent  = perc + '%';
-  if (elVal)   elVal.innerHTML     = `${fmtBRL(previsto)} <small>+ TR Mensal</small>`;
+  if (elVal)   elVal.innerHTML     = `${fmtBRL(previsto)} <small>(+ TR)</small>`;
   if (elSaldo) elSaldo.textContent = fmtBRL(sdProj);
 
   slider.style.background = `linear-gradient(to right, var(--accent) ${perc}%, var(--border) ${perc}%)`;
