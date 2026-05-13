@@ -1680,6 +1680,44 @@ dl dd.slider-result-val.accent span {
   font-style: italic;
 }
 
+
+/* ── CARD DE PARCELA FINANCIAMENTO (Novo) ── */
+/* Adicionar ao style.css existente */
+
+.quick-result-card-fin {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.quick-result-card-fin .qrc-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.quick-result-card-fin .qrc-val {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.quick-result-card-fin .qrc-note {
+  font-size: 10px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+
 /* ── RESULTADO RÁPIDO: disclaimer e CTA ── */
 .quick-disclaimer {
   background: var(--warn-bg);
