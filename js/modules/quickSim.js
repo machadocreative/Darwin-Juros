@@ -15,7 +15,7 @@ const STEPS_QUICK = [
   {
     num: '03 / 06',
     title: 'Qual o seu saldo devedor atual?',
-    hint: 'Consulte o extrato do seu financiamento no app Habitação Caixa ou no internet banking da Caixa.',
+    hint: 'Consulte valores no app Habitação Caixa ou no Internet Banking.',
   },
   {
     num: '04 / 06',
@@ -184,8 +184,8 @@ function renderQuickStep() {
       attachMask('qinp-taxaAdm', 'brl', formQuick.taxaAdm || 25);
       const qseg = document.getElementById('qinp-seguro');
       const qadm = document.getElementById('qinp-taxaAdm');
-      if (qseg) qseg.oninput = () => { maskValue(qseg, 'brl'); qseg.classList.remove('invalid'); atualizaEncargos(); };
-      if (qadm) qadm.oninput = () => { maskValue(qadm, 'brl'); atualizaEncargos(); };
+      if (qseg) qseg.oninput = () => { maskValue(qseg, 'brl'); qseg.classList.remove('invalid'); atualizaQuickEncargos(); };
+      if (qadm) qadm.oninput = () => { maskValue(qadm, 'brl'); atualizaQuickEncargos(); };
     }
     if (currentStep === 5) {
       attachMask('qinp-parcela-fin', 'brl', formQuick.parcelaFinanciamento || '');
@@ -251,6 +251,13 @@ function _atualizaTaxaQuick() {
   if (elCombinada) elCombinada.textContent = fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4);
 }
 
+function atualizaQuickEncargos() {
+  const s = maskRead(document.getElementById('qinp-seguro')) || 0;
+  const a = maskRead(document.getElementById('qinp-taxaAdm')) || 25;
+  const box = document.getElementById('box-enc'), val = document.getElementById('val-enc');
+  if (box && val) { box.style.display = s > 0 ? 'flex' : 'none'; val.textContent = fmtBRL(s + a); }
+}
+
 // ── NAVEGAÇÃO ──
 function nextStepQuick() {
   if (currentStep === 0) {
@@ -283,9 +290,9 @@ function nextStepQuick() {
     formQuick.taxaAnual = v;
 
   } else if (currentStep === 4) {
-    const elSeg = document.getElementById('qinp-seguro');
-    const s = maskRead(elSeg);
-    if (!s || s <= 0) { elSeg?.classList.add('invalid'); showToast('⚠️ Informe o valor do seguro.'); return; }
+    const elQseg = document.getElementById('qinp-seguro');
+    const s = maskRead(elQSeg);
+    if (!s || s <= 0) { elQSeg?.classList.add('invalid'); showToast('⚠️ Informe o valor do seguro.'); return; }
     formQuick.seguro  = s;
     formQuick.taxaAdm = maskRead(document.getElementById('qinp-taxaAdm')) || 25;
 
