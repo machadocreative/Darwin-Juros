@@ -62,13 +62,13 @@ function renderBifurcacao() {
           <span class="bifurc-icon">⚡</span>
           <div>
             <div class="bifurc-label">Simulação rápida</div>
-            <div class="bifurc-sub">Descubra quanto vai pagar agora com apenas 5 perguntas. Totalmente gratuito.</div>
+            <div class="bifurc-sub">Descubra de forma aproximada quais serão suas próximas prestações.</div>
           </div>
         </button>
         <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('complete')">
           <span class="bifurc-icon">📋</span>
           <div>
-            <div class="bifurc-label">Simulação completa</div>
+            <div class="bifurc-label">Simulação detalhada</div>
             <div class="bifurc-sub">Veja todas as parcelas mês a mês e acompanhe o que já foi pago.</div>
           </div>
         </button>

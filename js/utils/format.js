@@ -22,8 +22,9 @@ function parseDecimal(val) { return parseFloat(String(val).replace(',', '.')); }
 // ── MASKED INPUT ENGINE ──
 // Cada campo tem um "tipo de máscara":
 //   'brl'   → R$ 999.999,99   (centavos obrigatórios, 2 decimais)
-//   'perc1' → 999,9%          (1 decimal — % de obra e TR na tabela)
-//   'perc4' → 99,9999%        (4 decimais — taxa anual e taxa mensal)
+//   'perc1' → 999,9%          (está sendo utilizado?)
+//   'perc2' → 999,99%         (2 decimais — % de obra e % de financiamento)
+//   'perc4' → 99,9999%        (2 inteiros, 4 decimais — taxa de juros e tr)
 //   'int'   → número inteiro  (meses pagos no fluxo B)
 
 function maskApply(rawDigits, tipo) {
@@ -42,13 +43,15 @@ function maskApply(rawDigits, tipo) {
     return inteiro.toLocaleString('pt-BR') + ',' + dec;
   }
   if (tipo === 'perc2') {
-    const n = parseInt(d, 10);
+    const limited = d.slice(0, 5); // máx: 10000 -> 100,00
+    const n = parseInt(limited, 10) || 0;
     const inteiro = Math.floor(n / 100);
     const dec = String(n % 100).padStart(2, '0');
     return inteiro.toLocaleString('pt-BR') + ',' + dec;
   }
   if (tipo === 'perc4') {
-    const n = parseInt(d, 10);
+    const limited = d.slice(0, 6); // máx: 99,9999
+    const n = parseInt(limited, 10) || 0;
     const inteiro = Math.floor(n / 10000);
     const dec = String(n % 10000).padStart(4, '0');
     return inteiro.toLocaleString('pt-BR') + ',' + dec;
@@ -60,7 +63,13 @@ function maskApply(rawDigits, tipo) {
 }
 
 function maskValue(el, tipo) {
-  const digits = el.value.replace(/\D/g, '');
+  let digits = el.value.replace(/\D/g, '');
+  if (tipo === 'perc2') {
+    digits = digits.slice(0, 5); // 100,00
+  }
+  if (tipo === 'perc4') {
+    digits = digits.slice(0, 6); // 99,9999
+  }
   el.value = maskApply(digits, tipo);
   el.dataset.rawDigits = digits;
 }

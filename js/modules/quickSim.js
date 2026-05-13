@@ -9,8 +9,8 @@ const STEPS_QUICK = [
   },
   {
     num: '02 / 06',
-    title: 'Qual o valor da prestação mais recente?',
-    hint: 'Total que foi debitado da sua conta — Consulte seu extrato bancário.',
+    title: 'Qual o valor da prestação paga mais recente?',
+    hint: 'Consulte seu extrato bancário.',
   },
   {
     num: '03 / 06',
@@ -42,15 +42,15 @@ function renderQuickStep() {
 
   if (currentStep === 0) {
     const perc = formQuick.percObra ?? 50;
-    const sliderMin = 1;
-    const sliderStart = Math.max(1, perc);
+    const sliderMin = 5;
+    const sliderStart = Math.max(sliderMin, perc);
     inputsHtml = `
       <div class="quick-perc-wrap">
         <div class="slider-labels">
           <span>1%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="qinp-slider" class="preview-slider"
-          min="1" max="100" step="1" value="${sliderStart}"
+          min="sliderMin" max="100" step="5" value="${sliderStart}"
           oninput="_syncPercQuick(this.value)">
         <div class="slider-perc-label" id="qslider-perc">${perc}%<</div>
         <div class="quick-perc-row">
@@ -72,7 +72,7 @@ function renderQuickStep() {
           <input type="text" id="qinp-ultima" class="has-pre" placeholder="123,45" inputmode="numeric"
             oninput="maskOnInput(this);this.classList.remove('invalid')">
         </div>
-      </div>
+      </div><br>
       <label class="field-label">Mês</label>
       <input type="month" id="qinp-mes-parcela" value="${formQuick.mesParcela || ''}"
         oninput="this.classList.remove('invalid')">`;
@@ -91,17 +91,23 @@ function renderQuickStep() {
         <input type="text" id="qinp-taxa" class="has-suf" placeholder="5,4321" inputmode="numeric"
           oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaTaxaQuick()">
         <span class="suf">% a.a.</span>
-      </div>
+      </div>0
 
       <div class="diff-box" id="box-taxa" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
     
-      <div class="d-title">Como funcionam os juros na prestação de Evolução de Obra?</div>
-      <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span></div>
-      <div class="diff-row"><span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span></div>
+      <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
+      <div class="diff-row">
+        <span class="d-label">Taxa de Juros Mensal</span>
+        <span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span>
+      </div>
+      <div class="diff-row">
+        <span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span>
+      </div>
       <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Taxa de Juros no cálculo da Evolução</span><span class="d-val" id="val-taxa">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4) : ''}</span></div>
+      <div class="diff-row hl"><span class="d-label">Taxa no cálculo da prestação</span><span class="d-val" id="val-taxa">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4) : ''}</span></div>
     </div>
-    <div class="info-box">💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.</div>`;
+    <div class="info-box" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
+      💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.</div>`;
 
   } else if (currentStep === 4) {
     inputsHtml = `
@@ -110,7 +116,7 @@ function renderQuickStep() {
       <div class="input-wrap">
         <span class="pre">R$</span>
         <input type="text" id="qinp-seguro" class="has-pre" placeholder="00,00" inputmode="numeric"
-          oninput="maskOnInput(this);this.classList.remove('invalid')">
+          oninput="maskOnInput(this);atualizaEncargos();this.classList.remove('invalid')">
       </div>
 
       <div class="field-group">
@@ -119,8 +125,13 @@ function renderQuickStep() {
         <div class="input-wrap">
           <span class="pre">R$</span>
           <input type="text" id="qinp-taxaAdm" class="has-pre" placeholder="25,00" inputmode="numeric"
-            oninput="maskOnInput(this)">
+            oninput="maskOnInput(this);atualizaEncargos()">
         </div>
+      </div>
+
+      <div class="confirm-box" id="box-enc" style="${seg > 0 ? '' : 'display:none'}">
+        <div><div class="c-label">Total de encargos mensais</div></div>
+        <div class="c-val" id="val-enc">${seg > 0 ? fmtBRL(seg + 25) : ''}</div>
       </div>`;
 
   } else if (currentStep === 5) {
@@ -145,9 +156,8 @@ function renderQuickStep() {
       <button class="btn btn-primary" onclick="nextStepQuick()">
         ${isLast ? 'Ver resultado →' : 'Continuar →'}
       </button>
-      ${isLast ? `<button class="btn btn-back" onclick="nextStepQuick()" style="display:none"></button>` : ''}
       <button class="btn btn-back" onclick="${isFirst ? 'renderBifurcacao()' : 'prevStepQuick()'}">
-        ${isLast ? '' : '← Voltar'}
+        ← Voltar
       </button>
     </div>`);
 
@@ -212,15 +222,18 @@ function _syncPercFromInput() {
   if (!el) return;
   const v = maskRead(el);
   if (isNaN(v)) return;
-  const clamped = Math.min(100, Math.max(0, v));
+  let clamped = Math.min(100, Math.max(5, v));  // limita entre 5 e 100
+  clamped = Math.round(clamped / 5) * 5;        // arredonda para múltiplos de 5
+
   formQuick.percObra = clamped;
   const slider = document.getElementById('qinp-slider');
   const label  = document.getElementById('qslider-perc');
   if (slider) {
-    slider.value = Math.round(clamped / 10) * 10;
+    slider.value = clamped;
     slider.style.background = `linear-gradient(to right, var(--accent) ${clamped}%, var(--border) ${clamped}%)`;
   }
   if (label) label.textContent = clamped + '%';
+  el.value = clamped + ',00';
 }
 
 // ── BOX DE TAXA ──
@@ -322,8 +335,8 @@ function renderResultQuick() {
   const mesLabel  = formQuick.mesParcela ? mLabel(parseMS(formQuick.mesParcela)) : '—';
   const temTR     = trPerc !== null && trPerc > 0;
   const temFin    = formQuick.parcelaFinanciamento > 0;
-  const sliderMin = 1; // thumb mínimo 1%
-  const sliderStart = Math.max(1, perc); // thumb do slider % de obra atual, mínimo 1
+  const sliderMin = 5; // thumb mínimo 5%
+  const sliderStart = Math.max(sliderMin, perc); // thumb do slider % de obra atual, mínimo 5
 
   // Card 2: TR
   const card2Html = `
