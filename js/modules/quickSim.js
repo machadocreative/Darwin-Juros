@@ -4,18 +4,18 @@
 const STEPS_QUICK = [
   {
     num: '01 / 06',
-    title: 'Qual o percentual atual de evolução de obra?',
-    hint: 'Consulte o Internet Banking Caixa ou o app Habitação.',
+    title: 'Qual o percentual aproximado da Evolução de Obra?',
+    hint: 'A simulação rápida permite incrementos de 5% em 5%. Informe o valor mais próximo.',
   },
   {
     num: '02 / 06',
     title: 'Qual o valor da prestação paga mais recente?',
-    hint: 'Consulte seu extrato bancário.',
+    hint: 'Verifique no seu extrato.',
   },
   {
     num: '03 / 06',
-    title: 'Qual o valor total do seu financiamento?',
-    hint: 'O valor de crédito liberado pelo banco. Consulte no app Habitação Caixa ou no seu contrato.',
+    title: 'Qual o valor do seu financiamento?',
+    hint: 'O total de crédito liberado pelo banco. Consulte no app Caixa ou no seu contrato.',
   },
   {
     num: '04 / 06',
@@ -416,8 +416,10 @@ function renderResultQuick() {
       </button>
     </div>
     
-    <div class="slider-result-note"><p>Darwin é uma ferramenta de cálculo não preditiva. Não nos responsabilizamos se previsões futuras não corresponderem à realidade.
-    As estimativas apresentadas funcionam melhor quando os dados inseridos são mais precisos, mas podem haver variações sutis, uma vez que a instituição financeira é a responsável final pelos valores cobrados.</p></div>
+    <div class="slider-result-note">
+      <p>Darwin é uma ferramenta de cálculo não preditiva. Não nos responsabilizamos se previsões futuras não corresponderem à realidade.
+      As estimativas apresentadas funcionam melhor quando os dados inseridos são mais precisos, mas podem haver variações sutis, uma vez que a instituição financeira é a responsável final pelos valores cobrados.</p>
+    </div>
 
     
   `);

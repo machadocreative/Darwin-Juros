@@ -1144,7 +1144,13 @@
     transform: translateY(0);
 }
 
-/* Opção A — ainda não comecei */
+.btn-bifurc:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Opção A — simulação detalhada */
 .btn-bifurc.bifurc-a {
     background: var(--accent-light);
     border-color: #A8D5BC;
@@ -1160,7 +1166,7 @@
     color: var(--accent-dark);
 }
 
-/* Opção B — já estou pagando */
+/* Opção B — simulação rápida */
 .btn-bifurc.bifurc-b {
     background: #EEF6FB;
     border-color: #B2D4E8;

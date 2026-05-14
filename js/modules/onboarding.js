@@ -65,13 +65,24 @@ function renderBifurcacao() {
             <div class="bifurc-sub">Descubra de forma aproximada quais serão suas próximas prestações.</div>
           </div>
         </button>
+
+        <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('complete')" disabled title="Em breve">
+          <span class="bifurc-icon">📋</span>
+          <div>
+            <div class="bifurc-label">Simulação detalhada</div>
+            <div class="bifurc-sub">Veja todas as parcelas mês a mês e acompanhe o que já foi pago.<strong>EM BREVE</strong></div>
+          </div>
+        </button>-->
+
+        <!-- VERSÃO BETA SEM A SIMULAÇÃO COMPLETA
         <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('complete')">
           <span class="bifurc-icon">📋</span>
           <div>
             <div class="bifurc-label">Simulação detalhada</div>
             <div class="bifurc-sub">Veja todas as parcelas mês a mês e acompanhe o que já foi pago.</div>
           </div>
-        </button>
+        </button>-->
+
       </div>
     </div>
   `);
