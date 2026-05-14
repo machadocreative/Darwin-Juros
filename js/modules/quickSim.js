@@ -14,7 +14,7 @@ const STEPS_QUICK = [
   },
   {
     num: '03 / 06',
-    title: 'Qual o valor do seu financiamento?',
+    title: 'Qual o valor total do seu financiamento?',
     hint: 'O total de crédito liberado pelo banco. Consulte no app Caixa ou no seu contrato.',
   },
   {
@@ -79,7 +79,7 @@ function renderQuickStep() {
           oninput="maskOnInput(this);this.classList.remove('invalid')">
       </div>
       <div class="info-box" style="margin-top:12px">
-        💡 Este é o valor máximo do seu financiamento — equivale ao saldo devedor quando a obra estiver 100% concluída.
+        💡 Este valor equivale ao seu saldo devedor quando a obra atingir 100% de conclusão.
       </div>`;
 
   } else if (currentStep === 3) {
@@ -90,23 +90,23 @@ function renderQuickStep() {
         <span class="suf">% a.a.</span>
       </div>
       <div id="hint-taxa" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
-        <div class="diff-box" id="box-taxa">
-          <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
-          <div class="diff-row">
-            <span class="d-label">Taxa de Juros Mensal</span>
-            <span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span>
-          </div>
-          <div class="diff-row">
-            <span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span>
-          </div>
-          <hr class="diff-divider">
-          <div class="diff-row hl">
-            <span class="d-label">Taxa no cálculo da prestação</span>
-            <span class="d-val" id="val-taxa">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4) : ''}</span>
-          </div>
+      <div class="diff-box" id="box-taxa">
+        <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
+        <div class="diff-row">
+          <span class="d-label">Taxa de Juros Mensal</span>
+          <span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span>
         </div>
-        <div class="info-box" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
-          💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.
+        <div class="diff-row">
+          <span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span>
+        </div>
+        <hr class="diff-divider">
+        <div class="diff-row hl">
+          <span class="d-label">Taxa no cálculo da prestação</span>
+          <span class="d-val" id="val-taxa">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4) : ''}</span>
+        </div>
+      </div>
+      <div class="info-box" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
+        💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.
         </div>
       </div>`;
 
@@ -345,37 +345,28 @@ function renderResultQuick() {
 
   const card2Html = `
     <div class="quick-result-card">
-      <div class="qrc-label">TR de ${mesLabel}</div>
-      <div class="qrc-perc">${temTR ? fmtPerc(trPerc, 4) : '—'}</div>
+      <div class="qrc-label">Taxa Referencial</div>
       <div class="qrc-val">${temTR ? fmtBRL(trReais) : '—'}</div>
-      <div class="qrc-note">Aplicada para o cálculo da prestação</div>
+      <div class="qrc-note">TR de ${mesLabel} · ${temTR ? fmtPerc(trPerc, 4) : '—'}</div>
     </div>`;
 
   setHtml(`
     <div class="result-header">
-      <h2>Resultado da Simulação</h2>
+      <h2>Resultado da sua Simulação Rápida</h2>
       <div class="quick-disclaimer">
-        ⚠️ Os valores futuros dependerão do saldo devedor atualizado, da TR divulgada pelo Banco Central e do percentual exato de evolução de obra.</p>
-        As estimativas apresentadas abaixo <strong>não incluem a TR oficial</strong>.
+        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial</strong>. A instituição financeira é a responsável final pelos valores cobrados.
       </div>
     </div>
 
     <div class="quick-result-cards">
       <div class="quick-result-card accent">
-        <div class="qrc-label">Última parcela paga</div>
-        <div class="qrc-perc">${perc}% de obra · ref. ${mesLabel}</div>
+        <div class="qrc-label">Total da última parcela</div>
         <div class="qrc-val">${fmtBRL(formQuick.ultimaParcela)}</div>
-        <div class="qrc-note">valor informado</div>
+        <div class="qrc-note">Parcela mais recente · ref. ${mesLabel}</div>
+        <div class="qrc-perc">${perc}% de obra</div>
       </div>
       ${card2Html}
     </div>
-
-    ${temFin ? `
-    <div class="quick-result-card-fin" style="margin-top:12px; margin-bottom:12px">
-      <div class="qrc-label">Valor da 1ª parcela do financiamento</div>
-      <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
-      <div class="qrc-note">informado para comparação</div>
-    </div>` : ''}
 
     <div class="free-preview-card" style="margin-top:12px">
       <div class="free-preview-header">
@@ -397,33 +388,39 @@ function renderResultQuick() {
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Estimativa</dt>
+          <dt class="slider-result-label">Estime a evolução dos valores</dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
-      ${temFin ? `
-      <div id="slider-fin-aviso" style="padding:10px 20px 14px">
-        <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
+
+    ${temFin ? `
+      <div class="quick-result-cards" style="margin-top:12px; margin-bottom:12px">
+        <div class="quick-result-card accent">
+          <div class="qrc-label">Seu Financiamento</div>
+          <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
+          <div class="qrc-note">Valor informado para 1ª Parcela</div>
+        </div>
+        <div class="quick-result-card">
+          <div id="slider-fin-aviso">
+            <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
+          </div>
+          </div>
       </div>` : ''}
-    </div>
 
     <div class="quick-cta-card">
       <div class="quick-cta-title">Quer uma projeção mês a mês?</div>
       <div class="quick-cta-sub">Com a simulação completa você vê todas as parcelas, acompanha pagamentos e acessa a tabela editável.</div>
       <button class="btn btn-primary" onclick="irParaSimulacaoCompleta()">
-        📋 Fazer simulação completa →
+        EM TESTES
       </button>
       <button class="btn btn-back" onclick="reiniciarSimulacaoRapida()">
         ← Refazer simulação rápida
       </button>
     </div>
-    
-    <div class="slider-result-note">
-      <p>Darwin é uma ferramenta de cálculo não preditiva. Não nos responsabilizamos se previsões futuras não corresponderem à realidade.
-      As estimativas apresentadas funcionam melhor quando os dados inseridos são mais precisos, mas podem haver variações sutis, uma vez que a instituição financeira é a responsável final pelos valores cobrados.</p>
-    </div>
 
-    
+    <div class="quick-disclaimer-end">
+      <p>Darwin é uma ferramenta de cálculo não preditiva. Não nos responsabilizamos se previsões futuras não corresponderem à realidade.</p>
+    </div>
   `);
 
   setTimeout(() => atualizaSliderQuick(), 50);
