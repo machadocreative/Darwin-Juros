@@ -89,23 +89,25 @@ function renderQuickStep() {
           oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaTaxaQuick()">
         <span class="suf">% a.a.</span>
       </div>
-      <div class="diff-box" id="box-taxa" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
-        <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
-        <div class="diff-row">
-          <span class="d-label">Taxa de Juros Mensal</span>
-          <span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span>
+      <div id="hint-taxa" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
+        <div class="diff-box" id="box-taxa">
+          <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
+          <div class="diff-row">
+            <span class="d-label">Taxa de Juros Mensal</span>
+            <span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span>
+          </div>
+          <div class="diff-row">
+            <span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span>
+          </div>
+          <hr class="diff-divider">
+          <div class="diff-row hl">
+            <span class="d-label">Taxa no cálculo da prestação</span>
+            <span class="d-val" id="val-taxa">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4) : ''}</span>
+          </div>
         </div>
-        <div class="diff-row">
-          <span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span>
+        <div class="info-box" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
+          💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.
         </div>
-        <hr class="diff-divider">
-        <div class="diff-row hl">
-          <span class="d-label">Taxa no cálculo da prestação</span>
-          <span class="d-val" id="val-taxa">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4) : ''}</span>
-        </div>
-      </div>
-      <div class="info-box" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
-        💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.
       </div>`;
 
   } else if (currentStep === 4) {
