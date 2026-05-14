@@ -70,9 +70,9 @@ function renderBifurcacao() {
           <span class="bifurc-icon">📋</span>
           <div>
             <div class="bifurc-label">Simulação detalhada</div>
-            <div class="bifurc-sub">Veja todas as parcelas mês a mês e acompanhe o que já foi pago.<strong>EM BREVE</strong></div>
+            <div class="bifurc-sub"><strong>EM BREVE</strong>.</div>
           </div>
-        </button>-->
+        </button>
 
         <!-- VERSÃO BETA SEM A SIMULAÇÃO COMPLETA
         <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('complete')">
