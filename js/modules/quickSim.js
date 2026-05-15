@@ -345,25 +345,24 @@ function renderResultQuick() {
 
   const card2Html = `
     <div class="quick-result-card">
-      <div class="qrc-label">Taxa Referencial</div>
+      <div class="qrc-label">Taxa Referencial de ${mesLabel}<br>${temTR ? fmtPerc(trPerc, 4) : 'Não Informada'}</div>
       <div class="qrc-val">${temTR ? fmtBRL(trReais) : '—'}</div>
-      <div class="qrc-note">TR de ${mesLabel} · ${temTR ? fmtPerc(trPerc, 4) : '—'}</div>
+      <div class="qrc-note">Embutido na última prestação</div>
     </div>`;
 
   setHtml(`
     <div class="result-header">
       <h2>Resultado da sua Simulação Rápida</h2>
-      <div class="quick-disclaimer">
-        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial</strong>. A instituição financeira é a responsável final pelos valores cobrados.
+      <div class="quick-disclaimer-top">
+        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial</strong>.
       </div>
     </div>
 
     <div class="quick-result-cards">
       <div class="quick-result-card accent">
-        <div class="qrc-label">Total da última parcela</div>
+        <div class="qrc-label">Total da última parcela<br>${perc}% de obra</div>
         <div class="qrc-val">${fmtBRL(formQuick.ultimaParcela)}</div>
-        <div class="qrc-note">Parcela mais recente · ref. ${mesLabel}</div>
-        <div class="qrc-perc">${perc}% de obra</div>
+        <div class="qrc-note">Parcela mais recente de Evolução</div>
       </div>
       ${card2Html}
     </div>
@@ -371,7 +370,7 @@ function renderResultQuick() {
     <div class="free-preview-card" style="margin-top:12px">
       <div class="free-preview-header">
         <div class="free-preview-title">Simule suas prestações</div>
-        <div class="free-preview-sub">Arraste para ver a estimativa em qualquer % de obra</div>
+        <div class="free-preview-sub">Arraste para os lados para alterar a % de obra</div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
@@ -380,38 +379,37 @@ function renderResultQuick() {
         <input type="range" id="preview-slider" class="preview-slider"
           min="5" max="100" step="5" value="${sliderStart}"
           oninput="atualizaSliderQuick()">
-        <div class="slider-perc-label" id="slider-perc">${sliderStart}%</div>
       </div>
       <div class="slider-result">
         <dl class="slider-result-row">
+          <dt class="slider-result-label">Percentual de Obra estimado</dt>
+          <dd class="slider-perc-label" id="slider-perc">${sliderStart}%</dd>
           <dt class="slider-result-label">Saldo devedor estimado</dt>
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Estime a evolução dos valores</dt>
+          <dt class="slider-result-label">Valor aproximado de parcela</dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
+    </div>
+
+    <div class="free-preview-sub">Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere sempre o Saldo.</div>
 
     ${temFin ? `
       <div class="quick-result-cards" style="margin-top:12px; margin-bottom:12px">
         <div class="quick-result-card accent">
-          <div class="qrc-label">Seu Financiamento</div>
+          <div class="qrc-label">Sua Parcela de Financiamento</div>
           <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
-          <div class="qrc-note">Valor informado para 1ª Parcela</div>
         </div>
-        <div class="quick-result-card">
-          <div id="slider-fin-aviso">
-            <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
-          </div>
-          </div>
+        <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
       </div>` : ''}
 
     <div class="quick-cta-card">
       <div class="quick-cta-title">Quer uma projeção mês a mês?</div>
       <div class="quick-cta-sub">Com a simulação completa você vê todas as parcelas, acompanha pagamentos e acessa a tabela editável.</div>
       <button class="btn btn-primary" onclick="irParaSimulacaoCompleta()">
-        EM TESTES
+        ⚠ EM TESTES — ERROS DE CÁLCULO PODEM OCORRER⚠ 
       </button>
       <button class="btn btn-back" onclick="reiniciarSimulacaoRapida()">
         ← Refazer simulação rápida
@@ -419,7 +417,7 @@ function renderResultQuick() {
     </div>
 
     <div class="quick-disclaimer-end">
-      <p>Darwin é uma ferramenta de cálculo não preditiva. Não nos responsabilizamos se previsões futuras não corresponderem à realidade.</p>
+      <p>Darwin é uma ferramenta de cálculo não preditiva. Utilizamos a fórmula oficial de cálculo divulgada pela Caixa Econômica. Não nos responsabilizamos se previsões futuras não corresponderem à realidade, uma vez que valores cobrados serão sempre de encargo da instituição financeira.</p>
     </div>
   `);
 
@@ -447,16 +445,12 @@ function atualizaSliderQuick() {
   if (elVal)   elVal.innerHTML    = `${fmtBRL(previsto)} <small>+ TR Mensal</small>`;
   if (elSaldo) elSaldo.textContent = fmtBRL(sdProj);
 
-  // Coloração: destaca a % informada na tela 1
+  // Coloração ESTÁTICA: faixa verde permanece na % informada na tela 1 (referência fixa)
+  // Thumb pode se mover livremente sem afetar a cor de fundo
   const percObra = parseFloat(formQuick.percObra || 5);
-  if (perc <= percObra) {
-    slider.style.background = `linear-gradient(to right, var(--accent) ${perc}%, var(--border) ${perc}%)`;
-  } else {
-    slider.style.background = `linear-gradient(to right,
-      var(--accent) 0% ${percObra}%,
-      var(--accent-light) ${percObra}% ${perc}%,
-      var(--border) ${perc}% 100%)`;
-  }
+  slider.style.background = `linear-gradient(to right,
+    var(--accent) 0% ${percObra}%,
+    var(--border) ${percObra}% 100%)`;
 
   // Aviso de ultrapassagem da parcela de financiamento
   const bloco = document.getElementById('slider-fin-bloco');
@@ -466,8 +460,8 @@ function atualizaSliderQuick() {
     const ultrapassou = diff < 0;
     bloco.className = 'slider-fin-bloco' + (ultrapassou ? ' slider-fin-danger' : '');
     bloco.innerHTML = ultrapassou
-      ? `🚨 Parcela de obra ultrapassou o financiamento em <strong>${fmtBRL(Math.abs(diff))}</strong>`
-      : `Faltam <strong>${fmtBRL(diff)}</strong> para igualar a parcela de financiamento`;
+      ? `🚨 Evolução de obra supera o financiamento em +<span><strong>${fmtBRL(Math.abs(diff))}</strong><span>`
+      : `<span><strong>${fmtBRL(diff)}</strong></span>sp para igualar a parcela de financiamento`;
   }
 }
 

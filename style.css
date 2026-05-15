@@ -9,6 +9,7 @@
       --card: #FFFFFF;
       --text: #1A1A18;
       --muted: #888880;
+      --muted-dark: #4c4c47
       --accent: #1A6B4A;
       --accent-light: #E6F2EC;
       --accent-dark: #135438;
@@ -1227,15 +1228,15 @@
     padding: 18px 20px 0;
 }
 .free-preview-title {
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 2px;
 }
 .free-preview-sub {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--muted);
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 .slider-wrap {
     padding: 0 20px;
@@ -1286,10 +1287,9 @@
 .slider-perc-label {
     text-align: center;
     font-family: var(--mono);
-    font-size: 24px;
+    font-size: 25px;
     font-weight: 500;
     color: var(--accent);
-    margin-top: 8px;
     letter-spacing: -.02em;
 }
 .slider-result {
@@ -1310,7 +1310,7 @@ dl.slider-result-row.highlight {
     border-top: 1px solid var(--border);
 }
 dl dt.slider-result-label {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--muted);
 }
 dl dd.slider-result-val {
@@ -1329,11 +1329,11 @@ dl dd.slider-result-val.accent span {
 } 
 
 .slider-result-note {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 6px;
-    font-style: italic;
-    text-align: right;
+    font-size: 13px;
+    color: var(--muted-dark);
+    margin-top: 15px;
+    font-weight: 500;
+    text-align: center;
 }
 
 .free-preview-cta {
@@ -1658,8 +1658,8 @@ dl dd.slider-result-val.accent span {
 }
 
 .qrc-label {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: .05em;
@@ -1677,7 +1677,7 @@ dl dd.slider-result-val.accent span {
 
 .qrc-val {
   font-family: var(--mono);
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--text);
   line-height: 1.2;
@@ -1688,7 +1688,7 @@ dl dd.slider-result-val.accent span {
 }
 
 .qrc-note {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--muted);
   font-style: italic;
 }
@@ -1821,7 +1821,7 @@ dl dd.slider-result-val.accent span {
 .slider-fin-bloco {
     font-size: 12px;
     line-height: 1.5;
-    background: var(--card);
+    background: #e0d4b3;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 14px 14px 12px;
@@ -1835,4 +1835,10 @@ dl dd.slider-result-val.accent span {
     background: var(--danger-light);
     border-color: #F5C6C6;
     color: var(--danger);
+}
+
+.slider-fin-bloco span,
+.slider-fin-bloco.slider-fin-danger span {
+    font-size: 22px !important;
+    font-weight: 800;
 }
