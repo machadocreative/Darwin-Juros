@@ -34,6 +34,29 @@ const STEPS_QUICK = [
   }
 ];
 
+// ── ATUALIZAR INFO DE TR NA TELA 2 ──
+function _atualizaTRInfo() {
+  const el = document.getElementById('qinp-mes-parcela');
+  const mes = el?.value;
+  const box = document.getElementById('box-tr-info');
+  const text = document.getElementById('tr-info-text');
+  
+  if (!mes || !box || !text) return;
+  
+  const ym = parseMS(mes);
+  const trDec = getTRParaMes(ym); // retorna 0 se não encontrar
+  
+  if (trDec > 0) {
+    const trPerc = (trDec * 100).toFixed(4);
+    text.innerHTML = `📊 Taxa Referencial de ${mLabel(ym)}: <strong>${trPerc}%</strong>`;
+    box.style.display = 'block';
+  } else {
+    const mesLabel = mLabel(ym);
+    text.innerHTML = `⏳ Taxa Referencial de ${mesLabel} ainda não divulgada`;
+    box.style.display = 'block';
+  }
+}
+
 // ── RENDER PRINCIPAL ──
 function renderQuickStep() {
   screen = 'quick';
@@ -69,7 +92,11 @@ function renderQuickStep() {
       </div><br>
       <label class="field-label">Mês</label>
       <input type="month" id="qinp-mes-parcela" value="${formQuick.mesParcela || ''}"
-        oninput="this.classList.remove('invalid')">`;
+        oninput="this.classList.remove('invalid');_atualizaTRInfo()">
+      <div class="info-box" id="box-tr-info" style="margin-top: 8px; display: none">
+        <span id="tr-info-text"></span>
+      </div>`;
+
 
   } else if (currentStep === 2) {
     inputsHtml = `
@@ -89,23 +116,23 @@ function renderQuickStep() {
           oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaTaxaQuick()">
         <span class="suf">% a.a.</span>
       </div>
-      <div id="hint-taxa" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
-      <div class="diff-box" id="box-taxa">
-        <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
-        <div class="diff-row">
-          <span class="d-label">Taxa de Juros Mensal</span>
-          <span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span>
+      <div id="box-taxa" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
+        <div class="diff-box">
+          <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
+          <div class="diff-row">
+            <span class="d-label">Taxa de Juros Mensal</span>
+            <span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span>
+          </div>
+          <div class="diff-row">
+            <span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span>
+          </div>
+          <hr class="diff-divider">
+          <div class="diff-row hl">
+            <span class="d-label">Taxa no cálculo da prestação</span>
+            <span class="d-val" id="val-taxa">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4) : ''}</span>
+          </div>
         </div>
-        <div class="diff-row">
-          <span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span>
-        </div>
-        <hr class="diff-divider">
-        <div class="diff-row hl">
-          <span class="d-label">Taxa no cálculo da prestação</span>
-          <span class="d-val" id="val-taxa">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4) : ''}</span>
-        </div>
-      </div>
-      <div class="info-box" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
+        <div class="info-box" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
         💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.
         </div>
       </div>`;
@@ -388,7 +415,7 @@ function renderResultQuick() {
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Valor aproximado de parcela</dt>
+          <dt class="slider-result-label">Valor aproximado de prestação</dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
