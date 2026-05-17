@@ -272,15 +272,23 @@ function _atualizaTRInfo() {
 
 // ── NAVEGAÇÃO ──
 function nextStepQuick() {
-  if (currentStep === 0) {
-    const el = document.getElementById('qinp-total');
-    const v  = maskRead(el);
-    if (!v || v <= 0) { el?.classList.add('invalid'); showToast('⚠️ Informe o valor total do financiamento.'); return; }
-    formQuick.totalFinanciado = v;
-    const el = document.getElementById('qinp-saldo');
-    const v  = maskRead(el);
-    if (!v || v <= 0) { el?.classList.add('invalid'); showToast('⚠️ Informe o saldo devedor atual.'); return; }
-    formQuick.saldoAtual = v;
+if (currentStep === 0) {
+    const elTotal = document.getElementById('qinp-total');
+    const total   = maskRead(elTotal);
+    if (!total || total <= 0) {
+      elTotal?.classList.add('invalid');
+      showToast('⚠️ Informe o valor total do financiamento.'); return; }
+    formQuick.totalFinanciado = total;
+
+    const elSaldo = document.getElementById('qinp-saldo');
+    const saldo   = maskRead(elSaldo);
+    if (!saldo || saldo <= 0) {
+      elSaldo?.classList.add('invalid');
+      showToast('⚠️ Informe o saldo devedor atual.'); return; }
+    if (saldo > total) {
+      elSaldo?.classList.add('invalid');
+      showToast('⚠️ Saldo devedor não pode ser maior que o valor financiado.'); return; }
+    formQuick.saldoAtual = saldo;
 
   } else if (currentStep === 1) {
     const el = document.getElementById('qinp-taxa');
@@ -413,10 +421,8 @@ function renderResultQuick() {
     </div>
     <div class="free-preview-sub">Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere sempre o Saldo.</div>
 
-
     ${temFin ? `
       <div class="quick-result-cards" style="margin-top:12px; margin-bottom:12px">
-
 
         <div class="quick-result-card accent">
           <div class="qrc-label">1ª Parcela de Financiamento</div>
@@ -477,7 +483,7 @@ function atualizaSliderQuick() {
     const diff = fin - previsto;
     bloco.className = 'slider-fin-bloco' + (diff < 0 ? ' slider-fin-danger' : '');
     bloco.innerHTML = diff < 0
-      ? `🚨 Evolução de obra supera o financiamento em +<span><strong>${fmtBRL(Math.abs(diff))}</strong><span>`
+      ? `🚨 Evolução de obra supera o financiamento em <span>+<strong>${fmtBRL(Math.abs(diff))}</strong><span>`
       : `<span><strong>${fmtBRL(diff)}</strong></span> para igualar a parcela de financiamento`;
   }
 }
