@@ -110,6 +110,9 @@ function renderQuickStep() {
 
   } else if (currentStep === 3) {
     const percCalc = _calcPercAutomatico();
+    const diferenca = Math.abs(percCalc - (formQuick.percObra || percCalc));
+    const temDiscrepancia = diferenca > 10;
+    
     inputsHtml = `
       <div class="field-group">
         <label class="field-label">Percentual atual de Evolução de Obra</label>
@@ -120,6 +123,10 @@ function renderQuickStep() {
           <span class="suf">%</span>
         </div>
       </div>
+      ${temDiscrepancia ? `
+      <div class="info-box" style="margin-top:8px;background:var(--warn-bg);border-color:#F6E0A0">
+        ⚠️ Atenção: há uma diferença de ${diferenca.toFixed(1)}% entre o % calculado e o informado. Verifique se os valores estão corretos.
+      </div>` : ''}
       <br>
       <label class="field-label">Mês dessa Medição</label>
       <div class="label-hint">A qual mês essa % de obra se refere?</div>
@@ -345,6 +352,16 @@ function _calcParcelaSemTR(saldo) {
   return tm * saldo + enc;
 }
 
+// Parcela estimada no % atual (usa saldo REAL + TR obtida silenciosamente)
+function _calcParcelaAtual() {
+  const saldo = parseFloat(formQuick.saldoAtual || 0);
+  const tm = (parseFloat(formQuick.taxaAnual) / 100) / 12;
+  const enc = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
+  const ym = formQuick.mesMedido ? parseMS(formQuick.mesMedido) : null;
+  const tr = ym ? getTRParaMes(ym) : 0; // obtém TR silenciosamente
+  return (tm + tr) * saldo + enc;
+}
+
 // TR em R$ (obtida silenciosamente via mês)
 function _calcTREmReais() {
   if (!formQuick.mesMedido) return { trPerc: null, trReais: null };
@@ -366,14 +383,14 @@ function renderResultQuick() {
   const temFin    = formQuick.parcelaFinanciamento > 0;
   const sliderStart = Math.max(5, perc);
 
-  const { trPerc, trReais } = _calcTREmReais();
-  const temTR = trPerc !== null && trPerc > 0;
+  // Card 2: Parcela Estimada no % Atual
+  const parcelaAtual = _calcParcelaAtual();
 
   const card2Html = `
     <div class="quick-result-card">
-      <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) : 'Não Informada'}</div>
-      <div class="qrc-val">${temTR ? fmtBRL(trReais) : '—'}</div>
-      <div class="qrc-note">Embutido na prestação de ${mesLabel}</div>
+      <div class="qrc-label">Parcela estimada no % atual</div>
+      <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
+      <div class="qrc-note">${perc.toFixed(1)}% de obra · ${mesLabel}</div>
     </div>`;
 
   setHtml(`
