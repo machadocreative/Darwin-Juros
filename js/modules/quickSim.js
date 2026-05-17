@@ -390,6 +390,10 @@ function renderResultQuick() {
       ${card2Html}
     </div>
 
+    <div class="quick-disclaimer-top">
+        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial e o valor do Terreno</strong>.
+    </div>
+
     <div class="free-preview-card" style="margin-top:12px">
       <div class="free-preview-header">
         <div class="free-preview-title">Simule suas prestações</div>
@@ -402,9 +406,6 @@ function renderResultQuick() {
         <input type="range" id="preview-slider" class="preview-slider"
           min="5" max="100" step="5" value="${sliderStart}"
           oninput="atualizaSliderQuick()">
-      </div>
-      <div class="quick-disclaimer-top">
-        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial e o valor do Terreno</strong>.
       </div>
       <div class="slider-result">
         <dl class="slider-result-row">
