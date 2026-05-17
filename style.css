@@ -1237,6 +1237,7 @@
     font-size: 14px;
     color: var(--muted);
     margin-bottom: 20px;
+    text-align: center;
 }
 .slider-wrap {
     padding: 0 20px;
@@ -1821,7 +1822,7 @@ dl dd.slider-result-val.accent span {
 .slider-fin-bloco {
     font-size: 12px;
     line-height: 1.5;
-    background: #e0d4b3;
+    background: #ffeccf;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 14px 14px 12px;

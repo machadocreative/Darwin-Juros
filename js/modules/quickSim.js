@@ -1,31 +1,31 @@
 // ── SIMULAÇÃO RÁPIDA ──
-// 6 telas: % de obra → última parcela paga → valor total financiamento → taxa de juros → encargos → parcela de financiamento para comparação
+// 5 telas otimizadas: Total+Saldo → Taxa → Encargos → %+Mês → Parcela Fin (opcional)
 
 const STEPS_QUICK = [
   {
-    num: '01 / 06',
-    title: 'Qual o percentual aproximado da Evolução de Obra?',
-    hint: 'A simulação rápida permite incrementos de 5% em 5%. Informe o valor mais próximo.',
-  },
-  {
-    num: '02 / 06',
-    title: 'Qual o valor da prestação paga mais recente?',
-    hint: 'Verifique no seu extrato.',
-  },
-  {
-    num: '03 / 06',
+    num: '01 / 05',
     title: 'Qual o valor total do seu financiamento?',
     hint: 'O total de crédito liberado pelo banco. Consulte no app Caixa ou no seu contrato.',
   },
   {
-    num: '04 / 06',
+    num: '02 / 05',
+    title: 'Qual é o seu saldo devedor atual?',
+    hint: 'Consulte seu extrato bancário ou app Habitação Caixa.',
+  },
+  {
+    num: '03 / 05',
     title: 'Qual a Taxa de Juros Anual do seu financiamento?',
     hint: 'O app irá converter sua taxa anual para mensal abaixo.',
   },
   {
-    num: '05 / 06',
+    num: '04 / 05',
     title: 'Quais os seus encargos mensais?',
     hint: 'Valores cobrados mensalmente pela Caixa, independente do andamento da obra.',
+  },
+  {
+    num: '05 / 05',
+    title: 'Informe o percentual aproximado de evolução de obra e o mês ao qual se refere.',
+    hint: 'Informe o valor mais próximo em múltiplos de 5%.',
   },
   {
     num: '06 / 06',
@@ -34,110 +34,64 @@ const STEPS_QUICK = [
   }
 ];
 
-// ── ATUALIZAR INFO DE TR NA TELA 2 ──
-function _atualizaTRInfo() {
-  const el = document.getElementById('qinp-mes-parcela');
-  const mes = el?.value;
-  const box = document.getElementById('box-tr-info');
-  const text = document.getElementById('tr-info-text');
-  
-  if (!mes || !box || !text) return;
-  
-  const ym = parseMS(mes);
-  const trDec = getTRParaMes(ym); // retorna 0 se não encontrar
-  
-  if (trDec > 0) {
-    const trPerc = (trDec * 100).toFixed(4);
-    text.innerHTML = `📊 Taxa Referencial de ${mLabel(ym)}: <strong>${trPerc}%</strong>`;
-    box.style.display = 'block';
-  } else {
-    const mesLabel = mLabel(ym);
-    text.innerHTML = `⏳ Taxa Referencial de ${mesLabel} ainda não divulgada`;
-    box.style.display = 'block';
-  }
-}
-
 // ── RENDER PRINCIPAL ──
 function renderQuickStep() {
   screen = 'quick';
-  const s = STEPS_QUICK[currentStep];
-  let inputsHtml = '';
-  const qseg = parseFloat(formQuick.seguro || 0); // precalculado para uso no template
+  const s    = STEPS_QUICK[currentStep];
+  const qseg = parseFloat(formQuick.seguro  || 0);
   const qadm = parseFloat(formQuick.taxaAdm || 25);
+  let inputsHtml = '';
 
   if (currentStep === 0) {
-    const perc = formQuick.percObra ?? 50;
-    const sliderMin = 5;
-    const sliderStart = Math.max(sliderMin, perc);
     inputsHtml = `
-      <div class="quick-perc-wrap">
-        <div class="slider-labels">
-          <span>5%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
-        </div>
-        <input type="range" id="qinp-slider" class="preview-slider"
-          min="${sliderMin}" max="100" step="5" value="${sliderStart}"
-          oninput="_syncPercQuick(this.value)">
-        <div class="slider-perc-label" id="qslider-perc">${perc}%</div>
+      <div class="input-wrap">
+        <span class="pre">R$</span>
+        <input type="text" id="qinp-total" class="has-pre" placeholder="150.000,00" inputmode="numeric"
+          oninput="maskOnInput(this);this.classList.remove('invalid')">
+      </div>
+      <div class="info-box" style="margin-top:12px">
+        💡 Este é o valor máximo do seu financiamento — equivale ao saldo devedor quando a obra estiver 100% concluída.
       </div>`;
 
   } else if (currentStep === 1) {
     inputsHtml = `
-      <div class="field-group">
-        <label class="field-label">Valor pago</label>
-        <div class="input-wrap">
-          <span class="pre">R$</span>
-          <input type="text" id="qinp-ultima" class="has-pre" placeholder="123,45" inputmode="numeric"
-            oninput="maskOnInput(this);this.classList.remove('invalid')">
-        </div>
-      </div><br>
-      <label class="field-label">Mês</label>
-      <input type="month" id="qinp-mes-parcela" value="${formQuick.mesParcela || ''}"
-        oninput="this.classList.remove('invalid');_atualizaTRInfo()">
-      <div class="info-box" id="box-tr-info" style="margin-top: 8px; display: none">
-        <span id="tr-info-text"></span>
-      </div>`;
-
-
-  } else if (currentStep === 2) {
-    inputsHtml = `
       <div class="input-wrap">
         <span class="pre">R$</span>
-        <input type="text" id="qinp-saldo100" class="has-pre" placeholder="150.000,00" inputmode="numeric"
-          oninput="maskOnInput(this);this.classList.remove('invalid')">
+        <input type="text" id="qinp-saldo" class="has-pre" placeholder="125.000,00" inputmode="numeric"
+          oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaPercCalculado()">
       </div>
-      <div class="info-box" style="margin-top:12px">
-        💡 Este valor equivale ao seu saldo devedor quando a obra atingir 100% de conclusão.
+      <div class="info-box" id="box-perc-calc" style="margin-top:12px;display:none">
+        📊 Com base no saldo informado, o sistema calcula: <strong id="perc-calc-valor">—</strong>% de evolução de obra
       </div>`;
 
-  } else if (currentStep === 3) {
+  } else if (currentStep === 2) {
     inputsHtml = `
       <div class="input-wrap">
         <input type="text" id="qinp-taxa" class="has-suf" placeholder="5,4321" inputmode="numeric"
           oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaTaxaQuick()">
         <span class="suf">% a.a.</span>
       </div>
-      <div id="box-taxa" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
-        <div class="diff-box">
-          <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
-          <div class="diff-row">
-            <span class="d-label">Taxa de Juros Mensal</span>
-            <span class="d-val" id="val-taxa-mensal">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12, 4) : ''}</span>
-          </div>
-          <div class="diff-row">
-            <span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span>
-          </div>
-          <hr class="diff-divider">
-          <div class="diff-row hl">
-            <span class="d-label">Taxa no cálculo da prestação</span>
-            <span class="d-val" id="val-taxa">${formQuick.taxaAnual > 0 ? fmtPerc(formQuick.taxaAnual / 12 + 0.1, 4) : ''}</span>
-          </div>
+      <div class="diff-box" id="box-taxa" style="display:none">
+        <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
+        <div class="diff-row">
+          <span class="d-label">Taxa de Juros Mensal</span>
+          <span class="d-val" id="val-taxa-mensal">—</span>
         </div>
-        <div class="info-box" style="${formQuick.taxaAnual > 0 ? '' : 'display:none'}">
+        <div class="diff-row">
+          <span class="d-label">(+) Taxa Referencial do mês</span>
+          <span class="d-val">0,1000%</span>
+        </div>
+        <hr class="diff-divider">
+        <div class="diff-row hl">
+          <span class="d-label">Taxa no cálculo da prestação</span>
+          <span class="d-val" id="val-taxa">—</span>
+        </div>
+      </div>
+      <div class="info-box" id="box-taxa-info" style="display:none">
         💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.
-        </div>
       </div>`;
 
-  } else if (currentStep === 4) {
+  } else if (currentStep === 3) {
     inputsHtml = `
       <label class="field-label">1. Seguro</label>
       <div class="label-hint">O valor de seguro é único para cada comprador — Verifique no seu contrato.</div>
@@ -146,7 +100,6 @@ function renderQuickStep() {
         <input type="text" id="qinp-seguro" class="has-pre" placeholder="00,00" inputmode="numeric"
           oninput="maskOnInput(this);atualizaEncargosQuick();this.classList.remove('invalid')">
       </div>
-
       <div class="field-group">
         <label class="field-label">2. Taxa Administrativa</label>
         <div class="label-hint">A Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
@@ -156,10 +109,30 @@ function renderQuickStep() {
             oninput="maskOnInput(this);atualizaEncargosQuick()">
         </div>
       </div>
-
       <div class="confirm-box" id="box-enc" style="${qseg > 0 ? '' : 'display:none'}">
         <div><div class="c-label">Total de encargos mensais</div></div>
         <div class="c-val" id="val-enc">${qseg > 0 ? fmtBRL(qseg + qadm) : ''}</div>
+      </div>`;
+
+  } else if (currentStep === 4) {
+    const percCalc = _calcPercAutomatico();
+    inputsHtml = `
+      <div class="field-group">
+        <label class="field-label">% Aproximado de Evolução de Obra</label>
+        <div class="label-hint">O sistema calculou ${percCalc.toFixed(1)}% com base no saldo. Ajuste se necessário.</div>
+        <div class="input-wrap">
+          <input type="text" id="qinp-perc" class="has-suf" placeholder="${percCalc.toFixed(1)}" inputmode="numeric"
+            oninput="maskOnInput(this);this.classList.remove('invalid')">
+          <span class="suf">%</span>
+        </div>
+      </div>
+      <br>
+      <label class="field-label">Mês dessa Medição</label>
+      <div class="label-hint">Em qual mês essa % de obra foi medida? (Para obter a TR do mês)</div>
+      <input type="month" id="qinp-mes-medido" value="${formQuick.mesMedido || ''}"
+        oninput="this.classList.remove('invalid');_atualizaTRInfo()">
+      <div class="info-box" id="box-tr-info" style="margin-top:8px;display:none">
+        <span id="tr-info-text"></span>
       </div>`;
 
   } else if (currentStep === 5) {
@@ -191,23 +164,19 @@ function renderQuickStep() {
 
   setTimeout(() => {
     if (currentStep === 0) {
-      _syncPercQuick(formQuick.percObra ?? 50);
+      attachMask('qinp-total', 'brl', formQuick.totalFinanciado || '');
     }
     if (currentStep === 1) {
-      attachMask('qinp-ultima', 'brl', formQuick.ultimaParcela || '');
-      const elMes = document.getElementById('qinp-mes-parcela');
-      if (elMes && formQuick.mesParcela) elMes.value = formQuick.mesParcela;
+      attachMask('qinp-saldo', 'brl', formQuick.saldoAtual || '');
+      _atualizaPercCalculado();
     }
     if (currentStep === 2) {
-      attachMask('qinp-saldo100', 'brl', formQuick.saldoDevedor100 || '');
-    }
-    if (currentStep === 3) {
       attachMask('qinp-taxa', 'perc4', formQuick.taxaAnual || '');
       const el = document.getElementById('qinp-taxa');
       if (el) el.oninput = () => { maskValue(el, 'perc4'); el.classList.remove('invalid'); _atualizaTaxaQuick(); };
       if (formQuick.taxaAnual) _atualizaTaxaQuick();
     }
-    if (currentStep === 4) {
+    if (currentStep === 3) {
       attachMask('qinp-seguro',  'brl', formQuick.seguro  || '');
       attachMask('qinp-taxaAdm', 'brl', formQuick.taxaAdm || 25);
       const qsegEl = document.getElementById('qinp-seguro');
@@ -215,11 +184,18 @@ function renderQuickStep() {
       if (qsegEl) qsegEl.oninput = () => { maskValue(qsegEl, 'brl'); qsegEl.classList.remove('invalid'); atualizaEncargosQuick(); };
       if (qadmEl) qadmEl.oninput = () => { maskValue(qadmEl, 'brl'); atualizaEncargosQuick(); };
     }
+    if (currentStep === 4) {
+      const percCalc = _calcPercAutomatico();
+      attachMask('qinp-perc', 'perc2', formQuick.percObra || percCalc);
+      const elMes = document.getElementById('qinp-mes-medido');
+      if (elMes && formQuick.mesMedido) elMes.value = formQuick.mesMedido;
+      _atualizaTRInfo();
+    }
     if (currentStep === 5) {
       attachMask('qinp-parcela-fin', 'brl', formQuick.parcelaFinanciamento || '');
     }
     const f = document.querySelector('.step-card input:not([type=range])');
-    if (f && currentStep !== 3) f.focus();
+    if (f && currentStep !== 2) f.focus();
   }, 80);
 }
 
@@ -229,81 +205,115 @@ function _renderProgressQuick() {
   ).join('')}</div>`;
 }
 
-// ── SYNC % OBRA (só slider) ──
-function _syncPercQuick(val) {
-  const n = Math.min(100, Math.max(5, parseInt(val) || 5));
-  formQuick.percObra = n;
-  const slider = document.getElementById('qinp-slider');
-  const label  = document.getElementById('qslider-perc');
-  if (slider) {
-    slider.value = n;
-    slider.style.background = `linear-gradient(to right, var(--accent) ${n}%, var(--border) ${n}%)`;
+// ── CALCULAR % AUTOMATICAMENTE (Tela 1) ──
+function _calcPercAutomatico() {
+  const total = parseFloat(formQuick.totalFinanciado || 0);
+  const saldo = parseFloat(formQuick.saldoAtual || 0);
+  if (total <= 0) return 0;
+  return (saldo / total) * 100;
+}
+
+// ── ATUALIZAR INFO DE % CALCULADO (Tela 1) ──
+function _atualizaPercCalculado() {
+  const perc = _calcPercAutomatico();
+  const box = document.getElementById('box-perc-calc');
+  const val = document.getElementById('perc-calc-valor');
+  if (perc > 0 && box && val) {
+    val.textContent = perc.toFixed(1);
+    box.style.display = 'block';
+  } else if (box) {
+    box.style.display = 'none';
   }
-  if (label) label.textContent = n + '%';
 }
 
 // ── ATUALIZAR ENCARGOS ──
-// Corrigido: usa o valor real de taxaAdm digitado pelo usuário, não hardcoded 25
 function atualizaEncargosQuick() {
   const elSeg = document.getElementById('qinp-seguro');
   const elAdm = document.getElementById('qinp-taxaAdm');
   const s = maskRead(elSeg) || 0;
-  const a = maskRead(elAdm) || 25; // lê valor digitado, fallback 25
+  const a = maskRead(elAdm) || 25;
   const box = document.getElementById('box-enc');
   const val = document.getElementById('val-enc');
   if (box && val) {
     box.style.display = s > 0 ? 'block' : 'none';
-    val.textContent = fmtBRL(s + a); // ← soma dinâmica
+    val.textContent = fmtBRL(s + a);
   }
 }
 
-// ── ATUALIZAR TAXA ──
+// ── ATUALIZAR TAXA (DIDÁTICO) ──
 function _atualizaTaxaQuick() {
   const el = document.getElementById('qinp-taxa');
   const ta = maskRead(el) || 0;
   const box         = document.getElementById('box-taxa');
+  const boxInfo     = document.getElementById('box-taxa-info');
   const elMensal    = document.getElementById('val-taxa-mensal');
   const elCombinada = document.getElementById('val-taxa');
   if (box) box.style.display = ta > 0 ? 'block' : 'none';
-  if (elMensal)    elMensal.textContent    = fmtPerc(ta / 12, 4);
-  if (elCombinada) elCombinada.textContent = fmtPerc(ta / 12 + 0.1, 4);
+  if (boxInfo) boxInfo.style.display = ta > 0 ? 'block' : 'none';
+  if (elMensal)    elMensal.textContent    = ta > 0 ? fmtPerc(ta / 12, 4) : '—';
+  if (elCombinada) elCombinada.textContent = ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : '—';
+}
+
+// ── ATUALIZAR INFO DE TR (TELA 4) ──
+// Obtém a TR silenciosamente via mês informado
+function _atualizaTRInfo() {
+  const el = document.getElementById('qinp-mes-medido');
+  const mes = el?.value;
+  const box = document.getElementById('box-tr-info');
+  const text = document.getElementById('tr-info-text');
+  
+  if (!mes || !box || !text) return;
+  
+  const ym = parseMS(mes);
+  const trDec = getTRParaMes(ym); // retorna 0 se não encontrar
+  
+  if (trDec > 0) {
+    const trPerc = (trDec * 100).toFixed(4);
+    text.innerHTML = `📊 Taxa Referencial de ${mLabel(ym)}: <strong>${trPerc}%</strong>`;
+    box.style.display = 'block';
+  } else {
+    const mesLabel = mLabel(ym);
+    text.innerHTML = `⏳ Taxa Referencial de ${mesLabel} ainda não divulgada`;
+    box.style.display = 'block';
+  }
 }
 
 // ── NAVEGAÇÃO ──
 function nextStepQuick() {
   if (currentStep === 0) {
-    // % de obra vem diretamente do slider, já salvo em formQuick.percObra
-    // Garante que está no mínimo 5%
-    formQuick.percObra = Math.min(100, Math.max(5, parseFloat(formQuick.percObra) || 5));
-
-  } else if (currentStep === 1) {
-    const elMes   = document.getElementById('qinp-mes-parcela');
-    const elValor = document.getElementById('qinp-ultima');
-    const mes     = elMes?.value;
-    const valor   = maskRead(elValor);
-    if (!mes)                 { elMes?.classList.add('invalid');   showToast('⚠️ Informe o mês da última parcela.'); return; }
-    if (!valor || valor <= 0) { elValor?.classList.add('invalid'); showToast('⚠️ Informe o valor da última parcela.'); return; }
-    formQuick.mesParcela    = mes;
-    formQuick.ultimaParcela = valor;
-
-  } else if (currentStep === 2) {
-    const el = document.getElementById('qinp-saldo100');
+    const el = document.getElementById('qinp-total');
     const v  = maskRead(el);
     if (!v || v <= 0) { el?.classList.add('invalid'); showToast('⚠️ Informe o valor total do financiamento.'); return; }
-    formQuick.saldoDevedor100 = v; // ← saldo a 100% de obra
+    formQuick.totalFinanciado = v;
 
-  } else if (currentStep === 3) {
+  } else if (currentStep === 1) {
+    const el = document.getElementById('qinp-saldo');
+    const v  = maskRead(el);
+    if (!v || v <= 0) { el?.classList.add('invalid'); showToast('⚠️ Informe o saldo devedor atual.'); return; }
+    formQuick.saldoAtual = v;
+
+  } else if (currentStep === 2) {
     const el = document.getElementById('qinp-taxa');
     const v  = maskRead(el);
     if (!v || v <= 0) { el?.classList.add('invalid'); showToast('⚠️ Informe a taxa de juros.'); return; }
     formQuick.taxaAnual = v;
 
-  } else if (currentStep === 4) {
+  } else if (currentStep === 3) {
     const elSeg = document.getElementById('qinp-seguro');
     const s = maskRead(elSeg);
     if (!s || s <= 0) { elSeg?.classList.add('invalid'); showToast('⚠️ Informe o valor do seguro.'); return; }
     formQuick.seguro  = s;
     formQuick.taxaAdm = maskRead(document.getElementById('qinp-taxaAdm')) || 25;
+
+  } else if (currentStep === 4) {
+    const elPerc = document.getElementById('qinp-perc');
+    const elMes = document.getElementById('qinp-mes-medido');
+    const perc = maskRead(elPerc);
+    const mes = elMes?.value;
+    if (!perc || perc <= 0) { elPerc?.classList.add('invalid'); showToast('⚠️ Informe a % de obra.'); return; }
+    if (!mes) { elMes?.classList.add('invalid'); showToast('⚠️ Informe o mês da medição.'); return; }
+    formQuick.percObra = perc;
+    formQuick.mesMedido = mes;
 
   } else if (currentStep === 5) {
     const el = document.getElementById('qinp-parcela-fin');
@@ -321,75 +331,63 @@ function prevStepQuick() {
   if (currentStep > 0) { currentStep--; renderQuickStep(); }
 }
 
-// ── CÁLCULO DO SALDO DEVEDOR A 100% ──
-// Parte do saldo total informado na tela 3 (= saldo a 100% de obra).
-// Fallback: usa saldoDevedor100 diretamente se não houver mesParcela.
-function _calcSaldoDevedor100() {
-  return parseFloat(formQuick.saldoDevedor100 || 0);
+// ── CÁLCULOS ──
+
+// Saldo no % informado na tela 4
+function _calcSaldoNoPerc() {
+  const total = parseFloat(formQuick.totalFinanciado || 0);
+  const perc  = parseFloat(formQuick.percObra || 0);
+  return total * (perc / 100);
 }
 
-// ── CÁLCULO PRINCIPAL ──
-// Usa o saldo a 100% como base e projeta para o % informado na tela 1.
-function _calcQuick() {
-  const tm    = (parseFloat(formQuick.taxaAnual) / 100) / 12;
-  const enc   = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
-  const sd100 = _calcSaldoDevedor100();
-  const perc  = parseFloat(formQuick.percObra || 5);
-
-  // Saldo no % informado
-  const sd = sd100 * (perc / 100);
-  // Parcela estimada sem TR
-  const parcelaAtual = tm * sd + enc;
-
-  return { parcelaAtual, tm, enc, sd, sd100, perc };
+// Parcela sem TR
+function _calcParcelaSemTR(saldo) {
+  const tm  = (parseFloat(formQuick.taxaAnual) / 100) / 12;
+  const enc = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
+  return tm * saldo + enc;
 }
 
-// ── TR DA ÚLTIMA PARCELA EM % E R$ (do JSON histórico) ──
-function _calcTRUltimaParcela() {
-  if (!formQuick.mesParcela) return { trPerc: null, trReais: null };
-  const ym    = parseMS(formQuick.mesParcela);
-  const trDec = getTRParaMes(ym); // decimal (ex: 0.001687)
-
-  // Usa saldo no % informado para calcular TR em R$
-  const sd100 = _calcSaldoDevedor100();
-  const perc  = parseFloat(formQuick.percObra || 5);
-  const sd    = sd100 * (perc / 100);
-
-  const trPerc  = trDec * 100;   // % (ex: 0.1687)
-  const trReais = trDec * sd;    // R$
+// TR em R$ (obtida silenciosamente via mês)
+function _calcTREmReais() {
+  if (!formQuick.mesMedido) return { trPerc: null, trReais: null };
+  const ym    = parseMS(formQuick.mesMedido);
+  const trDec = getTRParaMes(ym);
+  if (!trDec) return { trPerc: null, trReais: null };
+  const saldo  = _calcSaldoNoPerc();
+  const trPerc  = trDec * 100;
+  const trReais = trDec * saldo;
   return { trPerc, trReais };
 }
 
 // ── TELA DE RESULTADO ──
 function renderResultQuick() {
   screen = 'resultQuick';
-  const { parcelaAtual, tm, enc, sd, sd100, perc } = _calcQuick();
-  const { trPerc, trReais } = _calcTRUltimaParcela();
-  const mesLabel   = formQuick.mesParcela ? mLabel(parseMS(formQuick.mesParcela)) : '—';
-  const temTR      = trPerc !== null && trPerc > 0;
-  const temFin     = formQuick.parcelaFinanciamento > 0;
+
+  const perc      = parseFloat(formQuick.percObra || 0);
+  const mesLabel  = formQuick.mesMedido ? mLabel(parseMS(formQuick.mesMedido)) : '—';
+  const temFin    = formQuick.parcelaFinanciamento > 0;
   const sliderStart = Math.max(5, perc);
+
+  const { trPerc, trReais } = _calcTREmReais();
+  const temTR = trPerc !== null && trPerc > 0;
 
   const card2Html = `
     <div class="quick-result-card">
-      <div class="qrc-label">Taxa Referencial de ${mesLabel}<br>${temTR ? fmtPerc(trPerc, 4) : 'Não Informada'}</div>
+      <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) : 'Não Informada'}</div></div>
       <div class="qrc-val">${temTR ? fmtBRL(trReais) : '—'}</div>
-      <div class="qrc-note">Embutido na última prestação</div>
+      <div class="qrc-note">Embutido na prestação de ${mesLabel}</div>
     </div>`;
 
   setHtml(`
     <div class="result-header">
-      <h2>Resultado da sua Simulação Rápida</h2>
-      <div class="quick-disclaimer-top">
-        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial</strong>.
-      </div>
+      <h2>Resultado da sua Simulação</h2>
     </div>
 
     <div class="quick-result-cards">
       <div class="quick-result-card accent">
-        <div class="qrc-label">Total da última parcela<br>${perc}% de obra</div>
-        <div class="qrc-val">${fmtBRL(formQuick.ultimaParcela)}</div>
-        <div class="qrc-note">Parcela mais recente de Evolução</div>
+        <div class="qrc-label">Situação atual<br>${perc.toFixed(1)}% de obra · ${mesLabel}</div>
+        <div class="qrc-val">${fmtBRL(formQuick.saldoAtual)}</div>
+        <div class="qrc-note">Saldo devedor informado</div>
       </div>
       ${card2Html}
     </div>
@@ -397,7 +395,7 @@ function renderResultQuick() {
     <div class="free-preview-card" style="margin-top:12px">
       <div class="free-preview-header">
         <div class="free-preview-title">Simule suas prestações</div>
-        <div class="free-preview-sub">Arraste para os lados para alterar a % de obra</div>
+        <div class="free-preview-sub">Arraste para os lados para alterar cenários.</div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
@@ -407,9 +405,12 @@ function renderResultQuick() {
           min="5" max="100" step="5" value="${sliderStart}"
           oninput="atualizaSliderQuick()">
       </div>
+      <div class="quick-disclaimer-top">
+        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial</strong>.
+      </div>
       <div class="slider-result">
         <dl class="slider-result-row">
-          <dt class="slider-result-label">Percentual de Obra estimado</dt>
+          <dt class="slider-result-label">Percentual de Obra</dt>
           <dd class="slider-perc-label" id="slider-perc">${sliderStart}%</dd>
           <dt class="slider-result-label">Saldo devedor estimado</dt>
           <dd class="slider-result-val" id="slider-saldo">—</dd>
@@ -420,13 +421,15 @@ function renderResultQuick() {
         </dl>
       </div>
     </div>
-
     <div class="free-preview-sub">Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere sempre o Saldo.</div>
+
 
     ${temFin ? `
       <div class="quick-result-cards" style="margin-top:12px; margin-bottom:12px">
+
+
         <div class="quick-result-card accent">
-          <div class="qrc-label">Sua Parcela de Financiamento</div>
+          <div class="qrc-label">1ª Parcela de Financiamento</div>
           <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
         </div>
         <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
@@ -434,9 +437,9 @@ function renderResultQuick() {
 
     <div class="quick-cta-card">
       <div class="quick-cta-title">Quer uma projeção mês a mês?</div>
-      <div class="quick-cta-sub">Com a simulação completa você vê todas as parcelas, acompanha pagamentos e acessa a tabela editável.</div>
+      <div class="quick-cta-sub">Com a simulação completa, você acessa a tabela com todas as parcelas, acompanha pagamentos e evolução mês a mês.</div>
       <button class="btn btn-primary" onclick="irParaSimulacaoCompleta()">
-        ⚠ EM TESTES — ERROS DE CÁLCULO PODEM OCORRER⚠ 
+        ⚠ EM TESTES — ERROS DE CÁLCULO PODEM OCORRER ⚠
       </button>
       <button class="btn btn-back" onclick="reiniciarSimulacaoRapida()">
         ← Refazer simulação rápida
@@ -451,44 +454,41 @@ function renderResultQuick() {
   setTimeout(() => atualizaSliderQuick(), 50);
 }
 
-// ── SLIDER DO RESULTADO ──
-// Base de cálculo: saldo a 100% (tela 3) × % do slider
+// ── SLIDER ──
 function atualizaSliderQuick() {
   const slider = document.getElementById('preview-slider');
   if (!slider) return;
-  const perc  = parseInt(slider.value);
-  const tm    = (parseFloat(formQuick.taxaAnual) / 100) / 12;
-  const enc   = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
-  const sd100 = _calcSaldoDevedor100();
 
-  // Saldo proporcional ao % do slider (base sempre = 100%)
-  const sdProj   = sd100 * (perc / 100);
-  const previsto = tm * sdProj + enc; // TR = 0
+  const perc      = parseInt(slider.value);
+  const total     = parseFloat(formQuick.totalFinanciado || 0);
+  const tm        = (parseFloat(formQuick.taxaAnual) / 100) / 12;
+  const enc       = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
+  const percObra  = parseFloat(formQuick.percObra || 5);
+
+  const sdProj   = total * (perc / 100);
+  const previsto = tm * sdProj + enc;
 
   const elPerc  = document.getElementById('slider-perc');
   const elVal   = document.getElementById('slider-val');
   const elSaldo = document.getElementById('slider-saldo');
-  if (elPerc)  elPerc.textContent = perc + '%';
-  if (elVal)   elVal.innerHTML    = `${fmtBRL(previsto)} <small>+ TR Mensal</small>`;
+  if (elPerc)  elPerc.textContent  = perc + '%';
+  if (elVal)   elVal.innerHTML     = `${fmtBRL(previsto)} <small>+ TR Mensal</small>`;
   if (elSaldo) elSaldo.textContent = fmtBRL(sdProj);
 
-  // Coloração ESTÁTICA: faixa verde permanece na % informada na tela 1 (referência fixa)
-  // Thumb pode se mover livremente sem afetar a cor de fundo
-  const percObra = parseFloat(formQuick.percObra || 5);
+  // Coloração estática: faixa verde na % informada, referência fixa
   slider.style.background = `linear-gradient(to right,
     var(--accent) 0% ${percObra}%,
     var(--border) ${percObra}% 100%)`;
 
-  // Aviso de ultrapassagem da parcela de financiamento
+  // Aviso: ultrapassagem da parcela de financiamento
   const bloco = document.getElementById('slider-fin-bloco');
   if (bloco && formQuick.parcelaFinanciamento > 0) {
     const fin  = parseFloat(formQuick.parcelaFinanciamento);
     const diff = fin - previsto;
-    const ultrapassou = diff < 0;
-    bloco.className = 'slider-fin-bloco' + (ultrapassou ? ' slider-fin-danger' : '');
-    bloco.innerHTML = ultrapassou
+    bloco.className = 'slider-fin-bloco' + (diff < 0 ? ' slider-fin-danger' : '');
+    bloco.innerHTML = diff < 0
       ? `🚨 Evolução de obra supera o financiamento em +<span><strong>${fmtBRL(Math.abs(diff))}</strong><span>`
-      : `<span><strong>${fmtBRL(diff)}</strong></span>sp para igualar a parcela de financiamento`;
+      : `<span><strong>${fmtBRL(diff)}</strong></span> para igualar a parcela de financiamento`;
   }
 }
 
