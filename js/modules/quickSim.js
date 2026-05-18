@@ -68,7 +68,7 @@ function renderQuickStep() {
       <div class="diff-box" id="box-taxa" style="display:none">
         <div class="d-title">Como funcionam os juros na Evolução de Obra?</div>
         <div class="diff-row">
-          <span class="d-label">Taxa de Juros Mensal</span>
+          <span class="d-label">Sua Taxa de Juros Mensal</span>
           <span class="d-val" id="val-taxa-mensal">—</span>
         </div>
         <div class="diff-row">
@@ -77,7 +77,7 @@ function renderQuickStep() {
         </div>
         <hr class="diff-divider">
         <div class="diff-row hl">
-          <span class="d-label">Taxa no cálculo da prestação</span>
+          <span class="d-label">Taxa de Juros para cálculo</span>
           <span class="d-val" id="val-taxa">—</span>
         </div>
       </div>
@@ -116,7 +116,7 @@ function renderQuickStep() {
     inputsHtml = `
       <div class="field-group">
         <label class="field-label">Percentual atual de Evolução de Obra</label>
-        <div class="label-hint">O sistema calculou ${percCalc.toFixed(1)}% com base no saldo. Ajuste se necessário.</div>
+        <div class="label-hint">Baseado nos dados informados, estimamos ${percCalc.toFixed(1)}%. Está correto?</div>
         <div class="input-wrap">
           <input type="text" id="qinp-perc" class="has-suf" placeholder="${percCalc.toFixed(1)}" inputmode="numeric"
             oninput="maskOnInput(this);this.classList.remove('invalid')">
@@ -388,27 +388,37 @@ function renderResultQuick() {
 
   const card2Html = `
     <div class="quick-result-card">
-      <div class="qrc-label">Parcela estimada no % atual</div>
+      <div class="qrc-label">Parcela mais recente</div>
       <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
-      <div class="qrc-note">${perc.toFixed(1)}% de obra · ${mesLabel}</div>
+      <div class="qrc-note">Valor total</div>
     </div>`;
+
+  // Card 1 → 100% de largura para caber o saldo devedor em 10 dígitos
+  // Card 2 → Última parcela com TR do mês / Card 3 → TR do mês
 
   setHtml(`
     <div class="result-header">
       <h2>Simulação Rápida</h2>
     </div>
 
-    <div class="quick-result-cards">
-      <div class="quick-result-card accent">
-        <div class="qrc-label">Situação atual<br>${perc.toFixed(1)}% de obra · ${mesLabel}</div>
-        <div class="qrc-val">${fmtBRL(formQuick.saldoAtual)}</div>
-        <div class="qrc-note">Saldo devedor informado</div>
-      </div>
-      ${card2Html}
+    <div class="quick-result-card accent large">
+      <div class="qrc-label">Saldo devedor informado<br></div>
+      <div class="qrc-val">${fmtBRL(formQuick.saldoAtual)}</div>
+      <div class="qrc-note">${perc.toFixed(1)}% de obra · ${mesLabel}</div>
     </div>
 
+    <div class="quick-result-cards">
+      ${card2Html}
+
+      <div class="quick-result-card">
+        <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) : 'Não Informada'}</div>
+        <div class="qrc-val">${temTR ? fmtBRL(trReais) : '—'}</div>
+        <div class="qrc-note">Embutido na prestação de ${mesLabel}</div>
+      </div>
+    </div>
+    <br>
     <div class="quick-disclaimer-top">
-        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial e o valor do Terreno</strong>.
+        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial e o valor do Terreno. Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere sempre o Saldo.</strong>.
     </div>
 
     <div class="free-preview-card" style="margin-top:12px">
@@ -426,7 +436,7 @@ function renderResultQuick() {
       </div>
       <div class="slider-result">
         <dl class="slider-result-row">
-          <dt class="slider-result-label">Percentual de Obra</dt>
+          <dt class="slider-result-label">Evolução de Obra</dt>
           <dd class="slider-perc-label" id="slider-perc">${sliderStart}%</dd>
           <dt class="slider-result-label">Saldo devedor estimado</dt>
           <dd class="slider-result-val" id="slider-saldo">—</dd>
@@ -437,7 +447,6 @@ function renderResultQuick() {
         </dl>
       </div>
     </div>
-    <div class="free-preview-sub">Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere sempre o Saldo.</div>
 
     ${temFin ? `
       <div class="quick-result-cards" style="margin-top:12px; margin-bottom:12px">

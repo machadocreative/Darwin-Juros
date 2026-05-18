@@ -1659,6 +1659,10 @@ dl dd.slider-result-val.accent span {
   border-color: #B2D8C4;
 }
 
+.quick-result-card.large {
+  margin-bottom: 10px;
+}
+
 .qrc-label {
   font-size: 13px;
   font-weight: 700;
