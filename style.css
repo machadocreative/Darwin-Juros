@@ -1134,10 +1134,11 @@
 
 .btn-bifurc {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    width: 90%;
+    margin: auto 10px 20px 10px;
     border-radius: var(--radius);
     padding: 20px 18px;
     cursor: pointer;

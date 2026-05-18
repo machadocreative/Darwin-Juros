@@ -41,15 +41,15 @@ function renderQuickStep() {
     inputsHtml = `
       <div class="field-group">
         <label class="field-label">Valor do seu Financiamento</label>
-        <div class="label-hint">O total de crédito liberado pelo banco, sem a entrada da Construtora.</div>
+        <div class="label-hint">O total de crédito liberado pelo banco — Sem a entrada da Construtora.</div>
         <div class="input-wrap">
           <span class="pre">R$</span>
           <input type="text" id="qinp-total" class="has-pre" placeholder="150.000,00" inputmode="numeric" oninput="maskOnInput(this);this.classList.remove('invalid')">
         </div>
       </div>
       <br>
-      <label class="field-label">Saldo devedor neste momento</label>
-      <div class="label-hint">Valor repassado à Construtora</div>
+      <label class="field-label">Saldo devedor atual</label>
+      <div class="label-hint">Valor repassado à Construtora até o momento</div>
       <div class="input-wrap">
         <span class="pre">R$</span>
         <input type="text" id="qinp-saldo" class="has-pre" placeholder="125.000,00" inputmode="numeric" oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaPercCalculado()">
@@ -395,7 +395,7 @@ function renderResultQuick() {
 
   setHtml(`
     <div class="result-header">
-      <h2>Resultado da sua Simulação</h2>
+      <h2>Simulação Rápida</h2>
     </div>
 
     <div class="quick-result-cards">
@@ -413,8 +413,8 @@ function renderResultQuick() {
 
     <div class="free-preview-card" style="margin-top:12px">
       <div class="free-preview-header">
-        <div class="free-preview-title">Simule suas prestações</div>
-        <div class="free-preview-sub">Arraste para os lados para alterar cenários.</div>
+        <div class="free-preview-title">Próximas Prestações</div>
+        <div class="free-preview-sub">Arraste para simular</div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
@@ -461,7 +461,7 @@ function renderResultQuick() {
     </div>
 
     <div class="quick-disclaimer-end">
-      <p>Darwin é uma ferramenta de cálculo não preditiva. Utilizamos a fórmula oficial de cálculo divulgada pela Caixa Econômica. Não nos responsabilizamos se previsões futuras não corresponderem à realidade, uma vez que valores cobrados serão sempre de encargo da instituição financeira.</p>
+      <p>Darwin não é uma ferramenta preditiva. Utilizamos a fórmula oficial de cálculo divulgada pela Caixa Econômica. Não nos responsabilizamos se previsões futuras não corresponderem à realidade, uma vez que valores cobrados serão sempre de encargo da instituição financeira.</p>
     </div>
   `);
 

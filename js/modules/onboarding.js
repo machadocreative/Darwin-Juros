@@ -57,33 +57,22 @@ function renderBifurcacao() {
     <div class="step-card">
       <div class="step-title">O que você precisa agora?</div>
       <div class="step-hint">Escolha o tipo de simulação.</div>
-      <div class="bifurcacao-grid">
         <button class="btn-bifurc bifurc-b" onclick="escolherFluxo('quick')">
           <span class="bifurc-icon">⚡</span>
           <div>
             <div class="bifurc-label">Simulação rápida</div>
-            <div class="bifurc-sub">Descubra de forma aproximada quais serão suas próximas prestações.</div>
+            <div class="bifurc-sub">Descubra de forma aproximada quais serão suas próximas prestações. Apenas 4 perguntas.</div>
           </div>
         </button>
 
+        <!-- VERSÃO BETA SEM A SIMULAÇÃO COMPLETA -->
         <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('complete')" disabled title="Em breve">
           <span class="bifurc-icon">📋</span>
           <div>
             <div class="bifurc-label">Simulação detalhada</div>
-            <div class="bifurc-sub"><strong>EM BREVE</strong>.</div>
+            <div class="bifurc-sub">Recomendado para quem quer ter mais controle de todas as prestações desde o início da obra. EM BREVE.</div>
           </div>
         </button>
-
-        <!-- VERSÃO BETA SEM A SIMULAÇÃO COMPLETA
-        <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('complete')">
-          <span class="bifurc-icon">📋</span>
-          <div>
-            <div class="bifurc-label">Simulação detalhada</div>
-            <div class="bifurc-sub">Veja todas as parcelas mês a mês e acompanhe o que já foi pago.</div>
-          </div>
-        </button>-->
-
-      </div>
     </div>
   `);
 }
