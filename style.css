@@ -1324,6 +1324,7 @@ dl dd.slider-result-val {
 dl dd.slider-result-val.accent {
     font-size: 20px;
     color: var(--accent);
+    text-align: right;
 }
 
 dl dd.slider-result-val.accent span {
@@ -1683,7 +1684,7 @@ dl dd.slider-result-val.accent span {
 
 .qrc-val {
   font-family: var(--mono);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text);
   line-height: 1.2;
@@ -1724,7 +1725,7 @@ dl dd.slider-result-val.accent span {
 
 .quick-result-card-fin .qrc-val {
   font-family: var(--mono);
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text);
   line-height: 1.2;

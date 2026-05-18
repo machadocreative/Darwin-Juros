@@ -414,14 +414,14 @@ function renderResultQuick() {
       ${card2Html}
 
       <div class="quick-result-card">
-        <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) : 'Não Informada'}</div>
-        <div class="qrc-val">${temTR ? fmtBRL(trReais) : '—'}</div>
-        <div class="qrc-note">Embutido na prestação de ${mesLabel}</div>
+        <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) : ''}</div>
+        <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
+        <div class="qrc-note">${temTR ? 'Embutido na prestação' : '-'}</div>
       </div>
     </div>
-    <br>
+
     <div class="quick-disclaimer-top">
-        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial e o valor do Terreno. Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere sempre o Saldo.</strong>.
+        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial e o valor do Terreno. Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere sempre o Saldo.</strong>
     </div>
 
     <div class="free-preview-card" style="margin-top:12px">
@@ -445,7 +445,7 @@ function renderResultQuick() {
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Valor aproximado de prestação</dt>
+          <dt class="slider-result-label">Valor aproximado de prestação<br><small>SEM Taxa Referencial</small></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
@@ -498,7 +498,7 @@ function atualizaSliderQuick() {
   const elVal   = document.getElementById('slider-val');
   const elSaldo = document.getElementById('slider-saldo');
   if (elPerc)  elPerc.textContent  = perc + '%';
-  if (elVal)   elVal.innerHTML     = `${fmtBRL(previsto)} <small>+ TR Mensal</small>`;
+  if (elVal)   elVal.innerHTML     = `${fmtBRL(previsto)}`;
   if (elSaldo) elSaldo.textContent = fmtBRL(sdProj);
 
   // Coloração estática: faixa verde na % informada, referência fixa
