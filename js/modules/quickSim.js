@@ -463,9 +463,9 @@ function renderResultQuick() {
 
     <div class="quick-cta-card">
       <div class="quick-cta-title">Quer uma projeção mês a mês?</div>
-      <div class="quick-cta-sub">Com a simulação completa, você acessa a tabela com todas as parcelas, acompanha pagamentos e evolução mês a mês.</div>
+      <div class="quick-cta-sub">Com a simulação detalhada, você acessa a tabela com todas as parcelas, acompanha pagamentos e evolução mês a mês.</div>
       <button class="btn btn-primary" onclick="irParaSimulacaoCompleta()">
-        ⚠ EM TESTES — ERROS DE CÁLCULO PODEM OCORRER ⚠
+        ⚠ EM TESTES ⚠
       </button>
       <button class="btn btn-back" onclick="reiniciarSimulacaoRapida()">
         ← Refazer simulação rápida
@@ -526,7 +526,7 @@ function reiniciarSimulacaoRapida() {
   renderQuickStep();
 }
 
-// ── CTA: migrar para simulação completa ──
+// ── CTA: migrar para simulação detalhada ──
 function irParaSimulacaoCompleta() {
   form.seguro    = String(formQuick.seguro   || '');
   form.taxaAdm   = String(formQuick.taxaAdm  || 25);
