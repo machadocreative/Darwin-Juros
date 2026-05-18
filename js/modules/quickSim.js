@@ -119,15 +119,17 @@ function renderQuickStep() {
         <div class="label-hint">Baseado nos dados informados, estimamos ${percCalc.toFixed(1)}%. Está correto?</div>
         <div class="input-wrap">
           <input type="text" id="qinp-perc" class="has-suf" placeholder="${percCalc.toFixed(1)}" inputmode="numeric"
-            oninput="maskOnInput(this);this.classList.remove('invalid')">
+            oninput="maskOnInput(this);_limitPercQuick(this);this.classList.remove('invalid')">
           <span class="suf">%</span>
         </div>
       </div>
+      
       ${temDiscrepancia ? `
-      <div class="info-box" style="margin-top:8px;background:var(--warn-bg);border-color:#F6E0A0">
+        <div class="info-box" style="margin-top:8px;background:var(--warn-bg);border-color:#F6E0A0">
         ⚠️ Atenção: há uma diferença de ${diferenca.toFixed(1)}% entre o % calculado e o informado. Verifique se os valores estão corretos.
-      </div>` : ''}
+        </div>` : ''}
       <br>
+
       <label class="field-label">Mês dessa Medição</label>
       <div class="label-hint">A qual mês essa % de obra se refere?</div>
       <input type="month" id="qinp-mes-medido" value="${formQuick.mesMedido || ''}"
@@ -204,7 +206,8 @@ function _renderProgressQuick() {
   ).join('')}</div>`;
 }
 
-// ── CALCULAR % AUTOMATICAMENTE (Tela 1) ──
+// TELA 1
+// ── CALCULAR % AUTOMATICAMENTE ──
 function _calcPercAutomatico() {
   const total = parseFloat(formQuick.totalFinanciado || 0);
   const saldo = parseFloat(formQuick.saldoAtual || 0);
@@ -212,7 +215,7 @@ function _calcPercAutomatico() {
   return (saldo / total) * 100;
 }
 
-// ── ATUALIZAR INFO DE % CALCULADO (Tela 1) ──
+// ── ATUALIZAR INFO DE % CALCULADO ──
 function _atualizaPercCalculado() {
   const perc = _calcPercAutomatico();
   const box = document.getElementById('box-perc-calc');
@@ -253,8 +256,19 @@ function _atualizaTaxaQuick() {
   if (elCombinada) elCombinada.textContent = ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : '—';
 }
 
-// ── ATUALIZAR INFO DE TR (TELA 4) ──
-// Obtém a TR silenciosamente via mês informado
+// TELA 4
+// ── IMPEDIR PERCENTUAL DE OBRA ACIMA DE 100% ──
+function _limitPercQuick(el) {
+  const v = maskRead(el);
+  if (isNaN(v)) return;
+
+  if (v > 100) {
+    el.value = '100,00';
+    el.dataset.rawDigits = '10000';
+  }
+}
+
+// ── ATUALIZAR INFO DE TR VIA MÊS INFORMADO ──
 function _atualizaTRInfo() {
   const el = document.getElementById('qinp-mes-medido');
   const mes = el?.value;
@@ -315,7 +329,7 @@ if (currentStep === 0) {
     const elMes = document.getElementById('qinp-mes-medido');
     const perc = maskRead(elPerc);
     const mes = elMes?.value;
-    if (!perc || perc <= 0) { elPerc?.classList.add('invalid'); showToast('⚠️ Informe a % de obra.'); return; }
+    if (!perc || perc <= 0 || perc > 100) { elPerc?.classList.add('invalid'); showToast('⚠️ Informe uma evolução entre 0,01% e 100%.'); return; }
     if (!mes) { elMes?.classList.add('invalid'); showToast('⚠️ Informe o mês da medição.'); return; }
     formQuick.percObra = perc;
     formQuick.mesMedido = mes;
@@ -391,9 +405,9 @@ function renderResultQuick() {
 
   const card2Html = `
     <div class="quick-result-card">
-      <div class="qrc-label">Parcela mais recente</div>
+      <div class="qrc-label">Parcela atual</div>
       <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
-      <div class="qrc-note">Valor total</div>
+      <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem TR'}</div>
     </div>`;
 
   // Card 1 → 100% de largura para caber o saldo devedor em 10 dígitos
