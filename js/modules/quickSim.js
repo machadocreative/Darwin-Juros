@@ -380,9 +380,11 @@ function renderResultQuick() {
 
   const perc      = parseFloat(formQuick.percObra || 0);
   const mesLabel  = formQuick.mesMedido ? mLabel(parseMS(formQuick.mesMedido)) : '—';
-  const temTR      = trPerc !== null && trPerc > 0;
   const temFin    = formQuick.parcelaFinanciamento > 0;
   const sliderStart = Math.max(5, perc);
+
+  const { trPerc, trReais } = _calcTREmReais();
+  const temTR = trPerc !== null && trPerc > 0;
 
   // Card 2: Parcela Estimada no % Atual
   const parcelaAtual = _calcParcelaAtual();
