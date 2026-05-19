@@ -463,7 +463,7 @@ function renderResultQuick() {
         </dl>
       </div>
       ${temFin ? `
-        <div class="quick-result-grid-slider>
+        <div class="quick-result-grid-slider">
           <div class="quick-result-card accent">
             <div class="qrc-label">1ª Parcela do Financiamento</div>
             <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
