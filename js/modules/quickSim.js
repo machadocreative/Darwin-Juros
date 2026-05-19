@@ -102,7 +102,7 @@ function renderQuickStep() {
           <input type="text" id="qinp-taxaAdm" class="has-pre" placeholder="25,00" inputmode="numeric"
             oninput="maskOnInput(this);atualizaEncargosQuick()">
         </div>
-      div>
+      <div>
       <div class="confirm-box" id="box-enc" style="${qseg > 0 ? '' : 'display:none'}">
         <div><div class="c-label">Total de encargos mensais</div></div>
         <div class="c-val" id="val-enc">${qseg > 0 ? fmtBRL(qseg + qadm) : ''}</div>
@@ -454,7 +454,7 @@ function renderResultQuick() {
         <dl class="slider-result-row">
           <dt class="slider-result-label">Evolução de Obra</dt>
           <dd class="slider-result-perc" id="slider-perc">${sliderStart}%</dd>
-          <dt class="slider-result-label">Saldo devedor estimado</dt>
+          <dt class="slider-result-label">Saldo devedor</dt>
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
