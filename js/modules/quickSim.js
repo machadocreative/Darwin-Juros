@@ -102,7 +102,7 @@ function renderQuickStep() {
           <input type="text" id="qinp-taxaAdm" class="has-pre" placeholder="25,00" inputmode="numeric"
             oninput="maskOnInput(this);atualizaEncargosQuick()">
         </div>
-      </div>
+      div>
       <div class="confirm-box" id="box-enc" style="${qseg > 0 ? '' : 'display:none'}">
         <div><div class="c-label">Total de encargos mensais</div></div>
         <div class="c-val" id="val-enc">${qseg > 0 ? fmtBRL(qseg + qadm) : ''}</div>
@@ -428,20 +428,19 @@ function renderResultQuick() {
       ${card2Html}
 
       <div class="quick-result-card">
-        <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) : ''}</div>
+        <div class="qrc-label">Taxa Referencial ${temTR ? fmtPerc(trPerc, 4) : ''}</div>
         <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
         <div class="qrc-note">${temTR ? 'Embutido na prestação' : '-'}</div>
       </div>
     </div>
 
     <div class="quick-disclaimer-top">
-        ⚠️ <strong>As estimativas abaixo serão sempre aproximadas por não incluírem a TR oficial e o valor do Terreno. Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere sempre o Saldo.</strong>
+        ⚠️ <strong>As estimativas abaixo sempre serão aproximações por não incluírem a TR oficial e o valor do Terreno. Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere sempre o Saldo.</strong>
     </div>
 
     <div class="free-preview-card" style="margin-top:12px">
       <div class="free-preview-header">
-        <div class="free-preview-title">Próximas Prestações</div>
-        <div class="free-preview-sub">Arraste para simular</div>
+        <div class="free-preview-title">Próximas Prestações <span>· Arraste para simular</span></div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
@@ -459,21 +458,19 @@ function renderResultQuick() {
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Valor aproximado de prestação<br><small>SEM Taxa Referencial</small></dt>
+          <dt class="slider-result-label">Prestação simulada<br><small><strong>SEM Taxa Referencial</strong></small></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
+      ${temFin ? `
+        <div class="quick-result-cards" style="margin-top:12px; margin-bottom:12px">
+          <div class="quick-result-card accent">
+            <div class="qrc-label">1ª Parcela do Financiamento</div>
+            <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
+          </div>
+          <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
+        </div>` : ''}
     </div>
-
-    ${temFin ? `
-      <div class="quick-result-cards" style="margin-top:12px; margin-bottom:12px">
-
-        <div class="quick-result-card accent">
-          <div class="qrc-label">1ª Parcela de Financiamento</div>
-          <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
-        </div>
-        <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
-      </div>` : ''}
 
     <div class="quick-cta-card">
       <div class="quick-cta-title">Quer uma projeção mês a mês?</div>

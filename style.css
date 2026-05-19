@@ -1234,11 +1234,11 @@
     color: var(--text);
     margin-bottom: 2px;
 }
-.free-preview-sub {
+.free-preview-title span {
     font-size: 14px;
     color: var(--muted);
     margin-bottom: 20px;
-    text-align: center;
+    text-align: left;
 }
 .slider-wrap {
     padding: 0 20px;
@@ -1311,23 +1311,29 @@ dl.slider-result-row.highlight {
     padding-top: 10px;
     border-top: 1px solid var(--border);
 }
-dl dt.slider-result-label {
-    font-size: 14px;
+dl.slider-result-row dt.slider-result-label {
+    font-size: 12px;
     color: var(--muted);
+    text-align: right;
 }
-dl dd.slider-result-val {
+
+dl.slider-result-row dd {
+    padding-right: 10px;
+}
+
+dl.slider-result-row dd.slider-result-val {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
 }
-dl dd.slider-result-val.accent {
+dl.slider-result-row dd.slider-result-val.accent {
     font-size: 20px;
     color: var(--accent);
     text-align: right;
 }
 
-dl dd.slider-result-val.accent span {
+dl.slider-result-row dd.slider-result-val.accent span {
     font-size: 15px;
 } 
 
