@@ -474,7 +474,8 @@ function renderResultQuick() {
 
     <div class="quick-cta-card">
       <div class="quick-cta-title">Quer uma projeção mês a mês?</div>
-      <div class="quick-cta-sub">Com a simulação detalhada, você acessa a tabela com todas as parcelas, acompanha pagamentos e evolução mês a mês.</div>
+      <div class="quick-cta-sub">Você pode aproveitar alguns dados da sua simulação e partir para a versão detalhada.<br>
+      Com a simulação detalhada, você acessa a tabela com todas as parcelas, acompanha pagamentos e evolução mês a mês.</div>
       <button class="btn btn-primary" onclick="irParaSimulacaoCompleta()">
         ⚠ EM TESTES ⚠
       </button>
