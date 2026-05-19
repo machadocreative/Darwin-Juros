@@ -1226,7 +1226,7 @@
     margin-bottom: 8px;
 }
 .free-preview-header {
-    padding: 18px 20px 0;
+    padding: 18px 20px 15px;
 }
 .free-preview-title {
     font-size: 17px;
@@ -1286,7 +1286,7 @@
     box-shadow: 0 1px 6px rgba(0,0,0,.18);
     cursor: pointer;
 }
-.slider-perc-label {
+.slider-result-perc {
     text-align: center;
     font-family: var(--mono);
     font-size: 25px;
@@ -1314,11 +1314,11 @@ dl.slider-result-row.highlight {
 dl.slider-result-row dt.slider-result-label {
     font-size: 12px;
     color: var(--muted);
-    text-align: right;
+    text-align: left;
 }
 
 dl.slider-result-row dd {
-    padding-right: 10px;
+    margin-right: 10px;
 }
 
 dl.slider-result-row dd.slider-result-val {
@@ -1608,7 +1608,7 @@ dl.slider-result-row dd.slider-result-val.accent span {
 }
  
 /* Reutiliza os filhos de .free-preview-card — nenhum estilo adicional necessário */
-.premium-preview-card .free-preview-header { padding: 18px 20px 0; }
+.premium-preview-card .free-preview-header { padding: 18px 20px 15px; }
 .premium-preview-card .slider-wrap { padding: 0 20px; margin-bottom: 16px; }
 .premium-preview-card .slider-result {
   background: var(--bg);
@@ -1644,7 +1644,7 @@ dl.slider-result-row dd.slider-result-val.accent span {
 }
 
 /* ── RESULTADO RÁPIDO: cards de parcela estimada ── */
-.quick-result-cards {
+.quick-result-grid-top {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
@@ -1707,8 +1707,14 @@ dl.slider-result-row dd.slider-result-val.accent span {
 }
 
 
-/* ── CARD DE PARCELA FINANCIAMENTO (Novo) ── */
-/* Adicionar ao style.css existente */
+/* ── CARDS COMPARATIVO COM PARCELAMENTO ── */
+.quick-result-grid-slider {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 4px;
+  padding: 10px;
+}
 
 .quick-result-card-fin {
   background: var(--card);
@@ -1854,4 +1860,64 @@ dl.slider-result-row dd.slider-result-val.accent span {
 .slider-fin-bloco.slider-fin-danger span {
     font-size: 22px !important;
     font-weight: 800;
+}
+
+
+/* ── SISTEMA DE AJUDA VISUAL ── */
+.help-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+}
+
+.help-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all .15s;
+  text-align: left;
+}
+
+.help-toggle:hover {
+  background: #f0f0ee;
+  border-color: var(--accent);
+}
+
+.help-content {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  animation: fadeIn .2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.help-image {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.help-caption {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
 }

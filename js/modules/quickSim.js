@@ -55,7 +55,7 @@ function renderQuickStep() {
         <input type="text" id="qinp-saldo" class="has-pre" placeholder="125.000,00" inputmode="numeric" oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaPercCalculado()">
       </div>
       <div class="info-box" id="box-perc-calc" style="margin-top: 12px; display:none">
-        📊 Com base nos valores acima, Darwin calculou: <strong id="perc-calc-valor">—</strong>% de evolução de obra
+        📊 Com base nos valores acima, Darwin calculou: <strong>Aproximadamente <span id="perc-calc-valor">—</span></strong>% de evolução de obra
       </div>`;
 
   } else if (currentStep === 1) {
@@ -424,7 +424,7 @@ function renderResultQuick() {
       <div class="qrc-note">${perc.toFixed(1)}% de obra · ${mesLabel}</div>
     </div>
 
-    <div class="quick-result-cards">
+    <div class="quick-result-grid-top">
       ${card2Html}
 
       <div class="quick-result-card">
@@ -435,7 +435,7 @@ function renderResultQuick() {
     </div>
 
     <div class="quick-disclaimer-top">
-        ⚠️ <strong>As estimativas abaixo sempre serão aproximações por não incluírem a TR oficial e o valor do Terreno. Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere sempre o Saldo.</strong>
+        ⚠️ <strong>IMPORTANTE: As estimativas abaixo sempre serão aproximações por não incluírem a TR oficial e o valor do Terreno. Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere preferencialmente o Saldo como referência.</strong>
     </div>
 
     <div class="free-preview-card" style="margin-top:12px">
@@ -453,17 +453,17 @@ function renderResultQuick() {
       <div class="slider-result">
         <dl class="slider-result-row">
           <dt class="slider-result-label">Evolução de Obra</dt>
-          <dd class="slider-perc-label" id="slider-perc">${sliderStart}%</dd>
+          <dd class="slider-result-perc" id="slider-perc">${sliderStart}%</dd>
           <dt class="slider-result-label">Saldo devedor estimado</dt>
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Prestação simulada<br><small><strong>SEM Taxa Referencial</strong></small></dt>
+          <dt class="slider-result-label">Prestação simulada <strong>SEM TR</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
       ${temFin ? `
-        <div class="quick-result-cards" style="margin-top:12px; margin-bottom:12px">
+        <div class="quick-result-grid-slider>
           <div class="quick-result-card accent">
             <div class="qrc-label">1ª Parcela do Financiamento</div>
             <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
