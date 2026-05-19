@@ -149,7 +149,7 @@ function renderQuickStep() {
         <label class="field-label">Percentual atual de Evolução de Obra</label>
         <div class="label-hint">Baseado nos dados informados, estimamos ${percCalc.toFixed(1)}%. Está correto?</div>
         <div class="input-wrap">
-          <input type="text" id="qinp-perc" class="has-suf" placeholder="${percCalc.toFixed(1)}" inputmode="numeric"
+          <input type="text" id="qinp-perc" class="has-suf" placeholder="00,00" inputmode="numeric"
             oninput="maskOnInput(this);_limitPercQuick(this);this.classList.remove('invalid')">
           <span class="suf">%</span>
         </div>
@@ -464,7 +464,7 @@ function renderResultQuick() {
   const { trPerc, trReais } = _calcTREmReais();
   const temTR = trPerc !== null && trPerc > 0;
 
-  const ymAtual = parseMS(formQuick.mesParcela);
+  const ymAtual = parseMS(formQuick.mesMedido);
   const ymSeguinte = _nextMesLabel(ymAtual);
   const proxMesLabel = mLabel(ymSeguinte);
 
