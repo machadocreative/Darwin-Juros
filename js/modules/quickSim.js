@@ -35,6 +35,7 @@ function renderQuickStep() {
   const s    = STEPS_QUICK[currentStep];
   const qseg = parseFloat(formQuick.seguro  || 0);
   const qadm = parseFloat(formQuick.taxaAdm || 25);
+
   let inputsHtml = '';
 
   if (currentStep === 0) {
@@ -56,6 +57,16 @@ function renderQuickStep() {
       </div>
       <div class="info-box" id="box-perc-calc" style="margin-top: 12px; display:none">
         📊 Com base nos valores acima, Darwin calculou: <strong>Aproximadamente <span id="perc-calc-valor">—</span></strong>% de evolução de obra
+      </div>
+
+      <div class="help-section">
+        <button class="help-toggle" onclick="toggleHelp('help-tela0')">
+          ❓ Não sabe onde encontrar esses valores? 
+        </button>
+        <div class="help-content" id="help-tela0" style="display:none">
+          <img src="data/ajuda-extrato-saldo.png" alt="Onde encontrar" class="help-image">
+          <p class="help-caption">Consulte seu extrato bancário ou app Habitação Caixa</p>
+        </div>
       </div>`;
 
   } else if (currentStep === 1) {
@@ -83,6 +94,16 @@ function renderQuickStep() {
       </div>
       <div class="info-box" id="box-taxa-info" style="display:none">
         💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.
+      </div>
+      
+      <div class="help-section">
+        <button class="help-toggle" onclick="toggleHelp('help-tela1')">
+          ❓ Não sabe onde encontrar esse valor?
+        </button>
+        <div class="help-content" id="help-tela1" style="display:none">
+          <img src="data/ajuda-taxa-juros.png" alt="Onde encontrar taxa de juros" class="help-image">
+          <p class="help-caption">Consulte seu contrato ou app Habitação Caixa</p>
+        </div>
       </div>`;
 
   } else if (currentStep === 2) {
@@ -102,10 +123,20 @@ function renderQuickStep() {
           <input type="text" id="qinp-taxaAdm" class="has-pre" placeholder="25,00" inputmode="numeric"
             oninput="maskOnInput(this);atualizaEncargosQuick()">
         </div>
-      <div>
+      </div>
       <div class="confirm-box" id="box-enc" style="${qseg > 0 ? '' : 'display:none'}">
         <div><div class="c-label">Total de encargos mensais</div></div>
         <div class="c-val" id="val-enc">${qseg > 0 ? fmtBRL(qseg + qadm) : ''}</div>
+      </div>
+      
+      <div class="help-section">
+        <button class="help-toggle" onclick="toggleHelp('help-tela2')">
+          ❓ Não sabe onde encontrar esses valores?
+        </button>
+        <div class="help-content" id="help-tela2" style="display:none">
+          <img src="data/ajuda-encargos.png" alt="Onde encontrar encargos" class="help-image">
+          <p class="help-caption">Consulte seu extrato bancário ou contrato</p>
+        </div>
       </div>`;
 
   } else if (currentStep === 3) {
@@ -187,7 +218,9 @@ function renderQuickStep() {
     }
     if (currentStep === 3) {
       const percCalc = _calcPercAutomatico();
-      attachMask('qinp-perc', 'perc2', formQuick.percObra || percCalc);
+      // Inicializa com valor calculado se não houver valor salvo
+      const valorInicial = formQuick.percObra || percCalc;
+      attachMask('qinp-perc', 'perc2', valorInicial);
       const elMes = document.getElementById('qinp-mes-medido');
       if (elMes && formQuick.mesMedido) elMes.value = formQuick.mesMedido;
       _atualizaTRInfo();
@@ -204,6 +237,13 @@ function _renderProgressQuick() {
   return `<div class="progress-wrap">${Array.from({ length: STEPS_QUICK.length }, (_, i) =>
     `<div class="progress-dot ${i < currentStep ? 'done' : i === currentStep ? 'active' : ''}"></div>`
   ).join('')}</div>`;
+}
+
+// ── TOGGLE AJUDA VISUAL ──
+function toggleHelp(id) {
+  const content = document.getElementById(id);
+  if (!content) return;
+  content.style.display = content.style.display === 'none' ? 'block' : 'none';
 }
 
 // TELA 1
@@ -337,7 +377,18 @@ if (currentStep === 0) {
   } else if (currentStep === 4) {
     const el = document.getElementById('qinp-parcela-fin');
     const v  = maskRead(el);
-    formQuick.parcelaFinanciamento = (!isNaN(v) && v > 0) ? v : null;
+
+    if (!v || v <= 0) {
+      el?.classList.add('invalid'); showToast('⚠️ Informe o valor da parcela.'); return;}
+
+    const total = formQuick.totalFinanciado || 0;
+
+    if (v > total) {
+      elv?.classList.add('invalid');
+      showToast('⚠️ Parcela não pode ser maior que o valor total financiado.'); return; }
+
+    formQuick.parcelaFinanciamento = v;
+
     renderResultQuick();
     return;
   }
@@ -388,6 +439,19 @@ function _calcTREmReais() {
   return { trPerc, trReais };
 }
 
+// ENCONTRAR MÊS INFORMADO + 1
+function _nextMesLabel(ym) {
+  let { y, m } = ym;
+
+  m += 1;
+  if (m > 12) {
+    m = 1;
+    y += 1;
+  }
+
+  return { y, m };
+}
+
 // ── TELA DE RESULTADO ──
 function renderResultQuick() {
   screen = 'resultQuick';
@@ -400,18 +464,22 @@ function renderResultQuick() {
   const { trPerc, trReais } = _calcTREmReais();
   const temTR = trPerc !== null && trPerc > 0;
 
-  // Card 2: Parcela Estimada no % Atual
+  const ymAtual = parseMS(formQuick.mesParcela);
+  const ymSeguinte = _nextMesLabel(ymAtual);
+  const proxMesLabel = mLabel(ymSeguinte);
+
+  // Card 1: Parcela Estimada no % Atual
   const parcelaAtual = _calcParcelaAtual();
 
-  const card2Html = `
+  const card1Html = `
     <div class="quick-result-card">
-      <div class="qrc-label">Parcela atual</div>
+      <div class="qrc-label">Parcela atual<br>Vence em ${proxMesLabel}</div>
       <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
       <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem TR'}</div>
     </div>`;
 
-  // Card 1 → 100% de largura para caber o saldo devedor em 10 dígitos
-  // Card 2 → Última parcela com TR do mês / Card 3 → TR do mês
+  // Card large → 100% de largura para caber o saldo devedor em 10 dígitos
+  // Card 1 → Última parcela com TR do mês / Card 3 → TR do mês
 
   setHtml(`
     <div class="result-header">
@@ -425,7 +493,7 @@ function renderResultQuick() {
     </div>
 
     <div class="quick-result-grid-top">
-      ${card2Html}
+      ${card1Html}
 
       <div class="quick-result-card">
         <div class="qrc-label">Taxa Referencial ${temTR ? fmtPerc(trPerc, 4) : ''}</div>
@@ -435,7 +503,7 @@ function renderResultQuick() {
     </div>
 
     <div class="quick-disclaimer-top">
-        ⚠️ <strong>IMPORTANTE: As estimativas abaixo sempre serão aproximações por não incluírem a TR oficial e o valor do Terreno. Em caso de discrepância entre a % de Obra e o Saldo Devedor, considere preferencialmente o Saldo como referência.</strong>
+        ⚠️ <strong>IMPORTANTE: Os valores abaixo são estimativas aproximadas por não incluírem a TR oficial e o valor do Terreno. Em caso de discrepância entre a % de Obra e o Saldo Devedor, opte por considerar o Saldo Devedor mais aproximado.</strong>
     </div>
 
     <div class="free-preview-card" style="margin-top:12px">
