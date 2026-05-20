@@ -55,13 +55,13 @@ function renderQuickStep() {
         <span class="pre">R$</span>
         <input type="text" id="qinp-saldo" class="has-pre" placeholder="125.000,00" inputmode="numeric" oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaPercCalculado()">
       </div>
-      <div class="info-box" id="box-perc-calc" style="margin-top: 12px; display:none">
+      <div class="info-box" id="box-perc-calc" style="display: none;">
         📊 Com base nos valores acima, Darwin calculou: <strong>Aproximadamente <span id="perc-calc-valor">—</span></strong>% de evolução de obra
       </div>
 
       <div class="help-section">
         <button class="help-toggle" onclick="toggleHelp('help-tela0')">
-          ❓ Não sabe onde encontrar esses valores? 
+          ❓ Não sabe onde encontrar esses valores? Clique aqui! 
         </button>
         <div class="help-content" id="help-tela0" style="display:none">
           <img src="data/ajuda-extrato-saldo.png" alt="Onde encontrar" class="help-image">
@@ -92,7 +92,7 @@ function renderQuickStep() {
           <span class="d-val" id="val-taxa">—</span>
         </div>
       </div>
-      <div class="info-box" id="box-taxa-info" style="display:none">
+      <div class="info-box" id="box-taxa-info" style="display: none;">
         💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.
       </div>
       
@@ -156,16 +156,21 @@ function renderQuickStep() {
       </div>
       
       ${temDiscrepancia ? `
-        <div class="info-box" style="margin-top:8px;background:var(--warn-bg);border-color:#F6E0A0">
+        <div class="info-box" style="display: none;">
         ⚠️ Atenção: há uma diferença de ${diferenca.toFixed(1)}% entre o % calculado e o informado. Verifique se os valores estão corretos.
-        </div>` : ''}
-      <br>
-
-      <label class="field-label">Mês dessa Medição</label>
-      <div class="label-hint">A qual mês essa % de obra se refere?</div>
-      <input type="month" id="qinp-mes-medido" value="${formQuick.mesMedido || ''}"
-        oninput="this.classList.remove('invalid');_atualizaTRInfo()">
-      <div class="info-box" id="box-tr-info" style="margin-top: 8px; display: none">
+        </div>
+        <br>` : ''}
+      
+      <div class="field-group">
+        <label class="field-label">Mês dessa Medição</label>
+        <div class="label-hint">A qual mês essa % de obra se refere?</div>
+        <div class="month-input-row">
+          <input type="month" id="qinp-mes-medido" value="${formQuick.mesMedido || ''}" oninput="this.classList.remove('invalid');_atualizaTRInfo()">
+          <button type="button" class="btn-current-month" onclick="preencherMesAtual()">Inserir Mês atual</button>
+        </div>
+      </div>
+      
+      <div class="info-box" id="box-tr-info" style="display: none;">
         <span id="tr-info-text"></span>
       </div>`;
 
@@ -321,6 +326,23 @@ function _mesAtual() {
   };
 }
 
+function preencherMesAtual() {
+  const atual = _mesAtual();
+
+  const valor =
+    atual.y + '-' + String(atual.m).padStart(2, '0');
+
+  const el = document.getElementById('qinp-mes-medido');
+
+  if (!el) return;
+
+  el.value = valor;
+
+  formQuick.mesMedido = valor;
+
+  el.classList.remove('invalid');
+}
+
 // ── ASSOCIAR VALOR DE TR COM O JSON PELO MÊS INFORMADO ──
 function _atualizaTRInfo() {
   const el = document.getElementById('qinp-mes-medido');
@@ -343,6 +365,7 @@ function _atualizaTRInfo() {
     box.style.display = 'block';
   }
 }
+
 
 // ── NAVEGAÇÃO ──
 function nextStepQuick() {

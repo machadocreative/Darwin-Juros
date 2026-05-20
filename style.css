@@ -16,8 +16,8 @@
       --border: #E2E0D8;
       --danger: #C0392B;
       --danger-light: #FDF0EF;
-      --warn-bg: #FFF8E6;
-      --warn: #B7791F;
+      --warn-bg: ##FFEFC6;
+      --warn: #81520D;
       --blue-bg: #EEF6FB;
       --blue: #1A5280;
       --radius: 12px;
@@ -303,6 +303,16 @@
         margin-top:16px;
     }
 
+    .month-input-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .btn-current-month {
+        white-space: nowrap;
+    }
+
     .error-msg {
         font-size: 12px;
         color: var(--danger);
@@ -356,7 +366,7 @@
         padding: 10px 14px;
         font-size: 12px;
         color: var(--warn);
-        margin-top: 8px;
+        margin-top: 10px;
         line-height: 1.5;
     }
 
