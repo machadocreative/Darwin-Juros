@@ -268,6 +268,22 @@ function _atualizaPercCalculado() {
   }
 }
 
+// TELA 2
+// ── TAXA ANUAL PARA MENSAL + TR (DIDÁTICO) ──
+function _atualizaTaxaQuick() {
+  const el = document.getElementById('qinp-taxa');
+  const ta = maskRead(el) || 0;
+  const box         = document.getElementById('box-taxa');
+  const boxInfo     = document.getElementById('box-taxa-info');
+  const elMensal    = document.getElementById('val-taxa-mensal');
+  const elCombinada = document.getElementById('val-taxa');
+  if (box) box.style.display = ta > 0 ? 'block' : 'none';
+  if (boxInfo) boxInfo.style.display = ta > 0 ? 'block' : 'none';
+  if (elMensal)    elMensal.textContent    = ta > 0 ? fmtPerc(ta / 12, 4) : '—';
+  if (elCombinada) elCombinada.textContent = ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : '—';
+}
+
+// TELA 3 
 // ── ATUALIZAR ENCARGOS ──
 function atualizaEncargosQuick() {
   const elSeg = document.getElementById('qinp-seguro');
@@ -282,19 +298,6 @@ function atualizaEncargosQuick() {
   }
 }
 
-// ── ATUALIZAR TAXA (DIDÁTICO) ──
-function _atualizaTaxaQuick() {
-  const el = document.getElementById('qinp-taxa');
-  const ta = maskRead(el) || 0;
-  const box         = document.getElementById('box-taxa');
-  const boxInfo     = document.getElementById('box-taxa-info');
-  const elMensal    = document.getElementById('val-taxa-mensal');
-  const elCombinada = document.getElementById('val-taxa');
-  if (box) box.style.display = ta > 0 ? 'block' : 'none';
-  if (boxInfo) boxInfo.style.display = ta > 0 ? 'block' : 'none';
-  if (elMensal)    elMensal.textContent    = ta > 0 ? fmtPerc(ta / 12, 4) : '—';
-  if (elCombinada) elCombinada.textContent = ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : '—';
-}
 
 // TELA 4
 // ── IMPEDIR PERCENTUAL DE OBRA ACIMA DE 100% ──
@@ -308,7 +311,17 @@ function _limitPercQuick(el) {
   }
 }
 
-// ── ATUALIZAR INFO DE TR VIA MÊS INFORMADO ──
+// ── OPÇÃO DE PREENCHER COM O MÊS ATUAL ──
+function _mesAtual() {
+  const d = new Date();
+
+  return {
+    y: d.getFullYear(),
+    m: d.getMonth() + 1
+  };
+}
+
+// ── ASSOCIAR VALOR DE TR COM O JSON PELO MÊS INFORMADO ──
 function _atualizaTRInfo() {
   const el = document.getElementById('qinp-mes-medido');
   const mes = el?.value;
