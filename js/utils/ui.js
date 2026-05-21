@@ -21,6 +21,13 @@ function renderProgress() {
   ).join('')}</div>`;
 }
 
+// ── TOGGLE AJUDA VISUAL ──
+function toggleHelp(id) {
+  const content = document.getElementById(id);
+  if (!content) return;
+  content.style.display = content.style.display === 'none' ? 'block' : 'none';
+}
+
 function updateCharCount(inp) {
   const len = sanitizeName(inp.value).length;
   const el = document.getElementById('char-count');
