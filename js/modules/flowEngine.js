@@ -43,33 +43,8 @@ function renderFlowStep() {
   const isFirst = currentFlowStep === 0;
   const isLast = currentFlowStep === totalSteps - 1;
 
-  const html = `
-    ${_renderProgressBar(totalSteps)}
-    <div class="step-card">
-      <div class="step-num">${_formatStepNumber(currentFlowStep + 1, totalSteps)}</div>
-      ${questionHtml}
-      <button class="btn btn-primary" onclick="nextFlowStep()">
-        ${isLast ? 'Ver resultado →' : 'Continuar →'}
-      </button>
-      <button class="btn btn-back" onclick="${isFirst ? 'renderBifurcacao()' : 'prevFlowStep()'}">
-        ← Voltar
-      </button>
-    </div>`;
+  //const html = `
 
-  setHtml(html);
-
-  // Inicializa máscaras, callbacks e estado da questão
-  if (questionObj.init) {
-    setTimeout(() => questionObj.init(), 80);
-  }
-
-  // Ajusta tela
-  screen = currentFlowArray === FLOW_QUICKSIM ? 'quick' : 'onboarding';
-}
-
-// ────────────────────────────────────────────────────────────────
-// NAVEGAÇÃO (próximo/anterior)
-// ────────────────────────────────────────────────────────────────
 
 function nextFlowStep() {
   if (!currentFlowArray) return;
