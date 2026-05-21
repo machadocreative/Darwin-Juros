@@ -65,8 +65,7 @@ function renderBifurcacao() {
           </div>
         </button>
 
-        <!-- VERSÃO BETA SEM A SIMULAÇÃO COMPLETA -->
-        <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('complete')" disabled title="Em breve">
+        <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('onboarding')" disabled title="Em breve">
           <span class="bifurc-icon">📋</span>
           <div>
             <div class="bifurc-label">Simulação detalhada</div>
