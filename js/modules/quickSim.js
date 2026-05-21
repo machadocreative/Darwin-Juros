@@ -226,12 +226,13 @@ function renderResultQuick() {
       <div class="free-preview-header">
         <div class="free-preview-title">Próximas Prestações <span>· Arraste para simular</span></div>
       </div>
-      <div class="slider-wrap">
+
+    <div class="slider-wrap">
         <div class="slider-labels">
           <span>5%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="preview-slider" class="preview-slider"
-          min="5" max="100" step="5" value="${sliderStart}"
+          min="${sliderStart}" max="100" step="5" value="${sliderStart}"
           oninput="atualizaSliderQuick()">
       </div>
       <div class="slider-result">
