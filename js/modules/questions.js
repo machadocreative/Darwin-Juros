@@ -493,7 +493,7 @@ const questions = {
     }
   },
 
-  historicoP agamentos: {
+  historicoPagamentos: {
     id: 'hist-table-wrap',
     maskType: 'brl',
     render: () => `
