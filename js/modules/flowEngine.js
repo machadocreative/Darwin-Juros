@@ -57,14 +57,21 @@ function renderFlowStep() {
 
   console.log(`  Total de steps: ${totalSteps}, É primeiro: ${isFirst}, É último: ${isLast}`);
 
+  const isOptionalLast = isLast && !!questionObj.optional;
+
   const html = `
     ${_renderProgressBar(totalSteps)}
     <div class="step-card">
       <div class="step-num">${_formatStepNumber(currentFlowStep + 1, totalSteps)}</div>
       ${questionHtml}
-      <button class="btn btn-primary" onclick="nextFlowStep()">
-        ${isLast ? 'Ver resultado →' : 'Continuar →'}
-      </button>
+      ${isOptionalLast ? `
+        <button class="btn btn-primary" onclick="nextFlowStep()">Avançar e ver resultado →</button>
+        <button class="btn btn-back" onclick="skipFlowStep()">Pular e ver resultado</button>
+      ` : `
+        <button class="btn btn-primary" onclick="nextFlowStep()">
+          ${isLast ? 'Ver resultado →' : 'Continuar →'}
+        </button>
+      `}
       <button class="btn btn-back" onclick="${isFirst ? 'renderBifurcacao()' : 'prevFlowStep()'}">
         ← Voltar
       </button>
@@ -129,6 +136,21 @@ function nextFlowStep() {
     _finalizeFlow();
   } else {
     console.log('  Renderizando próximo passo');
+    renderFlowStep();
+  }
+}
+
+function skipFlowStep() {
+  if (!currentFlowArray) return;
+  const questionKey = getCurrentQuestion(currentFlowArray, currentFlowStep);
+  const questionObj = questions[questionKey];
+  if (questionObj.onSkip) questionObj.onSkip();
+  currentFlowStep++;
+  currentStep = currentFlowStep;
+  const totalSteps = getTotalStepsForFlow(currentFlowArray);
+  if (currentFlowStep >= totalSteps) {
+    _finalizeFlow();
+  } else {
     renderFlowStep();
   }
 }

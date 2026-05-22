@@ -2,8 +2,28 @@
 // 5 telas otimizadas: Total+Saldo → Taxa → Encargos → %+Mês → Parcela Fin (opcional)
 
 
-// TELA 1
-// ── CALCULAR % AUTOMATICAMENTE ──
+// TELA 1 (QuickSim)
+// ── ATUALIZAR DIFF-BOX: VALOR DO IMÓVEL ──
+function _atualizaImovelQuick() {
+  const elVT  = document.getElementById(QUESTION_IDS.valorTotal);
+  const elFin = document.getElementById(QUESTION_IDS.financiamentoTotal);
+  const vt  = maskRead(elVT)  || 0;
+  const fin = maskRead(elFin) || 0;
+  const box = document.getElementById('box-imovel-quick');
+  if (vt > 0 && fin > 0 && fin < vt) {
+    const entrada   = vt - fin;
+    const percFin   = (fin / vt) * 100;
+    document.getElementById('dq-total').textContent   = fmtBRL(vt);
+    document.getElementById('dq-entrada').textContent = fmtBRL(entrada);
+    document.getElementById('dq-fin').textContent     = fmtBRL(fin);
+    document.getElementById('dq-perc-fin').textContent = fmtPerc(percFin, 1);
+    if (box) box.style.display = 'block';
+  } else {
+    if (box) box.style.display = 'none';
+  }
+}
+
+// ── CALCULAR % AUTOMATICAMENTE (usa saldo do DOM se disponível, senão formQuick) ──
 function _calcPercAutomatico() {
   const total = parseFloat(formQuick.totalFinanciado || 0);
   const saldo = parseFloat(formQuick.saldoAtual || 0);
@@ -11,14 +31,20 @@ function _calcPercAutomatico() {
   return (saldo / total) * 100;
 }
 
-// ── ATUALIZAR INFO DE % CALCULADO ──
+// TELA 4 (QuickSim)
+// ── ATUALIZAR INFO DE % CALCULADO E PRÉ-PREENCHER CAMPO ──
 function _atualizaPercCalculado() {
-  const perc = _calcPercAutomatico();
+  const elSaldo = document.getElementById(QUESTION_IDS.saldoDevedor);
+  const total   = parseFloat(formQuick.totalFinanciado || 0);
+  const saldo   = maskRead(elSaldo) || 0;
+  const perc    = total > 0 ? (saldo / total) * 100 : 0;
   const box = document.getElementById('box-perc-calc');
   const val = document.getElementById('perc-calc-valor');
   if (perc > 0 && box && val) {
     val.textContent = perc.toFixed(1);
     box.style.display = 'block';
+    const elPerc = document.getElementById(QUESTION_IDS.percentualObra);
+    if (elPerc) attachMask(QUESTION_IDS.percentualObra, 'perc2', perc);
   } else if (box) {
     box.style.display = 'none';
   }
@@ -27,7 +53,7 @@ function _atualizaPercCalculado() {
 // TELA 2
 // ── TAXA ANUAL PARA MENSAL + TR (DIDÁTICO) ──
 function _atualizaTaxaQuick() {
-  const el = document.getElementById('qinp-taxa');
+  const el = document.getElementById(QUESTION_IDS.taxaAnual);
   const ta = maskRead(el) || 0;
   const box         = document.getElementById('box-taxa');
   const boxInfo     = document.getElementById('box-taxa-info');
@@ -42,8 +68,8 @@ function _atualizaTaxaQuick() {
 // TELA 3 
 // ── ATUALIZAR ENCARGOS ──
 function atualizaEncargosQuick() {
-  const elSeg = document.getElementById('qinp-seguro');
-  const elAdm = document.getElementById('qinp-taxaAdm');
+  const elSeg = document.getElementById(QUESTION_IDS.seguro);
+  const elAdm = document.getElementById(QUESTION_IDS.taxaAdm);
   const s = maskRead(elSeg) || 0;
   const a = maskRead(elAdm) || 25;
   const box = document.getElementById('box-enc');
@@ -83,7 +109,7 @@ function preencherMesAtual() {
   const valor =
     atual.y + '-' + String(atual.m).padStart(2, '0');
 
-  const el = document.getElementById('qinp-mes-medido');
+  const el = document.getElementById(QUESTION_IDS.mesMedido);
 
   if (!el) return;
 
@@ -96,7 +122,7 @@ function preencherMesAtual() {
 
 // ── ASSOCIAR VALOR DE TR COM O JSON PELO MÊS INFORMADO ──
 function _atualizaTRInfo() {
-  const el = document.getElementById('qinp-mes-medido');
+  const el = document.getElementById(QUESTION_IDS.mesMedido);
   const mes = el?.value;
   const box = document.getElementById('box-tr-info');
   const text = document.getElementById('tr-info-text');
@@ -172,10 +198,10 @@ function _nextMesLabel(ym) {
 function renderResultQuick() {
   screen = 'resultQuick';
 
-  const perc      = parseFloat(formQuick.percObra || 0);
-  const mesLabel  = formQuick.mesMedido ? mLabel(parseMS(formQuick.mesMedido)) : '—';
-  const temFin    = formQuick.parcelaFinanciamento > 0;
-  const sliderStart = Math.max(5, perc);
+  const percInformado = parseFloat(formQuick.percObra || 0); // % que usuário digitou
+  const mesLabel = formQuick.mesMedido ? mLabel(parseMS(formQuick.mesMedido)) : '—';
+  const temFin = formQuick.parcelaFinanciamento > 0;
+  const sliderMin = Math.max(5, Math.ceil(percInformado / 5) * 5);
 
   const { trPerc, trReais } = _calcTREmReais();
   const temTR = trPerc !== null && trPerc > 0;
@@ -205,7 +231,7 @@ function renderResultQuick() {
     <div class="quick-result-card accent large">
       <div class="qrc-label">Saldo devedor informado<br></div>
       <div class="qrc-val">${fmtBRL(formQuick.saldoAtual)}</div>
-      <div class="qrc-note">${perc.toFixed(1)}% de obra · ${mesLabel}</div>
+      <div class="qrc-note">${percInformado.toFixed(1)}% de obra · ${mesLabel}</div>
     </div>
 
     <div class="quick-result-grid-top">
@@ -229,10 +255,10 @@ function renderResultQuick() {
 
     <div class="slider-wrap">
         <div class="slider-labels">
-          <span>5%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+          <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="preview-slider" class="preview-slider"
-          min="${sliderStart}" max="100" step="5" value="${sliderStart}"
+          min="${sliderMin}" max="100" step="5" value="${sliderMin}"
           oninput="atualizaSliderQuick()">
       </div>
       <div class="slider-result">
@@ -282,13 +308,20 @@ function atualizaSliderQuick() {
   const slider = document.getElementById('preview-slider');
   if (!slider) return;
 
-  const perc      = parseInt(slider.value);
-  const total     = parseFloat(formQuick.totalFinanciado || 0);
-  const tm        = (parseFloat(formQuick.taxaAnual) / 100) / 12;
-  const enc       = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
-  const percObra  = parseFloat(formQuick.percObra || 5);
+ // 1. Definir variáveis PRIMEIRO
+  const percSlider = parseInt(slider.value); // posição atual da thumb
+  const percInformado = parseFloat(formQuick.percObra || 5); // % digitado pelo usuário
+  const total = parseFloat(formQuick.totalFinanciado || 0);
+  const tm = (parseFloat(formQuick.taxaAnual) / 100) / 12;
+  const enc = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
 
-  const sdProj   = total * (perc / 100);
+  // 2. DEPOIS aplicar coloração
+  slider.style.background = `linear-gradient(to right,
+    var(--accent) 0% ${percInformado}%,
+    var(--border) ${percInformado}% 100%)`;
+
+  // 3. Calcular valores
+  const sdProj = total * (percSlider / 100);
   const previsto = tm * sdProj + enc;
 
   const elPerc  = document.getElementById('slider-perc');
@@ -298,12 +331,7 @@ function atualizaSliderQuick() {
   if (elVal)   elVal.innerHTML     = `${fmtBRL(previsto)}`;
   if (elSaldo) elSaldo.textContent = fmtBRL(sdProj);
 
-  // Coloração estática: faixa verde na % informada, referência fixa
-  slider.style.background = `linear-gradient(to right,
-    var(--accent) 0% ${percObra}%,
-    var(--border) ${percObra}% 100%)`;
-
-  // Aviso: ultrapassagem da parcela de financiamento
+  // Card: Comparativo de evolução com a parcela de financiamento
   const bloco = document.getElementById('slider-fin-bloco');
   if (bloco && formQuick.parcelaFinanciamento > 0) {
     const fin  = parseFloat(formQuick.parcelaFinanciamento);
@@ -328,11 +356,19 @@ function irParaSimulacaoCompleta() {
   form.seguro    = String(formQuick.seguro   || '');
   form.taxaAdm   = String(formQuick.taxaAdm  || 25);
   form.taxaAnual = String(formQuick.taxaAnual || '');
+
+  // Migra valor total e calcula % financiado se disponíveis do QuickSim
+  if (formQuick.valorTotal && formQuick.totalFinanciado) {
+    form.valorTotal    = String(formQuick.valorTotal);
+    form.percFinanciado = parseFloat(((formQuick.totalFinanciado / formQuick.valorTotal) * 100).toFixed(2));
+  } else {
+    form.valorTotal    = '';
+    form.percFinanciado = 80;
+  }
+
   form.mesInicial          = '';
   form.mesEntrega          = '';
-  form.valorTotal          = '';
   form.valorTerreno        = '';
-  form.percFinanciado      = 80;
   form.nomeSimulacao       = '';
   form.historicoPagamentos = [];
 

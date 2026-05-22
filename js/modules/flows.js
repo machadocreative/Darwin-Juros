@@ -5,11 +5,11 @@
 
 // Fluxo rápido (5 passos)
 const FLOW_QUICKSIM = [
-  'financiamentoTotal',      // 01 / 06 — Valor do Financiamento + Saldo Devedor
-  'taxaAnual',               // 02 / 06 — Taxa de Juros Anual
-  'seguro',                  // 03 / 06 — Seguro + Taxa Administrativa
-  'percentualObra',          // 04 / 06 — % de Obra + Mês da Medição (mesMedido renderizado junto)
-  'parcelaFinanciamento'     // 05 / 06 — Parcela do Financiamento (opcional)
+  'valorImovelQuick',        // 01 / 05 — Valor total do imóvel + Financiamento
+  'taxaAnual',               // 02 / 05 — Taxa de Juros Anual
+  'seguro',                  // 03 / 05 — Encargos mensais (Seguro + Taxa Adm)
+  'estadoObraQuick',         // 04 / 05 — Saldo devedor + % Obra + Mês da Medição
+  'parcelaFinanciamento'     // 05 / 05 — Parcela do Financiamento (opcional)
 ];
 
 // Fluxo completo (7 passos)

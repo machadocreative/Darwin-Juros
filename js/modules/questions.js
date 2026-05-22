@@ -42,6 +42,8 @@ const questions = {
     render: () => {
       const ta = parseFloat(form.taxaAnual) || parseFloat(formQuick.taxaAnual) || 0;
       return `
+        <div class="field-label">Qual sua Taxa de Juros Anual?</div>
+        <div class="label-hint">Informe abaixo em 4 casas decimais. O app irá converter sua taxa anual para mensal abaixo.</div>
         <div class="field-label">Qual a Taxa de Juros anual do seu Financiamento?</div>
         <div class="label-hint">O app irá converter sua taxa anual para mensal abaixo.</div>
         <div class="input-wrap">
@@ -104,6 +106,8 @@ const questions = {
       const seg = parseFloat(form.seguro) || parseFloat(formQuick.seguro) || 0;
       const adm = parseFloat(form.taxaAdm) || parseFloat(formQuick.taxaAdm) || 25;
       return `
+        <div class="field-label">Quais os Encargos Mensais?</div>
+        <div class="label-hint">São valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
         <label class="field-label">1. Seguro</label>
         <div class="label-hint">O valor de seguro é único para cada comprador — Verifique no seu contrato.</div>
         <div class="input-wrap">
@@ -177,6 +181,8 @@ const questions = {
       const diferenca = Math.abs(percCalc - (formQuick.percObra || percCalc));
       const temDiscrepancia = diferenca > 10;
       return `
+        <div class="field-label">Qual o Progresso atual da Obra?</div>
+        <div class="label-hint">Consulte seu extrato bancário ou app Habitação Caixa.</div>
         <div class="field-group">
           <label class="field-label">Percentual atual de Evolução de Obra</label>
           <div class="label-hint">Baseado nos dados informados, estimamos ${percCalc.toFixed(1)}%. Está correto?</div>
@@ -246,10 +252,194 @@ const questions = {
   // QUESTÕES EXCLUSIVAS QUICKSIM
   // ════════════════════════════════════════════════════════════════
 
+  valorImovelQuick: {
+    id: QUESTION_IDS.valorTotal,
+    maskType: 'brl',
+    render: () => {
+      const vt  = parseFloat(formQuick.valorTotal      || 0);
+      const fin = parseFloat(formQuick.totalFinanciado || 0);
+      const showBox = vt > 0 && fin > 0 && fin < vt;
+      return `
+        <div class="field-label">Qual o valor total do seu imóvel?</div>
+        <div class="label-hint">Compreende todo o valor de Entrada e Financiamento, conforme contrato.</div>
+        <div class="field-group">
+          <label class="field-label">Valor total do imóvel</label>
+          <div class="label-hint">Conforme contrato com a Construtora.</div>
+          <div class="input-wrap">
+            <span class="pre">R$</span>
+            <input type="text" id="${QUESTION_IDS.valorTotal}" class="has-pre" placeholder="300.000,00" inputmode="numeric"
+              oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaImovelQuick()">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Valor do Financiamento</label>
+          <div class="label-hint">Crédito liberado pela Caixa — sem a entrada.</div>
+          <div class="input-wrap">
+            <span class="pre">R$</span>
+            <input type="text" id="${QUESTION_IDS.financiamentoTotal}" class="has-pre" placeholder="240.000,00" inputmode="numeric"
+              oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaImovelQuick()">
+          </div>
+        </div>
+        <div class="diff-box" id="box-imovel-quick" style="${showBox ? '' : 'display:none'}">
+          <div class="d-title">Composição do valor</div>
+          <div class="diff-row"><span class="d-label">Valor total do imóvel</span><span class="d-val" id="dq-total">${showBox ? fmtBRL(vt) : '—'}</span></div>
+          <div class="diff-row"><span class="d-label">(−) Entrada</span><span class="d-val" id="dq-entrada">${showBox ? fmtBRL(vt - fin) : '—'}</span></div>
+          <hr class="diff-divider">
+          <div class="diff-row hl"><span class="d-label">Valor financiado (<span id="dq-perc-fin">${showBox ? fmtPerc((fin / vt) * 100, 1) : '—'}</span>%)</span><span class="d-val" id="dq-fin">${showBox ? fmtBRL(fin) : '—'}</span></div>
+        </div>
+        <div class="help-section">
+          <button class="help-toggle" onclick="toggleHelp('help-imovel-quick')">
+            ❓ Não sabe onde encontrar esse valor?
+          </button>
+          <div class="help-content" id="help-imovel-quick" style="display:none">
+            <p class="help-caption">Consulte seu contrato ou app Habitação Caixa</p>
+          </div>
+        </div>`;
+    },
+    validate: () => {
+      const elVT  = document.getElementById(QUESTION_IDS.valorTotal);
+      const elFin = document.getElementById(QUESTION_IDS.financiamentoTotal);
+      const vt  = maskRead(elVT);
+      const fin = maskRead(elFin);
+      if (!vt || vt <= 0) {
+        elVT?.classList.add('invalid');
+        showToast('⚠️ Informe o valor total do imóvel.');
+        return false;
+      }
+      if (!fin || fin <= 0) {
+        elFin?.classList.add('invalid');
+        showToast('⚠️ Informe o valor do financiamento.');
+        return false;
+      }
+      if (fin >= vt) {
+        elFin?.classList.add('invalid');
+        showToast('⚠️ O financiamento deve ser menor que o valor total do imóvel.');
+        return false;
+      }
+      return true;
+    },
+    save: () => {
+      formQuick.valorTotal      = maskRead(document.getElementById(QUESTION_IDS.valorTotal));
+      formQuick.totalFinanciado = maskRead(document.getElementById(QUESTION_IDS.financiamentoTotal));
+    },
+    init: () => {
+      attachMask(QUESTION_IDS.valorTotal,        'brl', formQuick.valorTotal      || '');
+      attachMask(QUESTION_IDS.financiamentoTotal, 'brl', formQuick.totalFinanciado || '');
+      _atualizaImovelQuick();
+    }
+  },
+
+  estadoObraQuick: {
+    id: QUESTION_IDS.saldoDevedor,
+    maskType: 'brl',
+    render: () => {
+      const percCalc = _calcPercAutomatico();
+      const diferenca = Math.abs(percCalc - (formQuick.percObra || percCalc));
+      const temDiscrepancia = diferenca > 10 && percCalc > 0;
+      const hintPerc = percCalc > 0
+        ? `Estimamos ${percCalc.toFixed(1)}% com base no saldo. Corrija se necessário.`
+        : `Informe o percentual exato de evolução de obra.`;
+      return `
+        <div class="field-label">Qual o Progresso atual da Obra?</div>
+        <div class="label-hint">Consulte seu extrato bancário ou app Habitação Caixa.</div>
+        <div class="field-group">
+          <label class="field-label">Saldo devedor atual</label>
+          <div class="label-hint">Valor repassado à Construtora até o momento.</div>
+          <div class="input-wrap">
+            <span class="pre">R$</span>
+            <input type="text" id="${QUESTION_IDS.saldoDevedor}" class="has-pre" placeholder="125.000,00" inputmode="numeric"
+              oninput="maskOnInput(this);this.classList.remove('invalid');_atualizaPercCalculado()">
+          </div>
+          <div class="info-box" id="box-perc-calc" style="display:none">
+            📊 Darwin calculou: <strong>≈ <span id="perc-calc-valor">—</span>%</strong> de evolução de obra
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Percentual atual de Evolução de Obra</label>
+          <div class="label-hint">${hintPerc}</div>
+          <div class="input-wrap">
+            <input type="text" id="${QUESTION_IDS.percentualObra}" class="has-suf" placeholder="00,00" inputmode="numeric"
+              oninput="maskOnInput(this);_limitPercQuick(this);this.classList.remove('invalid')">
+            <span class="suf">%</span>
+          </div>
+        </div>
+        ${temDiscrepancia ? `
+          <div class="info-box" style="background:var(--warn-bg);border-color:#F6E0A0">
+            ⚠️ Atenção: há uma diferença de ${diferenca.toFixed(1)}% entre o % calculado e o informado. Verifique se os valores estão corretos.
+          </div>` : ''}
+        <div class="field-group">
+          <label class="field-label">Mês dessa Medição</label>
+          <div class="label-hint">A qual mês essa % de obra se refere?</div>
+          <div class="month-input-row">
+            <input type="month" id="${QUESTION_IDS.mesMedido}" value="" oninput="this.classList.remove('invalid');_atualizaTRInfo()">
+            <button type="button" class="btn-current-month" onclick="preencherMesAtual()">Inserir Mês atual</button>
+          </div>
+        </div>
+        <div class="info-box" id="box-tr-info" style="display:none">
+          <span id="tr-info-text"></span>
+        </div>
+        <div class="help-section">
+          <button class="help-toggle" onclick="toggleHelp('help-saldo-quick')">
+            ❓ Não sabe onde encontrar esses valores? Clique aqui!
+          </button>
+          <div class="help-content" id="help-saldo-quick" style="display:none">
+            <img src="data/ajuda-extrato-saldo.png" alt="Onde encontrar" class="help-image">
+            <p class="help-caption">Consulte seu extrato bancário ou app Habitação Caixa</p>
+          </div>
+        </div>`;
+    },
+    validate: () => {
+      const elSaldo = document.getElementById(QUESTION_IDS.saldoDevedor);
+      const elPerc  = document.getElementById(QUESTION_IDS.percentualObra);
+      const elMes   = document.getElementById(QUESTION_IDS.mesMedido);
+      const saldo = maskRead(elSaldo);
+      const v     = maskRead(elPerc);
+      const mes   = elMes?.value;
+      if (!saldo || saldo <= 0) {
+        elSaldo?.classList.add('invalid');
+        showToast('⚠️ Informe o saldo devedor atual.');
+        return false;
+      }
+      const total = parseFloat(formQuick.totalFinanciado || 0);
+      if (total > 0 && saldo > total) {
+        elSaldo?.classList.add('invalid');
+        showToast('⚠️ Saldo devedor não pode ser maior que o valor financiado.');
+        return false;
+      }
+      if (!v || v <= 0 || v > 100) {
+        elPerc?.classList.add('invalid');
+        showToast('⚠️ Informe uma evolução entre 0,01% e 100%.');
+        return false;
+      }
+      if (!mes) {
+        elMes?.classList.add('invalid');
+        showToast('⚠️ Informe o mês da medição.');
+        return false;
+      }
+      return true;
+    },
+    save: () => {
+      formQuick.saldoAtual = maskRead(document.getElementById(QUESTION_IDS.saldoDevedor));
+      formQuick.percObra   = maskRead(document.getElementById(QUESTION_IDS.percentualObra));
+      formQuick.mesMedido  = document.getElementById(QUESTION_IDS.mesMedido)?.value || '';
+    },
+    init: () => {
+      attachMask(QUESTION_IDS.saldoDevedor,   'brl',   formQuick.saldoAtual || '');
+      const percCalc = _calcPercAutomatico();
+      attachMask(QUESTION_IDS.percentualObra, 'perc2', formQuick.percObra || percCalc || '');
+      const elMes = document.getElementById(QUESTION_IDS.mesMedido);
+      if (elMes && formQuick.mesMedido) elMes.value = formQuick.mesMedido;
+      _atualizaPercCalculado();
+      _atualizaTRInfo();
+    }
+  },
+
   financiamentoTotal: {
     id: QUESTION_IDS.financiamentoTotal,
     maskType: 'brl',
     render: () => `
+      <div class="field-label">Qual a situação atual do saldo?</div>
+      <div class="label-hint">Consulte nos apps Caixa ou no seu contrato.</div>
       <div class="field-group">
         <label class="field-label">Valor do seu Financiamento</label>
         <div class="label-hint">O total de crédito liberado pelo banco — Sem a entrada da Construtora.</div>
@@ -320,33 +510,20 @@ const questions = {
     id: QUESTION_IDS.parcelaFinanciamento,
     maskType: 'brl',
     render: () => `
+      <div class="field-label">Valor da sua 1ª parcela do financiamento? — Opcional</div>
+      <div class="label-hint">Compararemos o valor dos seus Juros de Evolução de Obra com a Parcela do Financiamento.</div>
       <div class="input-wrap">
         <span class="pre">R$</span>
         <input type="text" id="${QUESTION_IDS.parcelaFinanciamento}" class="has-pre" placeholder="1.234,56" inputmode="numeric"
           oninput="maskOnInput(this)">
       </div>`,
-    validate: () => {
-      const el = document.getElementById(QUESTION_IDS.parcelaFinanciamento);
-      const v = maskRead(el);
-      const total = formQuick.totalFinanciado || 0;
-
-      if (!v || v <= 0) {
-        el?.classList.add('invalid');
-        showToast('⚠️ Informe o valor da parcela.');
-        return false;
-      }
-      
-      if (v > total) {
-        el?.classList.add('invalid');
-        showToast('⚠️ Parcela não pode ser maior que o valor total financiado.');
-        return false;
-      }
-      
-      return true;
-    },
+    optional: true,
+    validate: () => true,
+    onSkip: () => { formQuick.parcelaFinanciamento = null; },
     save: () => {
       const el = document.getElementById(QUESTION_IDS.parcelaFinanciamento);
-      formQuick.parcelaFinanciamento = maskRead(el);
+      const v = maskRead(el);
+      formQuick.parcelaFinanciamento = (v && v > 0) ? v : null;
     },
     init: () => {
       attachMask(QUESTION_IDS.parcelaFinanciamento, 'brl', formQuick.parcelaFinanciamento || '');
@@ -361,6 +538,8 @@ const questions = {
     id: QUESTION_IDS.mesInicial,
     maskType: null,
     render: () => `
+      <div class="field-label">Qual os prazos de início e término de pagamento de Evolução de Obra?</div>
+      <div class="label-hint">Informe os meses abaixo.</div>
       <div class="field-group">
         <label class="field-label">Quando inicia o pagamento de Juros de Evolução de Obra?</label>
         <div class="label-hint">Mês da sua primeira prestação.</div>
@@ -413,8 +592,8 @@ const questions = {
       const fin_val = form.valorTotal ? parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) : 0;
       return `
         <div class="field-group">
-          <label class="field-label">Qual o valor do seu imóvel?</label>
-          <div class="label-hint">O valor total do apartamento conforme contrato.</div>
+          <label class="field-label">Qual o valor total do seu imóvel?</label>
+          <div class="label-hint">Compreende todo o valor de Entrada e Financiamento, conforme contrato.</div>
           <label class="field-label">Valor total</label>
           <div class="input-wrap"><span class="pre">R$</span><input type="text" id="${QUESTION_IDS.valorTotal}" class="has-pre" placeholder="300.000,00" inputmode="numeric" oninput="atualizaFin()"></div>
         </div>
@@ -474,7 +653,7 @@ const questions = {
       const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
       return `
         <div class="field-group">
-          <label class="field-label">Qual o valor do terreno?</label>
+          <label class="field-label">Qual o valor correspondente ao terreno?</label>
           <div class="label-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
           <div class="input-wrap"><span class="pre">R$</span><input type="text" id="${QUESTION_IDS.valorTerreno}" class="has-pre" placeholder="10.000,00" inputmode="numeric" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
           <div class="error-msg" id="err-terreno">O valor do terreno deve ser menor que o total financiado (${fmtBRL(fin)}).</div>
@@ -591,8 +770,7 @@ const questions = {
     maskType: null,
     render: () => `
       <div class="field-group">
-        <label class="field-label">Como quer chamar essa simulação?</label> 
-        <div class="label-hint">Máximo 30 caracteres. Ex: Apto Centro, Torre B, Meu apê...</div>
+        <label class="field-label">Como quer chamar essa simulação?</label>
         <input type="text" id="${QUESTION_IDS.nomePerfil}" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao || '')}" maxlength="30" oninput="updateCharCount(this)">
         <div class="char-count" id="char-count">0 / 30</div>
       </div>`,
