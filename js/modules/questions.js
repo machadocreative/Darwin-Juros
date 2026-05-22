@@ -43,9 +43,7 @@ const questions = {
       const ta = parseFloat(form.taxaAnual) || parseFloat(formQuick.taxaAnual) || 0;
       return `
         <div class="field-label">Qual sua Taxa de Juros Anual?</div>
-        <div class="label-hint">Informe abaixo em 4 casas decimais. O app irá converter sua taxa anual para mensal abaixo.</div>
-        <div class="field-label">Qual a Taxa de Juros anual do seu Financiamento?</div>
-        <div class="label-hint">O app irá converter sua taxa anual para mensal abaixo.</div>
+        <div class="label-hint">Informe abaixo em 4 casas decimais. O app irá converter sua taxa anual para mensal.</div>
         <div class="input-wrap">
           <input type="text" id="${QUESTION_IDS.taxaAnual}" class="has-suf" placeholder="5,4321" inputmode="numeric" 
             oninput="maskOnInput(this);this.classList.remove('invalid');atualizaTaxa();_atualizaTaxaQuick()">

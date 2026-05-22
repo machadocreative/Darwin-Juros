@@ -175,7 +175,7 @@ function _calcTREmReais() {
   const ym    = parseMS(formQuick.mesMedido);
   const trDec = getTRParaMes(ym);
   if (!trDec) return { trPerc: null, trReais: null };
-  const saldo  = _calcSaldoNoPerc();
+  const saldo   = parseFloat(formQuick.saldoAtual || 0);
   const trPerc  = trDec * 100;
   const trReais = trDec * saldo;
   return { trPerc, trReais };
@@ -264,7 +264,7 @@ function renderResultQuick() {
       <div class="slider-result">
         <dl class="slider-result-row">
           <dt class="slider-result-label">Evolução de Obra</dt>
-          <dd class="slider-result-perc" id="slider-perc">${sliderStart}%</dd>
+          <dd class="slider-result-perc" id="slider-perc">${sliderMin}%</dd>
           <dt class="slider-result-label">Saldo devedor</dt>
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
@@ -327,7 +327,7 @@ function atualizaSliderQuick() {
   const elPerc  = document.getElementById('slider-perc');
   const elVal   = document.getElementById('slider-val');
   const elSaldo = document.getElementById('slider-saldo');
-  if (elPerc)  elPerc.textContent  = perc + '%';
+  if (elPerc)  elPerc.textContent  = percSlider + '%';
   if (elVal)   elVal.innerHTML     = `${fmtBRL(previsto)}`;
   if (elSaldo) elSaldo.textContent = fmtBRL(sdProj);
 
