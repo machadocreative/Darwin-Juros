@@ -258,7 +258,7 @@ function renderResultQuick() {
           <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="preview-slider" class="preview-slider"
-          min="${sliderMin}" max="100" step="5" value="${sliderMin}"
+          min="0" max="100" step="5" value="${sliderMin}"
           oninput="atualizaSliderQuick()">
       </div>
       <div class="slider-result">
@@ -308,9 +308,12 @@ function atualizaSliderQuick() {
   const slider = document.getElementById('preview-slider');
   if (!slider) return;
 
- // 1. Definir variáveis PRIMEIRO
-  const percSlider = parseInt(slider.value); // posição atual da thumb
-  const percInformado = parseFloat(formQuick.percObra || 5); // % digitado pelo usuário
+  // 1. Definir variáveis PRIMEIRO
+  const percInformado = parseFloat(formQuick.percObra || 5);
+  const sliderMinLock = Math.max(5, Math.ceil(percInformado / 5) * 5);
+  // Trava thumb abaixo do % atual de obra
+  if (parseInt(slider.value) < sliderMinLock) slider.value = sliderMinLock;
+  const percSlider = parseInt(slider.value);
   const total = parseFloat(formQuick.totalFinanciado || 0);
   const tm = (parseFloat(formQuick.taxaAnual) / 100) / 12;
   const enc = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
