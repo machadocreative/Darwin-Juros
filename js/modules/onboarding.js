@@ -281,17 +281,24 @@ function _finalizarOnboarding() {
     });
     meses.forEach((_, i) => recalcRow(i));
     aplicaBloqueio();
+    // Aplica valorReal a partir de form.historicoPagamentos (fonte de verdade — mantida em sync por _syncValorRealToForm e historicoPagamentos.save)
+    const histEdit  = form.historicoPagamentos || [];
+    const ativasEdit = meses.filter(r => !r.bloqueado);
+    histEdit.forEach((entry, j) => {
+      if (j < ativasEdit.length) ativasEdit[j].valorReal = entry.valor > 0 ? entry.valor : null;
+    });
     currentProfileId  = edit.profileIdBackup;
     window._editMode  = null;
     hasUnsavedChanges = true;
   } else {
     meses = calcTable();
-    // Aplica histórico de pagamentos (tela 6) se o usuário preencheu
+    // Aplica histórico de pagamentos (tela 7) e popula valorReal
     const hist = form.historicoPagamentos || [];
     const ativas = meses.filter(r => !r.bloqueado);
     hist.forEach((entry, i) => {
       if (i < ativas.length && entry.valor > 0) {
         ativas[i].pago = true;
+        ativas[i].valorReal = entry.valor;
       }
     });
     aplicaBloqueio();

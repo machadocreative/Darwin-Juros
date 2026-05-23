@@ -2056,3 +2056,88 @@ dl.slider-result-row dd.slider-result-val.accent span {
 .rh-actions {
   flex-wrap: wrap;
 }
+
+/* ── COLUNA VALOR REAL (tabela premium) ── */
+.rv-input {
+  width: 88px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 12px;
+  font-family: var(--mono);
+  text-align: right;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color .15s;
+}
+
+.rv-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.rv-input.invalid {
+  border-color: var(--danger);
+}
+
+.rv-val {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── CARDS: PREVISTO VS REAL ── */
+.comparison-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.comparison-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.comparison-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.comparison-card.full {
+  grid-column: 1 / -1;
+}
+
+.comp-label {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.comp-val {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.comp-val.val-over {
+  color: var(--danger);
+}
+
+.comp-val.val-under {
+  color: var(--accent);
+}

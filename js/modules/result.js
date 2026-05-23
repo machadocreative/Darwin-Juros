@@ -150,6 +150,17 @@ function refreshTable() {
     if (rs) rs.textContent = r.bloqueado ? '—' : fmtBRL(r.saldo);
     const rp = document.getElementById('rp-' + i);
     if (rp) rp.textContent = r.bloqueado ? '—' : fmtBRL(r.previsto);
+    const rv = document.getElementById('rv-' + i);
+    if (rv) {
+      if (r.bloqueado) {
+        rv.innerHTML = '—';
+      } else if (r.pago) {
+        rv.innerHTML = r.valorReal ? `<span class="rv-val">${fmtBRL(r.valorReal)}</span>` : '—';
+      } else {
+        rv.innerHTML = `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="—">`;
+        setTimeout(() => _initSingleRvMask(i), 0);
+      }
+    }
     const bp = document.getElementById('bp-' + i);
     if (bp) {
       if (r.bloqueado)    bp.outerHTML = `<span id="bp-${i}" class="badge-blocked">—</span>`;
@@ -173,14 +184,62 @@ function refreshTable() {
 }
 
 function updateSummary() {
-  const ativas = meses.filter(r => !r.bloqueado);
-  const total  = ativas.reduce((s, r) => s + r.previsto, 0);
-  const pago   = ativas.filter(r => r.pago).reduce((s, r) => s + r.previsto, 0);
-  const media  = ativas.length ? total / ativas.length : 0;
+  const ativas    = meses.filter(r => !r.bloqueado);
+  const total     = ativas.reduce((s, r) => s + r.previsto, 0);
+  const pago      = ativas.filter(r => r.pago).reduce((s, r) => s + r.previsto, 0);
+  const media     = ativas.length ? total / ativas.length : 0;
+  const totalReal = ativas.reduce((s, r) => s + (r.valorReal || 0), 0);
+  const diff      = totalReal - total;
   const e = id => document.getElementById(id);
   if (e('sum-total')) e('sum-total').textContent = fmtBRL(total);
   if (e('sum-pago'))  e('sum-pago').textContent  = fmtBRL(pago);
   if (e('sum-media')) e('sum-media').textContent = fmtBRL(media);
+  if (e('sum-comp-previsto')) e('sum-comp-previsto').textContent = fmtBRL(total);
+  if (e('sum-real'))  e('sum-real').textContent  = fmtBRL(totalReal);
+  if (e('sum-diff')) {
+    e('sum-diff').textContent = (diff >= 0 ? '+' : '−') + ' ' + fmtBRL(Math.abs(diff));
+    e('sum-diff').className = 'comp-val' + (diff > 100 ? ' val-over' : diff < -100 ? ' val-under' : '');
+  }
+  const blocoComp = document.getElementById('bloco-comparacao');
+  if (blocoComp) blocoComp.style.display = totalReal > 0 ? '' : 'none';
+}
+
+// ── VALOR REAL: edição inline na tabela ──
+
+function _atualizaRvRow(i) {
+  const el = document.getElementById('rv-input-' + i);
+  if (!el || meses[i].bloqueado || meses[i].pago) return;
+  const v = maskRead(el);
+  if (v !== null && !isNaN(v) && v >= 0) {
+    el.classList.remove('invalid');
+    meses[i].valorReal = v > 0 ? v : null;
+    hasUnsavedChanges = true;
+    _syncValorRealToForm(i);
+    updateSummary();
+  } else {
+    el.classList.add('invalid');
+  }
+}
+
+function _syncValorRealToForm(mesIdx) {
+  const ativas = meses.filter(r => !r.bloqueado);
+  const j = ativas.indexOf(meses[mesIdx]);
+  if (j < 0) return;
+  if (!form.historicoPagamentos) form.historicoPagamentos = [];
+  while (form.historicoPagamentos.length <= j) form.historicoPagamentos.push({ valor: 0 });
+  form.historicoPagamentos[j] = { valor: meses[mesIdx].valorReal || 0 };
+}
+
+function _initSingleRvMask(i) {
+  const r = meses[i];
+  if (!r || r.bloqueado || r.pago) return;
+  attachMask('rv-input-' + i, 'brl', r.valorReal || '');
+  const el = document.getElementById('rv-input-' + i);
+  if (el) el.oninput = () => { maskValue(el, 'brl'); _atualizaRvRow(i); };
+}
+
+function _initRvMasks() {
+  meses.forEach((_, i) => _initSingleRvMask(i));
 }
 
 // ── HELPER: linhas da tabela ──
@@ -203,6 +262,13 @@ function _buildTableRows() {
           onblur="validateTRBlur(${i})">
       </td>
       <td id="rp-${i}" class="val-col td-prev">${r.bloqueado ? '—' : fmtBRL(r.previsto)}</td>
+      <td id="rv-${i}" class="val-col td-right">
+        ${r.bloqueado
+          ? '—'
+          : r.pago
+            ? (r.valorReal ? `<span class="rv-val">${fmtBRL(r.valorReal)}</span>` : '—')
+            : `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="—">`}
+      </td>
       <td class="td-center">
         ${r.bloqueado
           ? `<span id="bp-${i}" class="badge-blocked">—</span>`
@@ -332,6 +398,7 @@ function buildTabela(inline = false) {
             <th class="th-right">Saldo dev.</th>
             <th class="th-right">TR %</th>
             <th class="th-right">Previsto</th>
+            <th class="th-right">Valor Real</th>
             <th class="th-center">Pago?</th>
           </tr>
         </thead>
@@ -382,6 +449,34 @@ function renderResult() {
   const media   = ativas.length ? total / ativas.length : 0;
   const premium = isPremium();
 
+  const temFin    = parseFloat(form.parcelaFinanciamento || 0) > 0;
+  const totalReal = ativas.reduce((s, r) => s + (r.valorReal || 0), 0);
+
+  // Bloco de comparação Previsto vs Real (premium, aparece quando há valorReal)
+  const blocoComparacao = premium ? (() => {
+    const diff = totalReal - total;
+    const diffStr = (diff >= 0 ? '+' : '−') + ' ' + fmtBRL(Math.abs(diff));
+    const diffClass = diff > 100 ? ' val-over' : diff < -100 ? ' val-under' : '';
+    return `
+    <div class="comparison-section" id="bloco-comparacao" style="${totalReal > 0 ? '' : 'display:none'}">
+      <div class="comparison-section-title">Previsto vs Real</div>
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comp-label">Previsto pela fórmula</div>
+          <div class="comp-val" id="sum-comp-previsto">${fmtBRL(total)}</div>
+        </div>
+        <div class="comparison-card">
+          <div class="comp-label">Inserido pelo usuário</div>
+          <div class="comp-val" id="sum-real">${fmtBRL(totalReal)}</div>
+        </div>
+        <div class="comparison-card full">
+          <div class="comp-label">Diferença (real − previsto)</div>
+          <div class="comp-val${diffClass}" id="sum-diff">${diffStr}</div>
+        </div>
+      </div>
+    </div>`;
+  })() : '';
+
   // Slider: premium parte da última % paga; free parte de 50%
   const percPaga     = premium ? _ultimaPercPagaAtual() : 50;
   const sliderInicio = percPaga;
@@ -416,6 +511,14 @@ function renderResult() {
           ? ''
           : 'Exibição da Taxa Referencial na versão completa'}</div>
       </div>
+      ${temFin ? `
+      <div class="quick-result-grid-slider">
+        <div class="quick-result-card accent">
+          <div class="qrc-label">1ª Parcela do Financiamento</div>
+          <div class="qrc-val">${fmtBRL(form.parcelaFinanciamento)}</div>
+        </div>
+        <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
+      </div>` : ''}
       ${!premium ? `
       <button class="free-preview-cta" onclick="showPaywall()">
         🔓 Ver tabela completa de parcelas
@@ -465,8 +568,9 @@ function renderResult() {
 
     ${blocoSlider}
     ${blocoBannerPagas}
+    ${blocoComparacao}
     ${blocoTabelaInline}
   `);
 
-  setTimeout(() => atualizaSlider(), 50);
+  setTimeout(() => { atualizaSlider(); _initRvMasks(); }, 80);
 }

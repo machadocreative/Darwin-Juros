@@ -284,7 +284,7 @@ const questions = {
           </div>
         </div>
         <div class="diff-box" id="box-imovel-quick" style="${showBox ? '' : 'display:none'}">
-          <div class="d-title">Composição do valor</div>
+          <div class="d-title">Composição do Financiamento</div>
           <div class="diff-row"><span class="d-label">Valor total do imóvel</span><span class="d-val" id="dq-total">${showBox ? fmtBRL(vt) : '—'}</span></div>
           <div class="diff-row"><span class="d-label">(−) Entrada</span><span class="d-val" id="dq-entrada">${showBox ? fmtBRL(vt - fin) : '—'}</span></div>
           <hr class="diff-divider">
@@ -645,11 +645,11 @@ const questions = {
           <div class="error-msg" id="err-terreno">O valor do terreno deve ser menor que o total financiado (${fmtBRL(fin)}).</div>
         </div>
         <div class="diff-box" id="box-ter" style="${parseFloat(form.valorTerreno) > 0 ? '' : 'display:none'}">
-          <div class="d-title">Composição do financiamento</div>
-          <div class="diff-row"><span class="d-label">Valor total financiado</span><span class="d-val">${fmtBRL(fin)}</span></div>
+          <div class="d-title">Composição do Saldo Devedor durante à Obra</div>
+          <div class="diff-row"><span class="d-label">Total financiado</span><span class="d-val">${fmtBRL(fin)}</span></div>
           <div class="diff-row"><span class="d-label">(−) Terreno</span><span class="d-val" id="d-ter">${parseFloat(form.valorTerreno) > 0 ? fmtBRL(parseFloat(form.valorTerreno)) : '—'}</span></div>
           <hr class="diff-divider">
-          <div class="diff-row hl"><span class="d-label">Saldo devedor repassado à Construtora</span><span class="d-val" id="d-saldo">${parseFloat(form.valorTerreno) > 0 ? fmtBRL(fin - parseFloat(form.valorTerreno)) : '—'}</span></div>
+          <div class="diff-row hl"><span class="d-label">Crédito repassado à Construtora</span><span class="d-val" id="d-saldo">${parseFloat(form.valorTerreno) > 0 ? fmtBRL(fin - parseFloat(form.valorTerreno)) : '—'}</span></div>
         </div>
         <div class="info-box">💡 O valor do terreno é considerado como saldo devedor desde o primeiro mês. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`;
     },
