@@ -299,45 +299,56 @@ function _contarAteUltimaPaga() {
 }
 
 function _buildBannerPagas() {
-  const pendentes = _calcPagasPendentes();
-  if (pendentes === 0) return '';
-  const ate = _contarAteUltimaPaga();
-  return `
-    <div class="marcar-pagas-bloco" id="marcar-pagas-bloco">
-      <div class="mp-icon">📋</div>
+  return '';
+}
+
+function _abrirModalPagas(pendentes, ate) {
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-pagas-overlay';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-header">Parcelas não confirmadas</div>
       <div class="mp-content">
-        <div class="mp-title">Você tem ${pendentes} parcela(s) não marcada(s) como pagas</div>
+        <div class="mp-title" id="mp-title-count">Você tem ${pendentes} parcela(s) não marcada(s) como pagas</div>
         <div class="mp-sub">Marque-as para manter o controle correto do que já foi pago.</div>
       </div>
-      <div class="mp-actions">
-        <button class="mp-btn-sim" onclick="marcarPagasPendentes(${ate})">✓ Marcar todas</button>
-        <button class="mp-btn-nao" onclick="dispensarBannerPagas()">Ignorar</button>
+      <div class="modal-actions">
+        <button class="btn btn-back" onclick="dispensarBannerPagas()">← Ignorar</button>
+        <button class="btn btn-primary" id="mp-btn-marcar" onclick="marcarPagasPendentes(${ate})">✓ Marcar todas</button>
       </div>
     </div>`;
+  document.body.appendChild(overlay);
 }
 
 function _refreshBannerPagas() {
-  const bloco = document.getElementById('marcar-pagas-bloco');
-  if (!bloco) return;
+  if (!isPremium()) return;
   const pendentes = _calcPagasPendentes();
-  if (pendentes === 0) { bloco.remove(); return; }
+  const existing = document.getElementById('modal-pagas-overlay');
+  if (pendentes === 0) { if (existing) existing.remove(); return; }
   const ate = _contarAteUltimaPaga();
-  bloco.querySelector('.mp-title').textContent = `Você tem ${pendentes} parcela(s) não marcada(s) como pagas`;
-  bloco.querySelector('.mp-btn-sim').setAttribute('onclick', `marcarPagasPendentes(${ate})`);
+  if (!existing) {
+    _abrirModalPagas(pendentes, ate);
+  } else {
+    const t = document.getElementById('mp-title-count');
+    const b = document.getElementById('mp-btn-marcar');
+    if (t) t.textContent = `Você tem ${pendentes} parcela(s) não marcada(s) como pagas`;
+    if (b) b.setAttribute('onclick', `marcarPagasPendentes(${ate})`);
+  }
 }
 
 function marcarPagasPendentes(ate) {
-  // `ate` = número de parcelas ativas (da primeira até a última paga inclusive) a marcar
   const ativas = meses.filter(r => !r.bloqueado);
   ativas.slice(0, ate).forEach(r => { r.pago = true; });
   hasUnsavedChanges = true;
+  dispensarBannerPagas();
   refreshTable();
   showToast('✅ Parcelas marcadas como pagas.');
 }
 
 function dispensarBannerPagas() {
-  const bloco = document.getElementById('marcar-pagas-bloco');
-  if (bloco) bloco.remove();
+  const overlay = document.getElementById('modal-pagas-overlay');
+  if (overlay) overlay.remove();
 }
 
 // ── SLIDER PREMIUM: faixa "já pago" vs "simulação futura" ──
@@ -583,5 +594,5 @@ function renderResult() {
     ${blocoTabelaInline}
   `);
 
-  setTimeout(() => { atualizaSlider(); _initRvMasks(); }, 80);
+  setTimeout(() => { atualizaSlider(); _initRvMasks(); _refreshBannerPagas(); }, 80);
 }

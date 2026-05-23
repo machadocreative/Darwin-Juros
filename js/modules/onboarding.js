@@ -64,11 +64,6 @@ function renderEditScreen() {
       </div>
 
       <div class="edit-section">
-        <div class="edit-section-title">Datas</div>
-        ${questions.mesInicial.render()}
-      </div>
-
-      <div class="edit-section">
         <div class="edit-section-title">Valor do Imóvel</div>
         ${questions.valorImovel.render()}
       </div>
@@ -94,6 +89,11 @@ function renderEditScreen() {
       </div>
 
       <div class="edit-section">
+        <div class="edit-section-title">Datas</div>
+        ${questions.mesInicial.render()}
+      </div>
+
+      <div class="edit-section">
         <div class="edit-section-title">Histórico de Pagamentos — Opcional</div>
         ${questions.historicoPagamentos.render()}
       </div>
@@ -112,33 +112,32 @@ function renderEditScreen() {
   setHtml(html);
 
   setTimeout(() => {
-    questions.mesInicial.init();
     questions.valorImovel.init();
     questions.valorTerreno.init();
     questions.taxaAnual.init();
     questions.seguro.init();
     questions.parcelaFinanciamento.init();
+    questions.mesInicial.init();
     questions.historicoPagamentos.init();
     questions.nomePerfil.init();
   }, 80);
 }
 
 function confirmarEdicao() {
-  if (!questions.mesInicial.validate())   return;
   if (!questions.valorImovel.validate())  return;
-  // Save valorImovel early so valorTerreno/parcelaFinanciamento validations use updated form values
-  questions.valorImovel.save();
+  questions.valorImovel.save(); // necessário antes de valorTerreno e parcelaFinanciamento validarem
   if (!questions.valorTerreno.validate()) return;
   if (!questions.taxaAnual.validate())    return;
   if (!questions.seguro.validate())       return;
   if (!questions.parcelaFinanciamento.validate()) return;
+  if (!questions.mesInicial.validate())   return;
   if (!questions.nomePerfil.validate())   return;
 
-  questions.mesInicial.save();
   questions.valorTerreno.save();
   questions.taxaAnual.save();
   questions.seguro.save();
   questions.parcelaFinanciamento.save();
+  questions.mesInicial.save();
   questions.historicoPagamentos.save();
   questions.nomePerfil.save();
 

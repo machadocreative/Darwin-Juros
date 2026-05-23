@@ -14,12 +14,12 @@ const FLOW_QUICKSIM = [
 
 // Fluxo completo (8 passos)
 const FLOW_FULLSIM = [
-  'mesInicial',               // 01 / 08 — Datas iniciais
-  'valorImovel',         // 02 / 08 — Valor Total + Valor Financiado (calcula % internamente)
-  'valorTerreno',             // 03 / 08 — Valor do Terreno
-  'taxaAnual',                // 04 / 08 — Taxa de Juros Anual
-  'seguro',                   // 05 / 08 — Seguro + Taxa Administrativa
-  'parcelaFinanciamento',     // 06 / 08 — 1ª Parcela do Financiamento (opcional)
+  'valorImovel',              // 01 / 08 — Valor Total + Valor Financiado (calcula % internamente)
+  'valorTerreno',             // 02 / 08 — Valor do Terreno
+  'taxaAnual',                // 03 / 08 — Taxa de Juros Anual
+  'seguro',                   // 04 / 08 — Seguro + Taxa Administrativa
+  'parcelaFinanciamento',     // 05 / 08 — 1ª Parcela do Financiamento (opcional)
+  'mesInicial',               // 06 / 08 — Datas iniciais
   'historicoPagamentos',      // 07 / 08 — Histórico de Pagamentos (opcional)
   'nomePerfil'                // 08 / 08 — Nome da Simulação
 ];
