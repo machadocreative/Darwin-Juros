@@ -250,12 +250,17 @@ const questions = {
   // QUESTÕES EXCLUSIVAS QUICKSIM
   // ════════════════════════════════════════════════════════════════
 
-  valorImovelQuick: {
+  valorImovel: {
     id: QUESTION_IDS.valorTotal,
     maskType: 'brl',
     render: () => {
-      const vt  = parseFloat(formQuick.valorTotal      || 0);
-      const fin = parseFloat(formQuick.totalFinanciado || 0);
+      const vt  = parseFloat(formQuick.valorTotal || form.valorTotal || 0);
+      const fin = parseFloat(
+        formQuick.totalFinanciado ||
+        (form.valorTotal && form.percFinanciado
+          ? parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100)
+          : 0)
+      );
       const showBox = vt > 0 && fin > 0 && fin < vt;
       return `
         <div class="field-label">Qual o valor total do seu imóvel?</div>
@@ -283,7 +288,7 @@ const questions = {
           <div class="diff-row"><span class="d-label">Valor total do imóvel</span><span class="d-val" id="dq-total">${showBox ? fmtBRL(vt) : '—'}</span></div>
           <div class="diff-row"><span class="d-label">(−) Entrada</span><span class="d-val" id="dq-entrada">${showBox ? fmtBRL(vt - fin) : '—'}</span></div>
           <hr class="diff-divider">
-          <div class="diff-row hl"><span class="d-label">Valor financiado (<span id="dq-perc-fin">${showBox ? fmtPerc((fin / vt) * 100, 1) : '—'}</span>%)</span><span class="d-val" id="dq-fin">${showBox ? fmtBRL(fin) : '—'}</span></div>
+          <div class="diff-row hl"><span class="d-label">Valor financiado (<span id="dq-perc-fin">${showBox ? fmtPerc((fin / vt) * 100, 1) : '—'}</span>)</span><span class="d-val" id="dq-fin">${showBox ? fmtBRL(fin) : '—'}</span></div>
         </div>
         <div class="help-section">
           <button class="help-toggle" onclick="toggleHelp('help-imovel-quick')">
@@ -317,12 +322,21 @@ const questions = {
       return true;
     },
     save: () => {
-      formQuick.valorTotal      = maskRead(document.getElementById(QUESTION_IDS.valorTotal));
-      formQuick.totalFinanciado = maskRead(document.getElementById(QUESTION_IDS.financiamentoTotal));
+      const vt  = maskRead(document.getElementById(QUESTION_IDS.valorTotal));
+      const fin = maskRead(document.getElementById(QUESTION_IDS.financiamentoTotal));
+      formQuick.valorTotal      = vt;
+      formQuick.totalFinanciado = fin;
+      form.valorTotal    = String(vt || '');
+      form.percFinanciado = (vt > 0 && fin > 0) ? parseFloat(((fin / vt) * 100).toFixed(2)) : 80;
     },
     init: () => {
-      attachMask(QUESTION_IDS.valorTotal,        'brl', formQuick.valorTotal      || '');
-      attachMask(QUESTION_IDS.financiamentoTotal, 'brl', formQuick.totalFinanciado || '');
+      const vtVal  = formQuick.valorTotal || form.valorTotal || '';
+      const finRaw = formQuick.totalFinanciado ||
+        (form.valorTotal && form.percFinanciado
+          ? parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100)
+          : '');
+      attachMask(QUESTION_IDS.valorTotal,         'brl', vtVal);
+      attachMask(QUESTION_IDS.financiamentoTotal, 'brl', finRaw ? String(finRaw) : '');
       const elVT  = document.getElementById(QUESTION_IDS.valorTotal);
       const elFin = document.getElementById(QUESTION_IDS.financiamentoTotal);
       if (elVT)  elVT.oninput  = () => { maskValue(elVT,  'brl'); elVT.classList.remove('invalid');  _atualizaImovelQuick(); };
@@ -524,15 +538,42 @@ const questions = {
           oninput="maskOnInput(this)">
       </div>`,
     optional: true,
-    validate: () => true,
-    onSkip: () => { formQuick.parcelaFinanciamento = null; },
-    save: () => {
+    validate: () => {
       const el = document.getElementById(QUESTION_IDS.parcelaFinanciamento);
       const v = maskRead(el);
-      formQuick.parcelaFinanciamento = (v && v > 0) ? v : null;
+      if (v && v > 0) {
+        const total = fluxo === 'quick'
+          ? parseFloat(formQuick.totalFinanciado || 0)
+          : parseFloat(form.valorTotal || 0) * (parseFloat(form.percFinanciado || 80) / 100);
+        if (total > 0 && v > total) {
+          el?.classList.add('invalid');
+          showToast('⚠️ A parcela não pode ser maior que o valor financiado.');
+          return false;
+        }
+      }
+      return true;
+    },
+    onSkip: () => { formQuick.parcelaFinanciamento = null; form.parcelaFinanciamento = null; },
+    save: () => {
+      const el  = document.getElementById(QUESTION_IDS.parcelaFinanciamento);
+      const val = maskRead(el);
+      const v   = (val && val > 0) ? val : null;
+      formQuick.parcelaFinanciamento = v;
+      form.parcelaFinanciamento      = v;
     },
     init: () => {
-      attachMask(QUESTION_IDS.parcelaFinanciamento, 'brl', formQuick.parcelaFinanciamento || '');
+      const val = formQuick.parcelaFinanciamento ?? form.parcelaFinanciamento ?? null;
+      attachMask(QUESTION_IDS.parcelaFinanciamento, 'brl', val || '');
+      const el  = document.getElementById(QUESTION_IDS.parcelaFinanciamento);
+      const btn = document.getElementById('btn-step-primary');
+      const _atualizaBtn = () => {
+        if (!btn) return;
+        const v = maskRead(el);
+        btn.textContent = (v && v > 0) ? 'Concluir simulação rápida →' : 'Pular e ver resultados →';
+      };
+      if (el) el.oninput = () => { maskValue(el, 'brl'); el.classList.remove('invalid'); _atualizaBtn(); };
+      if (btn) btn.onclick = () => { const v = maskRead(el); if (!v || v <= 0) skipFlowStep(); else nextFlowStep(); };
+      _atualizaBtn();
     }
   },
 
@@ -588,67 +629,6 @@ const questions = {
     },
     init: () => {
       atualizaMesesStep0();
-    }
-  },
-
-  valorImovel: {
-    id: QUESTION_IDS.valorTotal,
-    maskType: 'brl',
-    render: () => {
-      const fin_val = form.valorTotal ? parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) : 0;
-      return `
-        <div class="field-group">
-          <label class="field-label">Qual o valor total do seu imóvel?</label>
-          <div class="label-hint">Compreende todo o valor de Entrada e Financiamento, conforme contrato.</div>
-          <label class="field-label">Valor total</label>
-          <div class="input-wrap"><span class="pre">R$</span><input type="text" id="${QUESTION_IDS.valorTotal}" class="has-pre" placeholder="300.000,00" inputmode="numeric" oninput="atualizaFin()"></div>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Percentual financiado</label>
-          <div class="input-wrap"><input type="text" id="${QUESTION_IDS.percFinanciado}" class="has-suf" placeholder="80,00" inputmode="numeric" oninput="atualizaFin()"><span class="suf">%</span></div>
-        </div>
-        <div class="diff-box" id="box-fin" style="${fin_val > 0 ? '' : 'display:none'}">
-          <div class="d-title">Composição dos valores</div>
-          <div class="diff-row"><span class="d-label">Valor total do imóvel</span><span class="d-val" id="val-total">${fin_val > 0 ? fmtBRL(parseFloat(form.valorTotal)) : ''}</span></div>
-          <div class="diff-row"><span class="d-label">(−) Valor não financiado (<span id="val-perc-label">${form.percFinanciado || 80}</span>% → <span id="val-nfin-perc">${parseFloat((100 - parseFloat(form.percFinanciado || 80)).toFixed(2))}</span>%)</span><span class="d-val" id="val-nfin">${fin_val > 0 ? fmtBRL(parseFloat(form.valorTotal) - fin_val) : ''}</span></div>
-          <hr class="diff-divider">
-          <div class="diff-row hl"><span class="d-label">Valor financiado</span><span class="d-val" id="val-fin">${fin_val > 0 ? fmtBRL(fin_val) : ''}</span></div>
-        </div>`;
-    },
-    validate: () => {
-      const elVT = document.getElementById(QUESTION_IDS.valorTotal);
-      const elPF = document.getElementById(QUESTION_IDS.percFinanciado);
-      const v = maskRead(elVT);
-      const pf = maskRead(elPF);
-      
-      if (!v || v <= 0) {
-        elVT?.classList.add('invalid');
-        return false;
-      }
-      
-      if (!pf || pf <= 10 || pf > 80) {
-        elPF?.classList.add('invalid');
-        showToast('⚠️ O percentual financiado deve ser entre 10% e 80%.');
-        return false;
-      }
-      
-      return true;
-    },
-    save: () => {
-      const elVT = document.getElementById(QUESTION_IDS.valorTotal);
-      const elPF = document.getElementById(QUESTION_IDS.percFinanciado);
-      const v = maskRead(elVT);
-      const pf = maskRead(elPF);
-      form.valorTotal = String(v);
-      form.percFinanciado = pf;
-    },
-    init: () => {
-      attachMask(QUESTION_IDS.valorTotal, 'brl', form.valorTotal || '');
-      attachMask(QUESTION_IDS.percFinanciado, 'perc2', form.percFinanciado || 80);
-      const vt = document.getElementById(QUESTION_IDS.valorTotal);
-      const pf = document.getElementById(QUESTION_IDS.percFinanciado);
-      if (vt) vt.oninput = () => { maskValue(vt, 'brl'); vt.classList.remove('invalid'); atualizaFin(); };
-      if (pf) pf.oninput = () => { maskValue(pf, 'perc2'); pf.classList.remove('invalid'); atualizaFin(); };
     }
   },
 
@@ -725,6 +705,10 @@ const questions = {
           <button class="rc-btn" id="hist-btn-rem" onclick="histRemoverLinha()" disabled>−</button>
           <button class="rc-btn" id="hist-btn-add" onclick="histAdicionarLinha()">+</button>
         </div>
+      </div>
+      <div class="confirm-box" id="box-somatorio" style="display:none">
+        <div><div class="c-label">Total já pago</div></div>
+        <div class="c-val" id="val-somatorio"></div>
       </div>`,
     validate: () => {
       // Histórico é opcional
@@ -742,12 +726,24 @@ const questions = {
       form.historicoPagamentos = rows;
     },
     init: () => {
-      const histRows = (form.historicoPagamentos && form.historicoPagamentos.length > 0)
-        ? form.historicoPagamentos
-        : [{ valor: 0 }];
       const tbody = document.getElementById('hist-tbody');
       if (!tbody) return;
-      
+
+      // Determina linhas: dados salvos > pré-população por mesMedido > padrão 1 linha
+      let histRows;
+      if (form.historicoPagamentos && form.historicoPagamentos.length > 0) {
+        histRows = form.historicoPagamentos;
+      } else if (migrationSkipCheck && formQuick.mesMedido && form.mesInicial) {
+        const mesIniYM  = parseMS(form.mesInicial);
+        const mesObraYM = parseMS(formQuick.mesMedido);
+        const nMeses    = mBetween(mesIniYM, mesObraYM);
+        if (nMeses >= 0) {
+          const nRows = Math.min(nMeses + 1, MAX_MESES);
+          histRows = Array.from({ length: nRows }, () => ({ valor: 0 }));
+        }
+      }
+      if (!histRows) histRows = [{ valor: 0 }];
+
       histRows.forEach((r, i) => {
         const mesLabel = form.mesInicial
           ? mLabel(addM(parseMS(form.mesInicial), i))
@@ -761,13 +757,14 @@ const questions = {
               <span class="pre" style="font-size:12px">R$</span>
               <input type="text" id="hist-val-${i}" class="has-pre hist-val-input"
                 placeholder="0,00" inputmode="numeric"
-                oninput="maskOnInput(this)">
+                oninput="maskOnInput(this);_atualizaSomatorio()">
             </div>
           </td>`;
         tbody.appendChild(tr);
         attachMask(`hist-val-${i}`, 'brl', r.valor > 0 ? r.valor : '');
       });
       _updateHistControls();
+      _atualizaSomatorio();
     }
   },
 

@@ -29,10 +29,25 @@ function renderFlowStep() {
   console.log('📖 renderFlowStep() chamada');
   console.log('  currentFlowArray:', currentFlowArray);
   console.log('  currentFlowStep:', currentFlowStep);
-  
+
   if (!currentFlowArray) {
     console.error('❌ flowEngine: Nenhum fluxo inicializado.');
     return;
+  }
+
+  // Pula passos flagados pela migração QuickSim→FullSim
+  if (migrationSkipCheck) {
+    while (currentFlowStep < getTotalStepsForFlow(currentFlowArray)) {
+      const key = getCurrentQuestion(currentFlowArray, currentFlowStep);
+      if (!migrationSkipCheck(key)) break;
+      console.log(`  ⏭ Pulando '${key}' (dados migrados do QuickSim)`);
+      currentFlowStep++;
+      currentStep = currentFlowStep;
+    }
+    if (currentFlowStep >= getTotalStepsForFlow(currentFlowArray)) {
+      _finalizeFlow();
+      return;
+    }
   }
 
   const questionKey = getCurrentQuestion(currentFlowArray, currentFlowStep);
@@ -65,8 +80,7 @@ function renderFlowStep() {
       <div class="step-num">${_formatStepNumber(currentFlowStep + 1, totalSteps)}</div>
       ${questionHtml}
       ${isOptionalLast ? `
-        <button class="btn btn-primary" onclick="nextFlowStep()">Avançar e ver resultado →</button>
-        <button class="btn btn-back" onclick="skipFlowStep()">Pular e ver resultado</button>
+        <button class="btn btn-primary" id="btn-step-primary">Pular e ver resultados →</button>
       ` : `
         <button class="btn btn-primary" onclick="nextFlowStep()">
           ${isLast ? 'Ver resultado →' : 'Continuar →'}
@@ -157,10 +171,17 @@ function skipFlowStep() {
 
 function prevFlowStep() {
   console.log('⬅️ prevFlowStep() chamada');
-  
+
   if (currentFlowStep > 0) {
     currentFlowStep--;
-    currentStep = currentFlowStep; // sincroniza
+    currentStep = currentFlowStep;
+    // Pula para trás passos migrados (mantém pelo menos o passo 0)
+    while (migrationSkipCheck && currentFlowStep > 0) {
+      const key = getCurrentQuestion(currentFlowArray, currentFlowStep);
+      if (!migrationSkipCheck(key)) break;
+      currentFlowStep--;
+      currentStep = currentFlowStep;
+    }
     console.log(`  Voltou para passo ${currentFlowStep}`);
     renderFlowStep();
   } else {

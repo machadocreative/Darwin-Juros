@@ -9,6 +9,7 @@ let currentProfileId = null;
 let screen = 'profiles'; // 'profiles' | 'bifurcacao' | 'onboarding' | 'result' | 'tabela' | 'quick' | 'resultQuick'
 let hasUnsavedChanges = false;
 let fluxo = 'complete'; // 'quick' | 'complete'
+let migrationSkipCheck = null; // fn(questionKey) => bool — set during QuickSim→FullSim migration
 
 // ── DADOS DO FORMULÁRIO (simulação completa) ──
 const form = {
@@ -17,8 +18,9 @@ const form = {
   valorTerreno: '',
   seguro: '', taxaAdm: '',
   taxaAnual: '',
+  parcelaFinanciamento: null, // R$ — opcional
   nomeSimulacao: '',
-  historicoPagamentos: []  // [{ valor: Number }] — uma entrada por parcela paga (tela 6)
+  historicoPagamentos: []  // [{ valor: Number }] — uma entrada por parcela paga
 };
 
 // ── DADOS DO FORMULÁRIO (simulação rápida) ──

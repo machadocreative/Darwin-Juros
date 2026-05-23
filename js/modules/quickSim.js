@@ -228,7 +228,7 @@ function renderResultQuick() {
     </div>
 
     <div class="quick-result-card accent large">
-      <div class="qrc-label">Saldo devedor informado<br></div>
+      <div class="qrc-label">Saldo devedor informado</div>
       <div class="qrc-val">${fmtBRL(formQuick.saldoAtual)}</div>
       <div class="qrc-note">${percInformado.toFixed(1)}% de obra · ${mesLabel}</div>
     </div>
@@ -237,14 +237,14 @@ function renderResultQuick() {
       ${card1Html}
 
       <div class="quick-result-card">
-        <div class="qrc-label">Taxa Referencial ${temTR ? fmtPerc(trPerc, 4) : ''}</div>
+        <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) : ''}</div>
         <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
         <div class="qrc-note">${temTR ? 'Embutido na prestação' : '-'}</div>
       </div>
     </div>
 
     <div class="quick-disclaimer-top">
-        ⚠️ <strong>IMPORTANTE: Os valores abaixo são estimativas aproximadas por não incluírem a TR oficial e o valor do Terreno. Em caso de discrepância entre a % de Obra e o Saldo Devedor, opte por considerar o Saldo Devedor mais aproximado.</strong>
+        ⚠️ <strong>IMPORTANTE: Os valores abaixo são estimativas aproximadas - sem o valor correspondente ao terreno e a Taxa referencial. onsiderar o Saldo Devedor mais aproximado.</strong>
     </div>
 
     <div class="free-preview-card" style="margin-top:12px">
@@ -358,8 +358,8 @@ function irParaSimulacaoCompleta() {
   form.seguro    = String(formQuick.seguro   || '');
   form.taxaAdm   = String(formQuick.taxaAdm  || 25);
   form.taxaAnual = String(formQuick.taxaAnual || '');
+  form.parcelaFinanciamento = formQuick.parcelaFinanciamento || null;
 
-  // Migra valor total e calcula % financiado se disponíveis do QuickSim
   if (formQuick.valorTotal && formQuick.totalFinanciado) {
     form.valorTotal    = String(formQuick.valorTotal);
     form.percFinanciado = parseFloat(((formQuick.totalFinanciado / formQuick.valorTotal) * 100).toFixed(2));
@@ -374,8 +374,20 @@ function irParaSimulacaoCompleta() {
   form.nomeSimulacao       = '';
   form.historicoPagamentos = [];
 
+  // Define quais telas pular por já terem dados do QuickSim
+  migrationSkipCheck = (questionKey) => {
+    switch (questionKey) {
+      case 'valorImovel':         return !!(form.valorTotal && form.percFinanciado);
+      case 'taxaAnual':           return !!form.taxaAnual;
+      case 'seguro':              return !!form.seguro;
+      case 'parcelaFinanciamento': return form.parcelaFinanciamento !== null;
+      default:                    return false;
+    }
+  };
+
   fluxo = 'complete';
   currentStep = 0;
   screen = 'onboarding';
-  initFlow(FLOW_FULLSIM); renderFlowStep();
+  initFlow(FLOW_FULLSIM);
+  renderFlowStep();
 }

@@ -3,12 +3,15 @@
 function novaSimulacao() {
   currentProfileId = null;
   window._editMode = null;
+  migrationSkipCheck = null;
   fluxo = 'complete';
   Object.keys(form).forEach(k => { form[k] = ''; });
   form.percFinanciado      = 80.00;
+  form.parcelaFinanciamento = null;
   form.historicoPagamentos = [];
   Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
-  formQuick.percObra = 50;
+  formQuick.percObra             = 50;
+  formQuick.parcelaFinanciamento = null;
   meses = []; currentStep = 0;
   renderBifurcacao();
 }
@@ -41,6 +44,7 @@ function editarSimulacao() {
 }
 
 function _iniciarEdicao() {
+  migrationSkipCheck = null; // edição sempre passa por todas as telas
   fluxo = 'complete';
   const mesesBackup    = JSON.parse(JSON.stringify(meses));
   const profileIdBackup = currentProfileId;
@@ -86,6 +90,7 @@ function escolherFluxo(f) {
 }
 
 function _finalizarOnboarding() {
+  migrationSkipCheck = null;
   const edit = window._editMode;
   if (edit) {
     const newTable = calcTable();
@@ -254,7 +259,7 @@ function histAdicionarLinha() {
         <span class="pre" style="font-size:12px">R$</span>
         <input type="text" id="hist-val-${i}" class="has-pre hist-val-input"
           placeholder="0,00" inputmode="numeric"
-          oninput="maskOnInput(this)">
+          oninput="maskOnInput(this);_atualizaSomatorio()">
       </div>
     </td>`;
   tbody.appendChild(tr);
@@ -271,4 +276,17 @@ function histRemoverLinha() {
   if (count <= 1) return;
   tbody.removeChild(tbody.lastElementChild);
   _updateHistControls();
+  _atualizaSomatorio();
+}
+
+function _atualizaSomatorio() {
+  let total = 0, i = 0;
+  while (document.getElementById(`hist-val-${i}`)) {
+    total += maskRead(document.getElementById(`hist-val-${i}`)) || 0;
+    i++;
+  }
+  const box = document.getElementById('box-somatorio');
+  const val = document.getElementById('val-somatorio');
+  if (box) box.style.display = total > 0 ? 'block' : 'none';
+  if (val) val.textContent   = fmtBRL(total);
 }
