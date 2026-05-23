@@ -323,6 +323,10 @@ const questions = {
     init: () => {
       attachMask(QUESTION_IDS.valorTotal,        'brl', formQuick.valorTotal      || '');
       attachMask(QUESTION_IDS.financiamentoTotal, 'brl', formQuick.totalFinanciado || '');
+      const elVT  = document.getElementById(QUESTION_IDS.valorTotal);
+      const elFin = document.getElementById(QUESTION_IDS.financiamentoTotal);
+      if (elVT)  elVT.oninput  = () => { maskValue(elVT,  'brl'); elVT.classList.remove('invalid');  _atualizaImovelQuick(); };
+      if (elFin) elFin.oninput = () => { maskValue(elFin, 'brl'); elFin.classList.remove('invalid'); _atualizaImovelQuick(); };
       _atualizaImovelQuick();
     }
   },
@@ -425,7 +429,11 @@ const questions = {
       attachMask(QUESTION_IDS.saldoDevedor,   'brl',   formQuick.saldoAtual || '');
       const percCalc = _calcPercAutomatico();
       attachMask(QUESTION_IDS.percentualObra, 'perc2', formQuick.percObra || percCalc || '');
-      const elMes = document.getElementById(QUESTION_IDS.mesMedido);
+      const elSaldo = document.getElementById(QUESTION_IDS.saldoDevedor);
+      const elPerc  = document.getElementById(QUESTION_IDS.percentualObra);
+      const elMes   = document.getElementById(QUESTION_IDS.mesMedido);
+      if (elSaldo) elSaldo.oninput = () => { maskValue(elSaldo, 'brl');   elSaldo.classList.remove('invalid'); _atualizaPercCalculado(); };
+      if (elPerc)  elPerc.oninput  = () => { maskValue(elPerc,  'perc2'); _limitPercQuick(elPerc); elPerc.classList.remove('invalid'); };
       if (elMes && formQuick.mesMedido) elMes.value = formQuick.mesMedido;
       _atualizaPercCalculado();
       _atualizaTRInfo();

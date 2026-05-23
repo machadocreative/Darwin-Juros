@@ -114,10 +114,9 @@ function preencherMesAtual() {
   if (!el) return;
 
   el.value = valor;
-
   formQuick.mesMedido = valor;
-
   el.classList.remove('invalid');
+  _atualizaTRInfo();
 }
 
 // ── ASSOCIAR VALOR DE TR COM O JSON PELO MÊS INFORMADO ──
