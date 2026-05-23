@@ -263,11 +263,11 @@ const questions = {
       );
       const showBox = vt > 0 && fin > 0 && fin < vt;
       return `
-        <div class="field-label">Qual o valor total do seu imóvel?</div>
-        <div class="label-hint">Compreende todo o valor de Entrada e Financiamento, conforme contrato.</div>
+        <div class="field-label">Informe os valores abaixo</div>
+        <div class="label-hint">Preencha de acordo como descrito no seu contrato.</div>
         <div class="field-group">
-          <label class="field-label">Valor total do imóvel</label>
-          <div class="label-hint">Conforme contrato com a Construtora.</div>
+          <label class="field-label">1. Imóvel</label>
+          <div class="label-hint"></div>
           <div class="input-wrap">
             <span class="pre">R$</span>
             <input type="text" id="${QUESTION_IDS.valorTotal}" class="has-pre" placeholder="300.000,00" inputmode="numeric"
@@ -275,8 +275,8 @@ const questions = {
           </div>
         </div>
         <div class="field-group">
-          <label class="field-label">Valor do Financiamento</label>
-          <div class="label-hint">Crédito liberado pela Caixa — sem a entrada.</div>
+          <label class="field-label">2. Financiamento</label>
+          <div class="label-hint">O crédito liberado — Sem a entrada da construtora e/ou subsídios.</div>
           <div class="input-wrap">
             <span class="pre">R$</span>
             <input type="text" id="${QUESTION_IDS.financiamentoTotal}" class="has-pre" placeholder="240.000,00" inputmode="numeric"
@@ -286,7 +286,7 @@ const questions = {
         <div class="diff-box" id="box-imovel-quick" style="${showBox ? '' : 'display:none'}">
           <div class="d-title">Composição do Financiamento</div>
           <div class="diff-row"><span class="d-label">Valor total do imóvel</span><span class="d-val" id="dq-total">${showBox ? fmtBRL(vt) : '—'}</span></div>
-          <div class="diff-row"><span class="d-label">(−) Entrada</span><span class="d-val" id="dq-entrada">${showBox ? fmtBRL(vt - fin) : '—'}</span></div>
+          <div class="diff-row"><span class="d-label">(−) Entrada / Descontos</span><span class="d-val" id="dq-entrada">${showBox ? fmtBRL(vt - fin) : '—'}</span></div>
           <hr class="diff-divider">
           <div class="diff-row hl"><span class="d-label">Valor financiado (<span id="dq-perc-fin">${showBox ? fmtPerc((fin / vt) * 100, 1) : '—'}</span>)</span><span class="d-val" id="dq-fin">${showBox ? fmtBRL(fin) : '—'}</span></div>
         </div>
@@ -558,7 +558,11 @@ const questions = {
       const _atualizaBtn = () => {
         if (!btn) return;
         const v = maskRead(el);
-        btn.textContent = (v && v > 0) ? 'Concluir simulação rápida →' : 'Pular e ver resultados →';
+        if (fluxo === 'quick') {
+          btn.textContent = (v && v > 0) ? 'Concluir simulação rápida →' : 'Pular e ver resultados →';
+        } else {
+          btn.textContent = (v && v > 0) ? 'Continuar →' : 'Pular esta pergunta →';
+        }
       };
       if (el) el.oninput = () => { maskValue(el, 'brl'); el.classList.remove('invalid'); _atualizaBtn(); };
       if (btn) btn.onclick = () => { const v = maskRead(el); if (!v || v <= 0) skipFlowStep(); else nextFlowStep(); };
@@ -574,17 +578,17 @@ const questions = {
     id: QUESTION_IDS.mesInicial,
     maskType: null,
     render: () => `
-      <div class="field-label">Qual os prazos de início e término de pagamento de Evolução de Obra?</div>
-      <div class="label-hint">Informe os meses abaixo.</div>
+      <div class="field-label">Informe as datas abaixo</div>
+      <div class="label-hint">O app irá definir quantos meses de Evolução de Obra serão simulados baseado nos prazos informados abaixo.</div>
       <div class="field-group">
-        <label class="field-label">Quando inicia o pagamento de Juros de Evolução de Obra?</label>
-        <div class="label-hint">Mês da sua primeira prestação.</div>
+        <label class="field-label">1. Início dos pagamentos</label>
+        <div class="label-hint">Mês da sua primeira prestação, quando inicia a obra.</div>
         <input type="month" id="${QUESTION_IDS.mesInicial}" value="${form.mesInicial}" oninput="atualizaMesesStep0();this.classList.remove('invalid')">
       </div>
       <br>
       <div class="field-group">
-        <label class="field-label">Qual a data de entrega prevista?</label>
-        <div class="label-hint">A data de entrega define quantos meses de evolução serão simulados.</div>
+        <label class="field-label">2. Data de entrega prevista</label>
+        <div class="label-hint">Após a entrega, encerra o pagamento de Juros de Evolução de Obra e inicia-se a amortização do Financiamento.</div>
         <input type="month" id="${QUESTION_IDS.mesEntrega}" value="${form.mesEntrega}" oninput="atualizaMesesStep0();this.classList.remove('invalid')">
       </div>
       <div id="badge-meses"></div>
@@ -628,7 +632,7 @@ const questions = {
       const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
       return `
         <div class="field-group">
-          <label class="field-label">Qual o valor correspondente ao terreno?</label>
+          <label class="field-label">Qual o valor do Terreno?</label>
           <div class="label-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
           <div class="input-wrap"><span class="pre">R$</span><input type="text" id="${QUESTION_IDS.valorTerreno}" class="has-pre" placeholder="10.000,00" inputmode="numeric" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
           <div class="error-msg" id="err-terreno">O valor do terreno deve ser menor que o total financiado (${fmtBRL(fin)}).</div>
@@ -678,7 +682,7 @@ const questions = {
     render: () => `
       <div class="field-group">
         <label class="field-label">Você já pagou alguma parcela? — Opcional</label>
-        <div class="label-hint">Informe os valores de meses já debitados para acompanhamento. Deixe em branco se quiser pular ou se ainda não pagou nenhuma parcela.<br></div>
+        <div class="label-hint">Informe os valores dos meses já pagos para acompanhamento. Deixe em branco se quiser pular ou se ainda não pagou nenhuma parcela.<br></div>
       </div>
       <div class="table-wrap" id="hist-table-wrap">
         <table>

@@ -367,7 +367,7 @@ function _syncSliderPremium() {
   const pagoLabel = document.getElementById('slider-pago-label');
   if (pagoLabel) {
     if (percPaga > 0) {
-      pagoLabel.textContent = percPaga + '% · já pago';
+      pagoLabel.textContent = percPaga + '% · de obra concluída';
       pagoLabel.style.visibility = '';
     } else {
       pagoLabel.style.visibility = 'hidden';
@@ -504,10 +504,9 @@ function renderResult() {
   const blocoSlider = `
     <div class="${premium ? 'premium-preview-card' : 'free-preview-card'}">
       <div class="free-preview-header">
-        <div class="free-preview-title">Simulador Rápido</div>
-        <div class="free-preview-sub">${premium
-          ? 'O slider marca quanto de % já foi pago de acordo com a tabela abaixo.'
-          : 'Arraste para simular cenários em qualquer % de obra'}</div>
+        <div class="free-preview-title">Visualizador de Prestações <span>· Arraste para simular</span></div>
+        <div class="free-preview-sub">Simule suas prestações sem o cálculo da TR. ${premium
+          ? '' : 'Simule suas prestações sem o cálculo da TR'}</div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
@@ -529,7 +528,6 @@ function renderResult() {
           <dt class="slider-result-label">Prestação simulada <strong>SEM TR</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
-        <div class="slider-result-note">${premium ? '' : 'Exibição da Taxa Referencial na versão completa'}</div>
       </div>
       ${temFin ? `
       <div class="quick-result-grid-slider">

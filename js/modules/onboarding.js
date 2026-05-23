@@ -95,7 +95,10 @@ function renderEditScreen() {
 
       <div class="edit-section">
         <div class="edit-section-title">Histórico de Pagamentos — Opcional</div>
-        ${questions.historicoPagamentos.render()}
+        ${isPremium()
+          ? `<div class="info-box">💡 Na versão premium, os pagamentos são gerenciados diretamente na tabela de resultados. Marque ou edite parcelas pagas a partir da tela de resultados.</div>`
+          : questions.historicoPagamentos.render()
+        }
       </div>
 
       <div class="edit-section">
@@ -118,7 +121,7 @@ function renderEditScreen() {
     questions.seguro.init();
     questions.parcelaFinanciamento.init();
     questions.mesInicial.init();
-    questions.historicoPagamentos.init();
+    if (!isPremium()) questions.historicoPagamentos.init();
     questions.nomePerfil.init();
   }, 80);
 }
@@ -138,7 +141,7 @@ function confirmarEdicao() {
   questions.seguro.save();
   questions.parcelaFinanciamento.save();
   questions.mesInicial.save();
-  questions.historicoPagamentos.save();
+  if (!isPremium()) questions.historicoPagamentos.save();
   questions.nomePerfil.save();
 
   _finalizarOnboarding();
@@ -297,11 +300,15 @@ function _renderBadgeMeses(ini, fim) {
   const n = mBetween(iniParsed, fimParsed);
   const totalParcelas = n + 1;
   if (n >= 1 && totalParcelas <= MAX_MESES)
-    badge.innerHTML = `<div class="months-badge">📅 ${mLabelFull(ini)} → ${mLabelFull(fim)} = <strong>${totalParcelas} parcela(s)</strong></div>`;
+    badge.innerHTML = `
+      <div class="confirm-box">
+        <div><div class="c-label">📅 ${mLabelFull(ini)} → ${mLabelFull(fim)}</div></div>
+        <div class="c-val">${totalParcelas} parcela(s)</div>
+      </div>`;
   else if (totalParcelas > MAX_MESES)
-    badge.innerHTML = `<div class="months-badge err">⚠️ Máximo ${MAX_MESES} parcelas. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
+    badge.innerHTML = `<div class="confirm-box err">⚠️ Máximo ${MAX_MESES} parcelas. Serão exibidas apenas as primeiras ${MAX_MESES}.</div>`;
   else
-    badge.innerHTML = `<div class="months-badge err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
+    badge.innerHTML = `<div class="confirm-box err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
 }
 function atualizaFin() {
   const elVT = document.getElementById('inp-valorTotal');

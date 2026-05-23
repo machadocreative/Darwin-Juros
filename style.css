@@ -416,21 +416,7 @@
         margin: 6px 0;
     }
 
-    .months-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: var(--accent-light);
-        border: 1px solid #B2D8C4;
-        border-radius: 20px;
-        padding: 6px 14px;
-        font-size: 13px;
-        color: var(--accent);
-        font-weight: 500;
-        margin: 12px 0 0;
-    }
-
-    .months-badge.err {
+    .confirm-box.err {
         background: #FFF0F0;
         border-color: #F5C6C6;
         color: #A0392B;
