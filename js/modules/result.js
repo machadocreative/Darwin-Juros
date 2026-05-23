@@ -15,6 +15,7 @@ function renderProfiles() {
           </div>
           <div class="pc-actions" onclick="event.stopPropagation()">
             <button class="pc-btn" onclick="loadProfile('${p.id}')">Abrir</button>
+            <button class="pc-btn" onclick="abrirRenomearPerfil('${p.id}')">Renomear</button>
             <button class="pc-btn del" id="del-${p.id}" onclick="deleteProfile('${p.id}')">Excluir</button>
           </div>
         </div>`;
@@ -434,7 +435,8 @@ function renderResult() {
       <p id="result-subtitle">${ativas.length} parcelas · ${meses[0]?.mes || ''} → ${ultimoMesAtivo()}</p>
       <div class="rh-actions">
         <button class="rh-btn save" onclick="saveProfile()">💾 Salvar</button>
-        <button class="rh-btn" onclick="editarSimulacao()">✏️ Editar</button>
+        <button class="rh-btn" onclick="abrirRenomearPerfil()">✏️ Renomear</button>
+        <button class="rh-btn" onclick="editarSimulacao()">🔧 Editar</button>
         <button class="rh-btn del" id="rh-btn-del" onclick="deleteProfileFromResult()">🗑️ Excluir</button>
       </div>
     </div>

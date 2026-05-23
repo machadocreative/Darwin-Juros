@@ -1943,3 +1943,116 @@ dl.slider-result-row dd.slider-result-val.accent span {
   margin: 0;
   line-height: 1.4;
 }
+
+/* ── TELA ÚNICA DE EDIÇÃO ── */
+.edit-intro-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+.edit-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 18px 12px;
+  margin-bottom: 10px;
+}
+
+.edit-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.edit-sticky-footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 10px 0 6px;
+  display: flex;
+  gap: 10px;
+  z-index: 20;
+}
+
+.edit-sticky-footer .btn {
+  flex: 1;
+  margin: 0;
+}
+
+/* ── MODAL RENOMEAR ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-box {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+  box-sizing: border-box;
+  animation: fadeIn .15s ease;
+}
+
+.modal-header {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  box-sizing: border-box;
+  transition: border-color .15s;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.modal-input.invalid {
+  border-color: var(--danger);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.modal-actions .btn {
+  flex: 1;
+  margin: 0;
+}
+
+/* rh-actions: allow wrap on narrow screens with 4 buttons */
+.rh-actions {
+  flex-wrap: wrap;
+}

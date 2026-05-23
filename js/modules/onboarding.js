@@ -44,14 +44,179 @@ function editarSimulacao() {
 }
 
 function _iniciarEdicao() {
-  migrationSkipCheck = null; // edição sempre passa por todas as telas
+  migrationSkipCheck = null;
   fluxo = 'complete';
-  const mesesBackup    = JSON.parse(JSON.stringify(meses));
+  const mesesBackup     = JSON.parse(JSON.stringify(meses));
   const profileIdBackup = currentProfileId;
   screen = 'onboarding';
   currentStep = 0;
   window._editMode = { mesesBackup, profileIdBackup };
-  initFlow(FLOW_FULLSIM); renderFlowStep();
+  renderEditScreen();
+}
+
+// ── TELA ÚNICA DE EDIÇÃO ──
+function renderEditScreen() {
+  const html = `
+    <div class="edit-screen">
+      <div class="step-card edit-intro-card">
+        <div class="step-title">Editar Simulação</div>
+        <div class="step-hint">Altere os campos desejados e confirme no final da página.</div>
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Datas</div>
+        ${questions.mesInicial.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Valor do Imóvel</div>
+        ${questions.valorImovel.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Valor do Terreno</div>
+        ${questions.valorTerreno.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Taxa de Juros</div>
+        ${questions.taxaAnual.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Encargos Mensais</div>
+        ${questions.seguro.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">1ª Parcela do Financiamento — Opcional</div>
+        ${questions.parcelaFinanciamento.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Histórico de Pagamentos — Opcional</div>
+        ${questions.historicoPagamentos.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Nome da Simulação</div>
+        ${questions.nomePerfil.render()}
+      </div>
+    </div>
+
+    <div class="edit-sticky-footer">
+      <button class="btn btn-back" onclick="cancelarEdicao()">← Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarEdicao()">Confirmar →</button>
+    </div>`;
+
+  setHtml(html);
+
+  setTimeout(() => {
+    questions.mesInicial.init();
+    questions.valorImovel.init();
+    questions.valorTerreno.init();
+    questions.taxaAnual.init();
+    questions.seguro.init();
+    questions.parcelaFinanciamento.init();
+    questions.historicoPagamentos.init();
+    questions.nomePerfil.init();
+  }, 80);
+}
+
+function confirmarEdicao() {
+  if (!questions.mesInicial.validate())   return;
+  if (!questions.valorImovel.validate())  return;
+  // Save valorImovel early so valorTerreno/parcelaFinanciamento validations use updated form values
+  questions.valorImovel.save();
+  if (!questions.valorTerreno.validate()) return;
+  if (!questions.taxaAnual.validate())    return;
+  if (!questions.seguro.validate())       return;
+  if (!questions.parcelaFinanciamento.validate()) return;
+  if (!questions.nomePerfil.validate())   return;
+
+  questions.mesInicial.save();
+  questions.valorTerreno.save();
+  questions.taxaAnual.save();
+  questions.seguro.save();
+  questions.parcelaFinanciamento.save();
+  questions.historicoPagamentos.save();
+  questions.nomePerfil.save();
+
+  _finalizarOnboarding();
+}
+
+function cancelarEdicao() {
+  window._editMode = null;
+  screen = 'result';
+  renderResult();
+}
+
+// ── MODAL RENOMEAR PERFIL ──
+function abrirRenomearPerfil(targetId) {
+  const id = (targetId !== undefined && targetId !== null) ? targetId : currentProfileId;
+  const profiles = loadProfiles();
+  const p = id ? profiles.find(pr => pr.id === id) : null;
+  const nomeAtual = p ? p.nome : (form.nomeSimulacao || '');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-renomear-overlay';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-header">Como deseja chamar essa simulação?</div>
+      <input type="hidden" id="modal-target-id" value="${escHtml(id || '')}">
+      <input type="text" id="modal-nome-input" class="modal-input" placeholder="Apto 101"
+        maxlength="30" value="${escHtml(nomeAtual)}"
+        oninput="document.getElementById('modal-char-count').textContent=this.value.length+' / 30'">
+      <div class="char-count" id="modal-char-count">${nomeAtual.length} / 30</div>
+      <div class="modal-actions">
+        <button class="btn btn-back" onclick="fecharModalRenomear()">← Cancelar</button>
+        <button class="btn btn-primary" onclick="confirmarRenomearPerfil()">Confirmar →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const el = document.getElementById('modal-nome-input');
+  if (el) { el.focus(); el.select(); }
+}
+
+function fecharModalRenomear() {
+  const overlay = document.getElementById('modal-renomear-overlay');
+  if (overlay) overlay.remove();
+}
+
+function confirmarRenomearPerfil() {
+  const el = document.getElementById('modal-nome-input');
+  const hiddenId = document.getElementById('modal-target-id');
+  if (!el) return;
+
+  const raw = sanitizeName(el.value) || 'Apto 101';
+  const targetId = hiddenId?.value || null;
+
+  const profiles = loadProfiles();
+  const duplicado = profiles.find(p => p.nome.toLowerCase() === raw.toLowerCase() && p.id !== targetId);
+  if (duplicado) {
+    el.classList.add('invalid');
+    showToast('⚠️ Já existe um perfil com esse nome. Utilize um nome diferente.');
+    return;
+  }
+
+  if (targetId) {
+    const idx = profiles.findIndex(p => p.id === targetId);
+    if (idx >= 0) { profiles[idx].nome = raw; saveProfiles(profiles); }
+  }
+
+  if (targetId === currentProfileId) {
+    form.nomeSimulacao = raw;
+  } else if (!targetId && currentProfileId === null) {
+    form.nomeSimulacao = raw;
+    hasUnsavedChanges = true;
+  }
+
+  fecharModalRenomear();
+  showToast('✅ Simulação renomeada.');
+
+  if (screen === 'result') renderResult();
+  else if (screen === 'profiles') renderProfiles();
 }
 
 // ── BIFURCAÇÃO INICIAL ──
