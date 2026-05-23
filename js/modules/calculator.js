@@ -181,9 +181,7 @@ function atualizaSlider() {
 
   if (isPremium()) {
     const percPaga = _ultimaPercPagaAtual();
-    if (elPerc) {
-      elPerc.textContent = perc + '%' + (percPaga > 0 && perc <= percPaga ? ' · já pago' : '');
-    }
+    if (elPerc) elPerc.textContent = perc + '%';
     _applySliderTrack(slider, percPaga, perc);
   } else {
     if (elPerc) elPerc.textContent = perc + '%';

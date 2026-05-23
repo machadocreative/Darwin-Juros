@@ -350,9 +350,18 @@ function _syncSliderPremium() {
   const slider = document.getElementById('preview-slider');
   if (!slider || !isPremium()) return;
   const percPaga = _ultimaPercPagaAtual();
-  slider.value = percPaga;                        // ← linha nova
+  slider.value = percPaga;
   _applySliderTrack(slider, percPaga, percPaga);
-  atualizaSlider();                               // ← linha nova (atualiza label e valores)
+  atualizaSlider();
+  const pagoLabel = document.getElementById('slider-pago-label');
+  if (pagoLabel) {
+    if (percPaga > 0) {
+      pagoLabel.textContent = percPaga + '% · já pago';
+      pagoLabel.style.visibility = '';
+    } else {
+      pagoLabel.style.visibility = 'hidden';
+    }
+  }
 }
 
 function _applySliderTrack(slider, percPaga, val) {
@@ -496,10 +505,12 @@ function renderResult() {
         <input type="range" id="preview-slider" class="preview-slider"
           min="0" max="100" step="${premium ? 1 : 10}" value="${sliderInicio}"
           oninput="atualizaSlider()">
-        <div class="slider-perc-label" id="slider-perc">${sliderInicio}%${premium && percPaga > 0 ? ' · última paga' : ''}</div>
+        ${premium ? `<div class="slider-pago-label" id="slider-pago-label" style="${percPaga > 0 ? '' : 'visibility:hidden'}">${percPaga > 0 ? percPaga + '% · já pago' : '—'}</div>` : ''}
       </div>
       <div class="slider-result">
         <dl class="slider-result-row">
+          <dt class="slider-result-label">Evolução de Obra</dt>
+          <dd class="slider-result-perc" id="slider-perc">—</dd>
           <dt class="slider-result-label">Saldo devedor estimado</dt>
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>

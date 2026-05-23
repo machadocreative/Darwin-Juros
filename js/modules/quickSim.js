@@ -237,14 +237,14 @@ function renderResultQuick() {
       ${card1Html}
 
       <div class="quick-result-card">
-        <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) : ''}</div>
+        <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) + ' · ' + mesLabel : ''}</div>
         <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
         <div class="qrc-note">${temTR ? 'Embutido na prestação' : '-'}</div>
       </div>
     </div>
 
     <div class="quick-disclaimer-top">
-        ⚠️ <strong>IMPORTANTE: Os valores abaixo são estimativas aproximadas - sem o valor correspondente ao terreno e a Taxa referencial. onsiderar o Saldo Devedor mais aproximado.</strong>
+        ⚠️ <strong>IMPORTANTE: Os valores abaixo são estimativas aproximadas - sem o valor correspondente ao terreno e a Taxa Referencial. Por via de regra, considere sempre o Saldo Devedor mais aproximado para sua situação.</strong>
     </div>
 
     <div class="free-preview-card" style="margin-top:12px">
