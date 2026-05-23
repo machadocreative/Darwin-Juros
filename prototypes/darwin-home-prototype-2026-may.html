@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1A6B4A">
+  <title>Darwin Juros — Protótipo Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F7F6F2;
+      --card: #FFFFFF;
+      --text: #1A1A18;
+      --muted: #888880;
+      --muted-dark: #4c4c47;
+      --accent: #1A6B4A;
+      --accent-light: #E6F2EC;
+      --accent-dark: #135438;
+      --border: #E2E0D8;
+      --warn-bg: #FFEFC6;
+      --warn: #81520D;
+      --blue-bg: #EEF6FB;
+      --blue: #1A5280;
+      --radius: 12px;
+      --font: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* LAYOUT GERAL */
+    #root {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--bg);
+      position: relative;
+    }
+
+    main {
+      flex: 1;
+      padding: 24px 20px 100px; /* espaço para bottom nav */
+      animation: fadeIn .2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* SAUDAÇÃO INLINE (substitui header sticky) */
+    .greeting {
+      margin-bottom: 24px;
+    }
+
+    .greeting-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .greeting-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .greeting-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -.01em;
+    }
+
+    .greeting-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-left: 42px;
+    }
+
+    /* SEÇÃO HEADER */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      margin-top: 24px;
+    }
+
+    /* CARD PRIMÁRIO — Iniciar Simulação */
+    .primary-card {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 16px;
+      padding: 22px 22px 20px;
+      margin-bottom: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .primary-card::before {
+      content: "";
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 140px;
+      height: 140px;
+      background: rgba(255,255,255,.06);
+      border-radius: 50%;
+    }
+
+    .primary-card::after {
+      content: "";
+      position: absolute;
+      bottom: -60px;
+      right: -20px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255,255,255,.05);
+      border-radius: 50%;
+    }
+
+    .pc-eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(255,255,255,.7);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      position: relative;
+    }
+
+    .pc-title {
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      position: relative;
+    }
+
+    .pc-sub {
+      font-size: 13px;
+      color: rgba(255,255,255,.8);
+      margin-bottom: 18px;
+      line-height: 1.5;
+      position: relative;
+    }
+
+    .pc-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      position: relative;
+    }
+
+    .pc-btn {
+      background: rgba(255,255,255,.15);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 10px;
+      padding: 12px 10px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .pc-btn:hover {
+      background: rgba(255,255,255,.25);
+    }
+
+    .pc-btn-icon {
+      font-size: 18px;
+    }
+
+    .pc-btn-label {
+      font-weight: 600;
+    }
+
+    .pc-btn-hint {
+      font-size: 11px;
+      color: rgba(255,255,255,.7);
+      font-weight: 400;
+    }
+
+    /* CARD ÚLTIMO PERFIL */
+    .last-profile {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .last-profile:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .lp-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--accent-light);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .lp-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .lp-label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .lp-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lp-arrow {
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    /* GRID DE FEATURES "EM BREVE" */
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 14px 14px;
+      position: relative;
+      transition: all .15s;
+      cursor: pointer;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .feature-card.disabled {
+      cursor: not-allowed;
+      opacity: .65;
+    }
+
+    .feature-card.disabled:hover {
+      transform: none;
+      border-color: var(--border);
+    }
+
+    .fc-icon {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .fc-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .fc-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    .fc-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--warn-bg);
+      color: var(--warn);
+      font-size: 9px;
+      padding: 3px 7px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .fc-badge.premium {
+      background: #FAF0E6;
+      color: #B8730B;
+    }
+
+    .fc-badge.new {
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    /* BOTTOM NAVIGATION */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+      z-index: 50;
+      box-shadow: 0 -2px 12px rgba(0,0,0,.03);
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      color: var(--muted);
+      transition: color .15s;
+      font-family: var(--font);
+    }
+
+    .nav-btn-icon {
+      font-size: 22px;
+      line-height: 1;
+      transition: transform .15s;
+    }
+
+    .nav-btn-label {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .nav-btn.active {
+      color: var(--accent);
+    }
+
+    .nav-btn.active .nav-btn-icon {
+      transform: scale(1.1);
+    }
+
+    .nav-btn:hover:not(.active) {
+      color: var(--text);
+    }
+
+    /* TELAS */
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* TELA PERFIS */
+    .profile-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .profile-card:hover {
+      border-color: var(--accent);
+    }
+
+    .pf-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .pf-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .pf-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .pf-info {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pf-stats {
+      text-align: right;
+    }
+
+    .pf-stats-num {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .pf-stats-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .btn-add-profile {
+      width: 100%;
+      padding: 14px;
+      background: var(--card);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--accent);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      margin-top: 8px;
+    }
+
+    .btn-add-profile:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    /* TELA EDUCAÇÃO */
+    .edu-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all .15s;
+      position: relative;
+    }
+
+    .edu-card.disabled {
+      opacity: .7;
+      cursor: not-allowed;
+    }
+
+    .edu-card:not(.disabled):hover {
+      border-color: var(--accent);
+    }
+
+    .edu-thumb {
+      height: 100px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: rgba(255,255,255,.85);
+      position: relative;
+    }
+
+    .edu-thumb-icon-circle {
+      width: 56px;
+      height: 56px;
+      background: rgba(255,255,255,.15);
+      border: 2px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .edu-content {
+      padding: 14px 16px;
+    }
+
+    .edu-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .edu-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .edu-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,.5);
+      color: #fff;
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    /* TELA SOBRE */
+    .about-hero {
+      text-align: center;
+      padding: 20px 0 28px;
+    }
+
+    .about-logo {
+      width: 72px;
+      height: 72px;
+      background: var(--accent);
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin-bottom: 16px;
+    }
+
+    .about-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -.02em;
+      margin-bottom: 6px;
+    }
+
+    .about-tagline {
+      font-size: 14px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .about-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 18px;
+      margin-bottom: 10px;
+    }
+
+    .ab-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ab-text {
+      font-size: 13px;
+      color: var(--muted-dark);
+      line-height: 1.6;
+    }
+
+    .about-meta {
+      text-align: center;
+      padding: 20px 0 10px;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .about-meta a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      opacity: 0;
+      transition: all .3s;
+      pointer-events: none;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<div id="root">
+  <main id="main">
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- TELA: NOVA (default)              -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="screen active" id="screen-nova">
+      <div class="greeting">
+        <div class="greeting-row">
+          <div class="greeting-logo">🏗️</div>
+          <div class="greeting-title">Olá, tudo bem?</div>
+        </div>
+        <div class="greeting-sub">Vamos calcular suas parcelas hoje?</div>
+      </div>
+
+      <!-- CARD PRIMÁRIO -->
+      <div class="primary-card">
+        <div class="pc-eyebrow">Começar agora</div>
+        <div class="pc-title">Calcule sua próxima parcela</div>
+        <div class="pc-sub">Escolha o modo de simulação que combina com você</div>
+        <div class="pc-btns">
+          <button class="pc-btn" onclick="showToast('Iniciar simulação rápida →')">
+            <span class="pc-btn-icon">⚡</span>
+            <span class="pc-btn-label">Rápida</span>
+            <span class="pc-btn-hint">~2 minutos</span>
+          </button>
+          <button class="pc-btn" onclick="showToast('Iniciar simulação completa →')">
+            <span class="pc-btn-icon">📋</span>
+            <span class="pc-btn-label">Completa</span>
+            <span class="pc-btn-hint">~5 minutos</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ÚLTIMO PERFIL ACESSADO (opcional, aparece se houver) -->
+      <div class="section-label">Continuar de onde parou</div>
+      <div class="last-profile" onclick="showToast('Abrir Apto 304 →')">
+        <div class="lp-icon">🏠</div>
+        <div class="lp-content">
+          <div class="lp-label">Último acesso · há 3 dias</div>
+          <div class="lp-name">Apto 304 — Edifício Sol Nascente</div>
+        </div>
+        <div class="lp-arrow">›</div>
+      </div>
+
+      <!-- FEATURES EM BREVE -->
+      <div class="section-label">Em breve no Darwin</div>
+      <div class="features-grid">
+
+        <div class="feature-card disabled" onclick="showToast('Em breve! 🚧')">
+          <span class="fc-badge">Em breve</span>
+          <div class="fc-icon">📊</div>
+          <div class="fc-title">Evolução da obra</div>
+          <div class="fc-desc">Veja mês a mês como sua obra está avançando</div>
+        </div>
+
+        <div class="feature-card disabled" onclick="showToast('Em breve! 🚧')">
+          <span class="fc-badge">Em breve</span>
+          <div class="fc-icon">📈</div>
+          <div class="fc-title">Histórico da TR</div>
+          <div class="fc-desc">Acompanhe a taxa referencial e seu impacto</div>
+        </div>
+
+        <div class="feature-card disabled" onclick="showToast('Em breve! 🚧')">
+          <span class="fc-badge">Em breve</span>
+          <div class="fc-icon">⚖️</div>
+          <div class="fc-title">Banco vs Realidade</div>
+          <div class="fc-desc">Compare a projeção do contrato com o que veio</div>
+        </div>
+
+        <div class="feature-card disabled" onclick="showToast('Em breve! 🚧')">
+          <span class="fc-badge">Em breve</span>
+          <div class="fc-icon">📅</div>
+          <div class="fc-title">Calendário</div>
+          <div class="fc-desc">Suas parcelas em uma timeline visual</div>
+        </div>
+
+        <div class="feature-card disabled" onclick="showToast('Em breve! 🚧')">
+          <span class="fc-badge premium">Premium</span>
+          <div class="fc-icon">📸</div>
+          <div class="fc-title">Exportar imagem</div>
+          <div class="fc-desc">Compartilhe seus cards nas redes sociais</div>
+        </div>
+
+        <div class="feature-card disabled" onclick="showToast('Em breve! 🚧')">
+          <span class="fc-badge premium">Premium</span>
+          <div class="fc-icon">📑</div>
+          <div class="fc-title">Exportar Excel</div>
+          <div class="fc-desc">Baixe sua tabela completa em .xlsx</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- TELA: PERFIS                      -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="screen" id="screen-perfis">
+      <div class="greeting">
+        <div class="greeting-row">
+          <div class="greeting-logo">📁</div>
+          <div class="greeting-title">Meus Imóveis</div>
+        </div>
+        <div class="greeting-sub">Gerencie e acompanhe seus financiamentos</div>
+      </div>
+
+      <div class="section-label">2 perfis salvos</div>
+
+      <div class="profile-card" onclick="showToast('Abrir Apto 304 →')">
+        <div class="pf-avatar">🏠</div>
+        <div class="pf-content">
+          <div class="pf-name">Apto 304 — Sol Nascente</div>
+          <div class="pf-info">28 parcelas · atualizado há 3 dias</div>
+        </div>
+        <div class="pf-stats">
+          <div class="pf-stats-num">42%</div>
+          <div class="pf-stats-label">Obra</div>
+        </div>
+      </div>
+
+      <div class="profile-card" onclick="showToast('Abrir Casa de Praia →')">
+        <div class="pf-avatar">🏖️</div>
+        <div class="pf-content">
+          <div class="pf-name">Casa de Praia</div>
+          <div class="pf-info">36 parcelas · atualizado há 1 mês</div>
+        </div>
+        <div class="pf-stats">
+          <div class="pf-stats-num">68%</div>
+          <div class="pf-stats-label">Obra</div>
+        </div>
+      </div>
+
+      <button class="btn-add-profile" onclick="showToast('Criar novo perfil →')">
+        + Adicionar novo imóvel
+      </button>
+    </section>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- TELA: EDUCAÇÃO                    -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="screen" id="screen-educacao">
+      <div class="greeting">
+        <div class="greeting-row">
+          <div class="greeting-logo">🎓</div>
+          <div class="greeting-title">Aprenda com Darwin</div>
+        </div>
+        <div class="greeting-sub">Entenda os termos sem precisar ser do mercado</div>
+      </div>
+
+      <div class="section-label">Vídeos · em breve</div>
+
+      <div class="edu-card disabled" onclick="showToast('Em breve! 🚧')">
+        <div class="edu-thumb">
+          <div class="edu-thumb-icon-circle">▶</div>
+          <span class="edu-badge">Em breve</span>
+        </div>
+        <div class="edu-content">
+          <div class="edu-title">Como funcionam os juros de obra?</div>
+          <div class="edu-desc">Entenda por que sua parcela aumenta a cada mês</div>
+        </div>
+      </div>
+
+      <div class="edu-card disabled" onclick="showToast('Em breve! 🚧')">
+        <div class="edu-thumb">
+          <div class="edu-thumb-icon-circle">▶</div>
+          <span class="edu-badge">Em breve</span>
+        </div>
+        <div class="edu-content">
+          <div class="edu-title">O que é Taxa Referencial (TR)?</div>
+          <div class="edu-desc">A variável invisível que afeta suas parcelas</div>
+        </div>
+      </div>
+
+      <div class="edu-card disabled" onclick="showToast('Em breve! 🚧')">
+        <div class="edu-thumb">
+          <div class="edu-thumb-icon-circle">▶</div>
+          <span class="edu-badge">Em breve</span>
+        </div>
+        <div class="edu-content">
+          <div class="edu-title">Por que a parcela inicial é tão baixa?</div>
+          <div class="edu-desc">O efeito do saldo devedor pequeno no começo da obra</div>
+        </div>
+      </div>
+
+      <div class="section-label">Artigos · em breve</div>
+
+      <div class="edu-card disabled" onclick="showToast('Em breve! 🚧')">
+        <div class="edu-content" style="padding: 16px;">
+          <div class="edu-title">📖 Glossário do comprador na planta</div>
+          <div class="edu-desc">Saldo devedor, TR, evolução de obra, encargos... tudo explicado em linguagem simples</div>
+        </div>
+      </div>
+
+      <div class="edu-card disabled" onclick="showToast('Em breve! 🚧')">
+        <div class="edu-content" style="padding: 16px;">
+          <div class="edu-title">📰 Direitos do comprador</div>
+          <div class="edu-desc">O que você pode (e deve) cobrar da construtora durante a obra</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- TELA: SOBRE                       -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <section class="screen" id="screen-sobre">
+      <div class="about-hero">
+        <div class="about-logo">🏗️</div>
+        <div class="about-title">Darwin Juros</div>
+        <div class="about-tagline">Sua evolução sem surpresas</div>
+      </div>
+
+      <div class="about-block">
+        <div class="ab-title">💡 Por que o Darwin existe?</div>
+        <div class="ab-text">
+          Quem compra imóvel na planta sabe: as parcelas de juros de evolução de obra crescem mês a mês — e quase ninguém entende como. Construtoras e bancos raramente explicam de forma clara, e o comprador é pego de surpresa todo mês.
+          <br><br>
+          O Darwin nasceu pra resolver isso. Sem planilhas. Sem papel e caneta. Sem mensalidade cara.
+        </div>
+      </div>
+
+      <div class="about-block">
+        <div class="ab-title">🧮 Como funciona o cálculo</div>
+        <div class="ab-text">
+          Usamos a fórmula oficial da Caixa Econômica Federal, considerando: taxa mensal de juros do seu contrato, Taxa Referencial (TR) do mês, saldo devedor atual e seus encargos (seguro e taxa administrativa).
+        </div>
+      </div>
+
+      <div class="about-block">
+        <div class="ab-title">🔒 Seus dados são seus</div>
+        <div class="ab-text">
+          Tudo fica salvo apenas no seu celular. Não enviamos nada pra servidores, não criamos contas, não pedimos email. Você pode usar o Darwin offline depois de instalar.
+        </div>
+      </div>
+
+      <div class="about-block">
+        <div class="ab-title">💬 Sugestões e feedback</div>
+        <div class="ab-text">
+          O Darwin é construído com base no que você precisa. Tem uma ideia? Encontrou um bug? Quer pedir uma funcionalidade? Estamos sempre ouvindo.
+        </div>
+      </div>
+
+      <div class="about-meta">
+        Versão 1.0.0 (MVP) · <a href="#">Política de privacidade</a>
+        <br>
+        Feito com 💚 no Brasil
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-screen="nova" onclick="switchScreen(this)">
+      <span class="nav-btn-icon">➕</span>
+      <span class="nav-btn-label">Nova</span>
+    </button>
+    <button class="nav-btn" data-screen="perfis" onclick="switchScreen(this)">
+      <span class="nav-btn-icon">📁</span>
+      <span class="nav-btn-label">Perfis</span>
+    </button>
+    <button class="nav-btn" data-screen="educacao" onclick="switchScreen(this)">
+      <span class="nav-btn-icon">🎓</span>
+      <span class="nav-btn-label">Educação</span>
+    </button>
+    <button class="nav-btn" data-screen="sobre" onclick="switchScreen(this)">
+      <span class="nav-btn-icon">ℹ️</span>
+      <span class="nav-btn-label">Sobre</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  function switchScreen(btn) {
+    const target = btn.dataset.screen;
+
+    // Atualiza nav
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Atualiza tela
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + target).classList.add('active');
+
+    // Scroll para o topo
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+</script>
+
+</body>
+</html>

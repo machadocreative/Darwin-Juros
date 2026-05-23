@@ -73,7 +73,8 @@ function calcTable() {
       tr,
       previsto: (tm + tr) * saldo + enc,
       pago: false,
-      bloqueado: false
+      bloqueado: false,
+      valorReal: null
     });
   }
   return rows;
@@ -127,7 +128,8 @@ function adicionarLinha() {
     tr,
     previsto: (tm + tr) * saldo + enc,
     pago: false,
-    bloqueado: false
+    bloqueado: false,
+    valorReal: null
   });
   aplicaBloqueio();
   hasUnsavedChanges = true;
@@ -167,11 +169,19 @@ function atualizaSlider() {
   if (elVal)   elVal.innerHTML = `${fmtBRL(previsto)} <small>+ TR Mensal</small>`;
   if (elSaldo) elSaldo.textContent = fmtBRL(saldo);
 
+  const bloco = document.getElementById('slider-fin-bloco');
+  if (bloco && parseFloat(form.parcelaFinanciamento || 0) > 0) {
+    const fin  = parseFloat(form.parcelaFinanciamento);
+    const diff = fin - previsto;
+    bloco.className = 'slider-fin-bloco' + (diff < 0 ? ' slider-fin-danger' : '');
+    bloco.innerHTML = diff < 0
+      ? `🚨 Evolução de obra supera o financiamento em <span>+<strong>${fmtBRL(Math.abs(diff))}</strong></span>`
+      : `<span><strong>${fmtBRL(diff)}</strong></span> para igualar a parcela de financiamento`;
+  }
+
   if (isPremium()) {
     const percPaga = _ultimaPercPagaAtual();
-    if (elPerc) {
-      elPerc.textContent = perc + '%' + (percPaga > 0 && perc <= percPaga ? ' · já pago' : '');
-    }
+    if (elPerc) elPerc.textContent = perc + '%';
     _applySliderTrack(slider, percPaga, perc);
   } else {
     if (elPerc) elPerc.textContent = perc + '%';

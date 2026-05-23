@@ -3,12 +3,15 @@
 function novaSimulacao() {
   currentProfileId = null;
   window._editMode = null;
+  migrationSkipCheck = null;
   fluxo = 'complete';
   Object.keys(form).forEach(k => { form[k] = ''; });
   form.percFinanciado      = 80.00;
+  form.parcelaFinanciamento = null;
   form.historicoPagamentos = [];
   Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
-  formQuick.percObra = 50;
+  formQuick.percObra             = 50;
+  formQuick.parcelaFinanciamento = null;
   meses = []; currentStep = 0;
   renderBifurcacao();
 }
@@ -41,13 +44,178 @@ function editarSimulacao() {
 }
 
 function _iniciarEdicao() {
+  migrationSkipCheck = null;
   fluxo = 'complete';
-  const mesesBackup    = JSON.parse(JSON.stringify(meses));
+  const mesesBackup     = JSON.parse(JSON.stringify(meses));
   const profileIdBackup = currentProfileId;
   screen = 'onboarding';
   currentStep = 0;
   window._editMode = { mesesBackup, profileIdBackup };
-  renderStep();
+  renderEditScreen();
+}
+
+// ── TELA ÚNICA DE EDIÇÃO ──
+function renderEditScreen() {
+  const html = `
+    <div class="edit-screen">
+      <div class="step-card edit-intro-card">
+        <div class="step-title">Editar Simulação</div>
+        <div class="step-hint">Altere os campos desejados e confirme no final da página.</div>
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Valor do Imóvel</div>
+        ${questions.valorImovel.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Valor do Terreno</div>
+        ${questions.valorTerreno.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Taxa de Juros</div>
+        ${questions.taxaAnual.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Encargos Mensais</div>
+        ${questions.seguro.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">1ª Parcela do Financiamento — Opcional</div>
+        ${questions.parcelaFinanciamento.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Datas</div>
+        ${questions.mesInicial.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Histórico de Pagamentos — Opcional</div>
+        ${questions.historicoPagamentos.render()}
+      </div>
+
+      <div class="edit-section">
+        <div class="edit-section-title">Nome da Simulação</div>
+        ${questions.nomePerfil.render()}
+      </div>
+    </div>
+
+    <div class="edit-sticky-footer">
+      <button class="btn btn-back" onclick="cancelarEdicao()">← Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarEdicao()">Confirmar →</button>
+    </div>`;
+
+  setHtml(html);
+
+  setTimeout(() => {
+    questions.valorImovel.init();
+    questions.valorTerreno.init();
+    questions.taxaAnual.init();
+    questions.seguro.init();
+    questions.parcelaFinanciamento.init();
+    questions.mesInicial.init();
+    questions.historicoPagamentos.init();
+    questions.nomePerfil.init();
+  }, 80);
+}
+
+function confirmarEdicao() {
+  if (!questions.valorImovel.validate())  return;
+  questions.valorImovel.save(); // necessário antes de valorTerreno e parcelaFinanciamento validarem
+  if (!questions.valorTerreno.validate()) return;
+  if (!questions.taxaAnual.validate())    return;
+  if (!questions.seguro.validate())       return;
+  if (!questions.parcelaFinanciamento.validate()) return;
+  if (!questions.mesInicial.validate())   return;
+  if (!questions.nomePerfil.validate())   return;
+
+  questions.valorTerreno.save();
+  questions.taxaAnual.save();
+  questions.seguro.save();
+  questions.parcelaFinanciamento.save();
+  questions.mesInicial.save();
+  questions.historicoPagamentos.save();
+  questions.nomePerfil.save();
+
+  _finalizarOnboarding();
+}
+
+function cancelarEdicao() {
+  window._editMode = null;
+  screen = 'result';
+  renderResult();
+}
+
+// ── MODAL RENOMEAR PERFIL ──
+function abrirRenomearPerfil(targetId) {
+  const id = (targetId !== undefined && targetId !== null) ? targetId : currentProfileId;
+  const profiles = loadProfiles();
+  const p = id ? profiles.find(pr => pr.id === id) : null;
+  const nomeAtual = p ? p.nome : (form.nomeSimulacao || '');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-renomear-overlay';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-header">Como deseja chamar essa simulação?</div>
+      <input type="hidden" id="modal-target-id" value="${escHtml(id || '')}">
+      <input type="text" id="modal-nome-input" class="modal-input" placeholder="Apto 101"
+        maxlength="30" value="${escHtml(nomeAtual)}"
+        oninput="document.getElementById('modal-char-count').textContent=this.value.length+' / 30'">
+      <div class="char-count" id="modal-char-count">${nomeAtual.length} / 30</div>
+      <div class="modal-actions">
+        <button class="btn btn-back" onclick="fecharModalRenomear()">← Cancelar</button>
+        <button class="btn btn-primary" onclick="confirmarRenomearPerfil()">Confirmar →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const el = document.getElementById('modal-nome-input');
+  if (el) { el.focus(); el.select(); }
+}
+
+function fecharModalRenomear() {
+  const overlay = document.getElementById('modal-renomear-overlay');
+  if (overlay) overlay.remove();
+}
+
+function confirmarRenomearPerfil() {
+  const el = document.getElementById('modal-nome-input');
+  const hiddenId = document.getElementById('modal-target-id');
+  if (!el) return;
+
+  const raw = sanitizeName(el.value) || 'Apto 101';
+  const targetId = hiddenId?.value || null;
+
+  const profiles = loadProfiles();
+  const duplicado = profiles.find(p => p.nome.toLowerCase() === raw.toLowerCase() && p.id !== targetId);
+  if (duplicado) {
+    el.classList.add('invalid');
+    showToast('⚠️ Já existe um perfil com esse nome. Utilize um nome diferente.');
+    return;
+  }
+
+  if (targetId) {
+    const idx = profiles.findIndex(p => p.id === targetId);
+    if (idx >= 0) { profiles[idx].nome = raw; saveProfiles(profiles); }
+  }
+
+  if (targetId === currentProfileId) {
+    form.nomeSimulacao = raw;
+  } else if (!targetId && currentProfileId === null) {
+    form.nomeSimulacao = raw;
+    hasUnsavedChanges = true;
+  }
+
+  fecharModalRenomear();
+  showToast('✅ Simulação renomeada.');
+
+  if (screen === 'result') renderResult();
+  else if (screen === 'profiles') renderProfiles();
 }
 
 // ── BIFURCAÇÃO INICIAL ──
@@ -65,8 +233,7 @@ function renderBifurcacao() {
           </div>
         </button>
 
-        <!-- VERSÃO BETA SEM A SIMULAÇÃO COMPLETA -->
-        <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('complete')" disabled title="Em breve">
+        <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('onboarding')" title="Em breve">
           <span class="bifurc-icon">📋</span>
           <div>
             <div class="bifurc-label">Simulação detalhada</div>
@@ -80,87 +247,14 @@ function renderBifurcacao() {
 function escolherFluxo(f) {
   fluxo = f;
   if (f === 'quick') {
-    screen = 'quick'; currentStep = 0; renderQuickStep();
+    initFlow(FLOW_QUICKSIM); screen = 'quick'; currentStep = 0; renderFlowStep();
   } else {
-    screen = 'onboarding'; currentStep = 0; renderStep();
+    initFlow(FLOW_FULLSIM); screen = 'onboarding'; currentStep = 0; renderFlowStep();
   }
 }
 
-// ── VALIDAÇÃO E AVANÇO DE PASSOS ──
-function nextStep() {
-  try {
-    if (currentStep === 0) {
-      const elIni = document.getElementById('inp-mesInicial');
-      const elFim = document.getElementById('inp-mesEntrega');
-      if (!elIni.value) { markError('inp-mesInicial'); return; }
-      if (!elFim.value) { markError('inp-mesEntrega'); return; }
-      const ini = parseMS(elIni.value), fim = parseMS(elFim.value);
-      if (mBetween(ini, fim) < 1) { markError('inp-mesEntrega'); showToast('⚠️ A data de entrega deve ser após a 1ª parcela.'); return; }
-      form.mesInicial = elIni.value;
-      form.mesEntrega = elFim.value;
-
-    } else if (currentStep === 1) {
-      const elVT = document.getElementById('inp-valorTotal');
-      const elPF = document.getElementById('inp-percFinanciado');
-      const v  = maskRead(elVT);
-      const pf = maskRead(elPF);
-      if (!v || v <= 0)               { elVT?.classList.add('invalid'); return; }
-      if (!pf || pf <= 10 || pf > 80) { elPF?.classList.add('invalid'); showToast('⚠️ O percentual financiado deve ser entre 10% e 80%.'); return; }
-      form.valorTotal     = String(v);
-      form.percFinanciado = pf;
-
-    } else if (currentStep === 2) {
-      const elTer = document.getElementById('inp-valorTerreno');
-      const v = maskRead(elTer);
-      const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
-      if (!v || v <= 0) { elTer?.classList.add('invalid'); return; }
-      if (v >= fin) { elTer?.classList.add('invalid'); document.getElementById('err-terreno').style.display = 'block'; return; }
-      form.valorTerreno = String(v);
-
-    } else if (currentStep === 3) {
-      const elTa = document.getElementById('inp-taxaAnual');
-      const v = maskRead(elTa);
-      if (!v || v <= 0) { elTa?.classList.add('invalid'); return; }
-      form.taxaAnual = String(v);
-
-    } else if (currentStep === 4) {
-      const elSeg = document.getElementById('inp-seguro');
-      const elAdm = document.getElementById('inp-taxaAdm');
-      const s = maskRead(elSeg);
-      if (!s || s <= 0) { elSeg?.classList.add('invalid'); return; }
-      form.seguro  = String(s);
-      form.taxaAdm = String(maskRead(elAdm) || 25);
-
-    } else if (currentStep === 5) {
-      // Coleta histórico de pagamentos da mini-tabela (opcional)
-      const rows = [];
-      let i = 0;
-      while (document.getElementById(`hist-val-${i}`)) {
-        const el = document.getElementById(`hist-val-${i}`);
-        const v  = maskRead(el);
-        rows.push({ valor: isNaN(v) || v < 0 ? 0 : v });
-        i++;
-      }
-      form.historicoPagamentos = rows;
-
-    } else if (currentStep === 6) {
-      const raw = sanitizeName(document.getElementById('inp-nome').value) || 'Apto 101';
-      const profiles = loadProfiles();
-      const duplicado = profiles.find(p => p.nome.toLowerCase() === raw.toLowerCase() && p.id !== currentProfileId);
-      if (duplicado) { showToast('⚠️ Já existe um perfil com esse nome. Utilize um nome diferente.'); markError('inp-nome'); return; }
-      form.nomeSimulacao = raw;
-    }
-
-    currentStep++;
-    if (currentStep >= 7) {
-      _finalizarOnboarding();
-    } else {
-      renderStep();
-    }
-  } catch (e) { console.error(e); }
-}
-
 function _finalizarOnboarding() {
+  migrationSkipCheck = null;
   const edit = window._editMode;
   if (edit) {
     const newTable = calcTable();
@@ -186,17 +280,24 @@ function _finalizarOnboarding() {
     });
     meses.forEach((_, i) => recalcRow(i));
     aplicaBloqueio();
+    // Aplica valorReal a partir de form.historicoPagamentos (fonte de verdade — mantida em sync por _syncValorRealToForm e historicoPagamentos.save)
+    const histEdit  = form.historicoPagamentos || [];
+    const ativasEdit = meses.filter(r => !r.bloqueado);
+    histEdit.forEach((entry, j) => {
+      if (j < ativasEdit.length) ativasEdit[j].valorReal = entry.valor > 0 ? entry.valor : null;
+    });
     currentProfileId  = edit.profileIdBackup;
     window._editMode  = null;
     hasUnsavedChanges = true;
   } else {
     meses = calcTable();
-    // Aplica histórico de pagamentos (tela 6) se o usuário preencheu
+    // Aplica histórico de pagamentos (tela 7) e popula valorReal
     const hist = form.historicoPagamentos || [];
     const ativas = meses.filter(r => !r.bloqueado);
     hist.forEach((entry, i) => {
       if (i < ativas.length && entry.valor > 0) {
         ativas[i].pago = true;
+        ativas[i].valorReal = entry.valor;
       }
     });
     aplicaBloqueio();
@@ -206,204 +307,7 @@ function _finalizarOnboarding() {
   renderResult();
 }
 
-function prevStep() {
-  if (currentStep > 0) { currentStep--; renderStep(); }
-}
 
-// ── RENDER DAS TELAS DO ONBOARDING ──
-function renderStep() {
-  const fin_val = form.valorTotal ? parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) : 0;
-  const ter = parseFloat(form.valorTerreno) || 0;
-  const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
-  const seg = parseFloat(form.seguro) || 0;
-  const ta  = parseFloat(form.taxaAnual) || 0;
-
-  // Tela 5: gera linhas da mini-tabela de histórico
-  // Usa os dados já salvos em form.historicoPagamentos, ou começa vazia com 1 linha
-  const histRows = (form.historicoPagamentos && form.historicoPagamentos.length > 0)
-    ? form.historicoPagamentos
-    : [{ valor: 0 }];
-
-  function _buildHistRows(rows) {
-    return rows.map((r, i) => {
-      const mesLabel = form.mesInicial
-        ? mLabel(addM(parseMS(form.mesInicial), i))
-        : `Parcela ${i + 1}`;
-      return `<tr>
-        <td class="num-col">${i + 1}</td>
-        <td class="td-mes" style="font-size:12px">${mesLabel}</td>
-        <td class="td-right">
-          <div class="input-wrap">
-            <span class="pre" style="font-size:12px">R$</span>
-            <input type="text" id="hist-val-${i}" class="has-pre hist-val-input"
-              placeholder="0,00" inputmode="numeric"
-              oninput="maskOnInput(this)">
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
-  }
-
-  const steps = [
-    // Passo 0 — Datas
-    `<div class="step-num">01 / 07</div>
-    <div class="step-title">Quando inicia o pagamento de Juros de Evolução de Obra?</div>
-    <div class="step-hint">Mês da sua primeira prestação.</div>
-    <input type="month" id="inp-mesInicial" value="${form.mesInicial}" oninput="atualizaMesesStep0();this.classList.remove('invalid')">
-    <br><br>
-    <div class="step-title">Qual a data de entrega prevista?</div>
-    <div class="step-hint">A data de entrega define quantos meses de evolução serão simulados.</div>
-    <input type="month" id="inp-mesEntrega" value="${form.mesEntrega}" oninput="atualizaMesesStep0();this.classList.remove('invalid')">
-    <div id="badge-meses"></div>
-    <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que for necessário.</div>`,
-
-    // Passo 1 — Valor do imóvel
-    `<div class="step-num">02 / 07</div>
-    <div class="step-title">Qual o valor do seu imóvel?</div>
-    <div class="step-hint">O valor total do apartamento conforme contrato.</div>
-    <label class="field-label">Valor total</label>
-    <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-valorTotal" class="has-pre" placeholder="300.000,00" inputmode="numeric" oninput="atualizaFin()"></div>
-    <div class="field-group">
-      <label class="field-label">Percentual financiado</label>
-      <div class="input-wrap"><input type="text" id="inp-percFinanciado" class="has-suf" placeholder="80,00" inputmode="numeric" oninput="atualizaFin()"><span class="suf">%</span></div>
-    </div>
-    <div class="diff-box" id="box-fin" style="${fin_val > 0 ? '' : 'display:none'}">
-      <div class="d-title">Composição dos valores</div>
-      <div class="diff-row"><span class="d-label">Valor total do imóvel</span><span class="d-val" id="val-total">${fin_val > 0 ? fmtBRL(parseFloat(form.valorTotal)) : ''}</span></div>
-      <div class="diff-row"><span class="d-label">(−) Valor não financiado (<span id="val-perc-label">${form.percFinanciado || 80}</span>% → <span id="val-nfin-perc">${parseFloat((100 - parseFloat(form.percFinanciado || 80)).toFixed(2))}</span>%)</span><span class="d-val" id="val-nfin">${fin_val > 0 ? fmtBRL(parseFloat(form.valorTotal) - fin_val) : ''}</span></div>
-      <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Valor financiado</span><span class="d-val" id="val-fin">${fin_val > 0 ? fmtBRL(fin_val) : ''}</span></div>
-    </div>`,
-
-    // Passo 2 — Terreno
-    `<div class="step-num">03 / 07</div>
-    <div class="step-title">Qual o valor do terreno?</div>
-    <div class="step-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
-    <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-valorTerreno" class="has-pre" placeholder="10.000,00" inputmode="numeric" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
-    <div class="error-msg" id="err-terreno">O valor do terreno deve ser menor que o total financiado (${fmtBRL(fin)}).</div>
-    <div class="diff-box" id="box-ter" style="${ter > 0 ? '' : 'display:none'}">
-      <div class="d-title">Composição do financiamento</div>
-      <div class="diff-row"><span class="d-label">Valor total financiado</span><span class="d-val">${fmtBRL(fin)}</span></div>
-      <div class="diff-row"><span class="d-label">(−) Terreno</span><span class="d-val" id="d-ter">${ter > 0 ? fmtBRL(ter) : '—'}</span></div>
-      <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Saldo devedor repassado à Construtora</span><span class="d-val" id="d-saldo">${ter > 0 ? fmtBRL(fin - ter) : '—'}</span></div>
-    </div>
-    <div class="info-box">💡 O valor do terreno é considerado como saldo devedor desde o primeiro mês. Isso explica porque você terá pagamento de parcelas mesmo em 0% de Evolução de Obra.</div>`,
-
-    // Passo 3 — Taxa de juros
-    `<div class="step-num">04 / 07</div>
-    <div class="step-title">Qual a Taxa de Juros anual do seu Financiamento?</div>
-    <div class="step-hint">O app irá converter sua taxa anual para mensal abaixo.</div>
-    <div class="input-wrap"><input type="text" id="inp-taxaAnual" class="has-suf" placeholder="5,4321" inputmode="numeric" oninput="maskOnInput(this);this.classList.remove('invalid');atualizaTaxa()"><span class="suf">% a.a.</span></div>
-    <div class="diff-box" id="box-taxa" style="${ta > 0 ? '' : 'display:none'}">
-    
-      <div class="d-title">Como funcionam os juros na prestação de Evolução de Obra?</div>
-      <div class="diff-row"><span class="d-label">Taxa de Juros Mensal</span><span class="d-val" id="val-taxa-mensal">${ta > 0 ? fmtPerc(ta / 12, 4) : ''}</span></div>
-      <div class="diff-row"><span class="d-label">(+) Taxa Referencial do mês</span><span class="d-val">0,1000%</span></div>
-      <hr class="diff-divider">
-      <div class="diff-row hl"><span class="d-label">Taxa de Juros no cálculo da Evolução</span><span class="d-val" id="val-taxa">${ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : ''}</span></div>
-    </div>
-    <div class="info-box">💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.</div>`,
-
-    // Passo 4 — Encargos
-    `<div class="step-num">05 / 07</div>
-    <div class="step-title">Quais os seus encargos mensais?</div>
-    <div class="step-hint">Valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
-    <label class="field-label">1. Seguro</label>
-    <div class="label-hint">O valor de seguro é único para cada comprador — Verifique no seu contrato.</div>
-    <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-seguro" class="has-pre" placeholder="00,00" inputmode="numeric" oninput="atualizaEncargos();this.classList.remove('invalid')"></div>
-
-    <div class="field-group">
-      <label class="field-label">2. Taxa Administrativa</label>
-      <div class="label-hint">A Taxa de Administração da Caixa Econômica possui um valor fixo de R$ 25,00.</div>
-      <div class="input-wrap"><span class="pre">R$</span><input type="text" id="inp-taxaAdm" class="has-pre" placeholder="25,00" inputmode="numeric" oninput="atualizaEncargos()"></div>
-    </div>
-
-    <div class="confirm-box" id="box-enc" style="${seg > 0 ? '' : 'display:none'}">
-      <div><div class="c-label">Total de encargos mensais</div></div>
-      <div class="c-val" id="val-enc">${seg > 0 ? fmtBRL(seg + 25) : ''}</div>
-    </div>`,
-
-    // Passo 5 — Histórico de pagamentos (opcional)
-    `<div class="step-num">06 / 07</div>
-    <div class="step-title">Você já pagou alguma parcela? — Opcional</div>
-    <div class="step-hint">Informe os valores de meses já debitados para acompanhamento. Deixe em branco se quiser pular ou se ainda não pagou nenhuma parcela.<br></div>
-    <div class="table-wrap" id="hist-table-wrap">
-      <table>
-        <thead><tr>
-          <th class="th-center">#</th>
-          <th>Mês</th>
-          <th class="th-right">Valor pago</th>
-        </tr></thead>
-        <tbody id="hist-tbody">${_buildHistRows(histRows)}</tbody>
-      </table>
-      <div class="row-controls">
-        <span class="rc-info" id="hist-rc-info">Use + / − para adicionar ou remover parcelas.</span>
-        <button class="rc-btn" id="hist-btn-rem" onclick="histRemoverLinha()" ${histRows.length <= 1 ? 'disabled' : ''}>−</button>
-        <button class="rc-btn" id="hist-btn-add" onclick="histAdicionarLinha()">+</button>
-      </div>
-    </div>`,
-
-    // Passo 6 — Nome do Perfil
-    `<div class="step-num">07 / 07</div>
-    <div class="step-title">Como quer chamar essa simulação?</div> 
-    <div class="step-hint">Máximo 30 caracteres. Ex: Apto Centro, Torre B, Meu apê...</div>
-    <input type="text" id="inp-nome" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao || '')}" maxlength="30" oninput="updateCharCount(this)">
-    <div class="char-count" id="char-count">0 / 30</div>`
-  ];
-
-  const btnLabel = currentStep === 6 ? 'Ver resultados →' : (currentStep === 1 ? 'Confirmar e continuar →' : 'Continuar →');
-  setHtml(`
-    ${renderProgress()}
-    <div class="step-card">
-      ${steps[currentStep]}
-      <button class="btn btn-primary" onclick="nextStep()">${btnLabel}</button>
-      ${currentStep > 0 ? '<button class="btn btn-back" onclick="prevStep()">← Voltar</button>' : ''}
-    </div>`);
-
-  // Inicializações pós-render
-  if (currentStep === 0) setTimeout(() => {
-    if (form.mesInicial && form.mesEntrega) atualizaMesesStep0();
-  }, 50);
-  if (currentStep === 2) setTimeout(() => { if (ter > 0) atualizaTer(); }, 50);
-  if (currentStep === 5) setTimeout(() => { _initHistMasks(); }, 80);
-  if (currentStep === 6) setTimeout(() => { const el = document.getElementById('inp-nome'); if (el) updateCharCount(el); }, 50);
-
-  // Aplica máscaras após render
-  setTimeout(() => {
-    if (currentStep === 1) {
-      attachMask('inp-valorTotal',     'brl',   form.valorTotal || '');
-      attachMask('inp-percFinanciado', 'perc2', form.percFinanciado || 80);
-      const vt = document.getElementById('inp-valorTotal');
-      const pf = document.getElementById('inp-percFinanciado');
-      if (vt) vt.oninput = () => { maskValue(vt, 'brl');   vt.classList.remove('invalid'); atualizaFin(); };
-      if (pf) pf.oninput = () => { maskValue(pf, 'perc2'); pf.classList.remove('invalid'); atualizaFin(); };
-    }
-    if (currentStep === 2) {
-      attachMask('inp-valorTerreno', 'brl', form.valorTerreno || '');
-      const vt = document.getElementById('inp-valorTerreno');
-      if (vt) vt.oninput = () => { maskValue(vt, 'brl'); vt.classList.remove('invalid'); document.getElementById('err-terreno').style.display = 'none'; atualizaTer(); };
-    }
-    if (currentStep === 3) {
-      attachMask('inp-taxaAnual', 'perc4', form.taxaAnual || '');
-      const ta = document.getElementById('inp-taxaAnual');
-      if (ta) ta.oninput = () => { maskValue(ta, 'perc4'); ta.classList.remove('invalid'); atualizaTaxa(); };
-      if (form.taxaAnual) atualizaTaxa();
-    }
-    if (currentStep === 4) {
-      attachMask('inp-seguro',  'brl', form.seguro  || '');
-      attachMask('inp-taxaAdm', 'brl', form.taxaAdm || 25);
-      const seg = document.getElementById('inp-seguro');
-      const adm = document.getElementById('inp-taxaAdm');
-      if (seg) seg.oninput = () => { maskValue(seg, 'brl'); seg.classList.remove('invalid'); atualizaEncargos(); };
-      if (adm) adm.oninput = () => { maskValue(adm, 'brl'); atualizaEncargos(); };
-    }
-    if (currentStep !== 5) {
-      const f = document.querySelector('.step-card input');
-      if (f) f.focus();
-    }
-  }, 80);
-}
 
 // ── ATUALIZAÇÕES INLINE DOS CAMPOS ──
 
@@ -526,7 +430,7 @@ function histAdicionarLinha() {
         <span class="pre" style="font-size:12px">R$</span>
         <input type="text" id="hist-val-${i}" class="has-pre hist-val-input"
           placeholder="0,00" inputmode="numeric"
-          oninput="maskOnInput(this)">
+          oninput="maskOnInput(this);_atualizaSomatorio()">
       </div>
     </td>`;
   tbody.appendChild(tr);
@@ -543,4 +447,17 @@ function histRemoverLinha() {
   if (count <= 1) return;
   tbody.removeChild(tbody.lastElementChild);
   _updateHistControls();
+  _atualizaSomatorio();
+}
+
+function _atualizaSomatorio() {
+  let total = 0, i = 0;
+  while (document.getElementById(`hist-val-${i}`)) {
+    total += maskRead(document.getElementById(`hist-val-${i}`)) || 0;
+    i++;
+  }
+  const box = document.getElementById('box-somatorio');
+  const val = document.getElementById('val-somatorio');
+  if (box) box.style.display = total > 0 ? 'block' : 'none';
+  if (val) val.textContent   = fmtBRL(total);
 }

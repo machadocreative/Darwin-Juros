@@ -1,7 +1,6 @@
 // ── CONSTANTES ──
 const MAX_MESES = 48;
 const STORAGE_KEY = 'juros_obra_perfis';
-const TOTAL_STEPS = 6; // simulação completa: 7 passos (0–6)
 const CUPOM_VALIDO = 'DARWIN10';
 
 // ── ESTADO GLOBAL ──
@@ -10,6 +9,7 @@ let currentProfileId = null;
 let screen = 'profiles'; // 'profiles' | 'bifurcacao' | 'onboarding' | 'result' | 'tabela' | 'quick' | 'resultQuick'
 let hasUnsavedChanges = false;
 let fluxo = 'complete'; // 'quick' | 'complete'
+let migrationSkipCheck = null; // fn(questionKey) => bool — set during QuickSim→FullSim migration
 
 // ── DADOS DO FORMULÁRIO (simulação completa) ──
 const form = {
@@ -18,20 +18,22 @@ const form = {
   valorTerreno: '',
   seguro: '', taxaAdm: '',
   taxaAnual: '',
+  parcelaFinanciamento: null, // R$ — opcional
   nomeSimulacao: '',
-  historicoPagamentos: []  // [{ valor: Number }] — uma entrada por parcela paga (tela 6)
+  historicoPagamentos: []  // [{ valor: Number }] — uma entrada por parcela paga
 };
 
 // ── DADOS DO FORMULÁRIO (simulação rápida) ──
 const formQuick = {
+  valorTotal:            '',   // R$ — valor total do imóvel (entrada + financiamento)
+  totalFinanciado:       '',   // R$ — valor do financiamento (crédito liberado pelo banco)
+  saldoAtual:            '',   // R$ — saldo devedor repassado à construtora até o momento
+  taxaAnual:             '',   // % a.a.
   seguro:                '',   // R$
   taxaAdm:               '',   // R$
-  saldoDevedor:          '',   // R$
-  taxaAnual:             '',   // % a.a.
-  percObra:              50,   // % — posição do slider / input manual
-  ultimaParcela:         '',   // R$ — valor da última parcela paga (tela 5)
-  mesParcela:            '',   // YYYY-MM — mês da última parcela paga (tela 5)
-  parcelaFinanciamento:  null  // R$ — parcela de financiamento (tela 6, opcional)
+  percObra:              50,   // % — evolução de obra informada/calculada
+  mesMedido:             '',   // YYYY-MM — mês de referência da medição
+  parcelaFinanciamento:  null  // R$ — opcional, para comparação no resultado
 };
 
 let meses = [];

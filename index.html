@@ -66,26 +66,32 @@
 
 <!-- ── SCRIPTS: ordem importa (dependências primeiro) ── -->
 
-<!-- 1. Estado global e constantes -->
+
+<!-- 1. Estado e storage -->
 <script src="js/core/state.js"></script>
 
 <!-- 2. Storage (depende de state) -->
 <script src="js/core/storage.js"></script>
 
-<!-- 3. Utilitários (dependem de state) -->
+<!-- 3. Utilitários -->
 <script src="js/utils/format.js"></script>
 <script src="js/utils/ui.js"></script>
 
-<!-- 4. Cálculo (depende de state + utils) -->
+<!-- 4. Cálculos (depende de state + utils) -->
 <script src="js/modules/calculator.js"></script>
 
-<!-- 5. Módulos de tela (dependem de tudo acima) -->
+<!-- 5. Questões e fluxos (order: questions → flows → engine) -->
+<script src="js/modules/questions.js"></script>
+<script src="js/modules/flows.js"></script>
+<script src="js/modules/flowEngine.js"></script>
+
+<!-- 6. Módulos de tela -->
 <script src="js/modules/onboarding.js"></script>
 <script src="js/modules/quickSim.js"></script>
 <script src="js/modules/result.js"></script>
 <script src="js/modules/paywall.js"></script>
 
-<!-- 6. Inicialização (deve ser o último) -->
+<!-- 7. Inicialização (sempre o último) -->
 <script src="js/main.js"></script>
 
 </body>
