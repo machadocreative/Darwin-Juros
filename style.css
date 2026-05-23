@@ -187,6 +187,7 @@
         border-radius: var(--radius);
         padding: 28px 24px 24px;
         animation: fadeUp .2s ease;
+        position: relative;
     }
 
     @keyframes fadeUp {
@@ -1182,35 +1183,35 @@
     pointer-events: none;
 }
 
-/* Opção A — simulação detalhada */
-.btn-bifurc.bifurc-a {
+/* Opção full — simulação detalhada */
+.btn-bifurc.bifurc-full {
     background: var(--accent-light);
     border-color: #A8D5BC;
 }
-.btn-bifurc.bifurc-a:hover {
+.btn-bifurc.bifurc-full:hover {
     border-color: var(--accent);
 }
-.btn-bifurc.bifurc-a .bifurc-icon {
+.btn-bifurc.bifurc-full .bifurc-icon {
     background: var(--accent);
     color: #fff;
 }
-.btn-bifurc.bifurc-a .bifurc-label {
+.btn-bifurc.bifurc-full .bifurc-label {
     color: var(--accent-dark);
 }
 
-/* Opção B — simulação rápida */
-.btn-bifurc.bifurc-b {
+/* Opção quick — simulação rápida */
+.btn-bifurc.bifurc-quick {
     background: #EEF6FB;
     border-color: #B2D4E8;
 }
-.btn-bifurc.bifurc-b:hover {
+.btn-bifurc.bifurc-quick:hover {
     border-color: var(--blue);
 }
-.btn-bifurc.bifurc-b .bifurc-icon {
+.btn-bifurc.bifurc-quick .bifurc-icon {
     background: var(--blue);
     color: #fff;
 }
-.btn-bifurc.bifurc-b .bifurc-label {
+.btn-bifurc.bifurc-quick .bifurc-label {
     color: var(--blue);
 }
 
@@ -1892,42 +1893,28 @@ dl.slider-result-row dd.slider-result-val.accent span {
 }
 
 
-/* ── SISTEMA DE AJUDA VISUAL ── */
-.help-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--border);
-}
-
-.help-toggle {
+/* ── BOTÃO DE AJUDA (modal) ── */
+.help-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-family: var(--font);
-  font-size: 13px;
-  color: var(--text);
-  cursor: pointer;
-  transition: all .15s;
-  text-align: left;
+  justify-content: center;
+  line-height: 1;
+  transition: border-color .15s, background .15s;
 }
 
-.help-toggle:hover {
-  background: #f0f0ee;
+.help-btn:hover {
+  background: var(--accent-light);
   border-color: var(--accent);
-}
-
-.help-content {
-  margin-top: 12px;
-  padding: 12px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  animation: fadeIn .2s ease;
 }
 
 @keyframes fadeIn {

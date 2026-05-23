@@ -218,40 +218,6 @@ function confirmarRenomearPerfil() {
   else if (screen === 'profiles') renderProfiles();
 }
 
-// ── BIFURCAÇÃO INICIAL ──
-function renderBifurcacao() {
-  screen = 'bifurcacao';
-  setHtml(`
-    <div class="step-card">
-      <div class="step-title">O que você precisa agora?</div>
-      <div class="step-hint">Escolha o tipo de simulação.</div>
-        <button class="btn-bifurc bifurc-b" onclick="escolherFluxo('quick')">
-          <span class="bifurc-icon">⚡</span>
-          <div>
-            <div class="bifurc-label">Simulação rápida</div>
-            <div class="bifurc-sub">Descubra de forma aproximada quais serão suas próximas prestações. Apenas 4 perguntas.</div>
-          </div>
-        </button>
-
-        <button class="btn-bifurc bifurc-a" onclick="escolherFluxo('onboarding')" title="Em breve">
-          <span class="bifurc-icon">📋</span>
-          <div>
-            <div class="bifurc-label">Simulação detalhada</div>
-            <div class="bifurc-sub">Recomendado para quem quer ter mais controle de todas as prestações desde o início da obra. EM BREVE.</div>
-          </div>
-        </button>
-    </div>
-  `);
-}
-
-function escolherFluxo(f) {
-  fluxo = f;
-  if (f === 'quick') {
-    initFlow(FLOW_QUICKSIM); screen = 'quick'; currentStep = 0; renderFlowStep();
-  } else {
-    initFlow(FLOW_FULLSIM); screen = 'onboarding'; currentStep = 0; renderFlowStep();
-  }
-}
 
 function _finalizarOnboarding() {
   migrationSkipCheck = null;

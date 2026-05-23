@@ -21,11 +21,29 @@ function renderProgress() {
   ).join('')}</div>`;
 }
 
-// ── TOGGLE AJUDA VISUAL ──
-function toggleHelp(id) {
-  const content = document.getElementById(id);
-  if (!content) return;
-  content.style.display = content.style.display === 'none' ? 'block' : 'none';
+// ── MODAL DE AJUDA ──
+function openHelpModal(questionKey) {
+  const q = questions[questionKey];
+  if (!q?.help) return;
+  const { title, img, alt, caption } = q.help;
+  const overlay = document.createElement('div');
+  overlay.id = 'help-modal-overlay';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-header">${title || 'Como encontrar?'}</div>
+      ${img ? `<img src="${img}" alt="${alt || ''}" class="help-image">` : ''}
+      <p class="help-caption">${caption}</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeHelpModal()">Entendi ✓</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeHelpModal(); });
+  document.body.appendChild(overlay);
+}
+
+function closeHelpModal() {
+  document.getElementById('help-modal-overlay')?.remove();
 }
 
 function updateCharCount(inp) {

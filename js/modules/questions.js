@@ -39,6 +39,12 @@ const questions = {
   taxaAnual: {
     id: QUESTION_IDS.taxaAnual,
     maskType: 'perc4',
+    help: {
+      title: 'Onde encontrar a taxa?',
+      img: 'data/ajuda-taxa-juros.png',
+      alt: 'Onde encontrar taxa de juros',
+      caption: 'Consulte seu contrato ou app Habitação Caixa'
+    },
     render: () => {
       const ta = parseFloat(form.taxaAnual) || parseFloat(formQuick.taxaAnual) || 0;
       return `
@@ -57,15 +63,7 @@ const questions = {
           <div class="diff-row hl"><span class="d-label">Taxa de Juros para cálculo</span><span class="d-val" id="val-taxa">${ta > 0 ? fmtPerc(ta / 12 + 0.1, 4) : '—'}</span></div>
         </div>
         <div class="info-box">💡 Aqui utilizamos TR de 0,1000% apenas como exemplo didático. O valor oficial é divulgado pelo Banco Central todos os meses.</div>
-        <div class="help-section">
-          <button class="help-toggle" onclick="toggleHelp('help-taxa')">
-            ❓ Não sabe onde encontrar esse valor?
-          </button>
-          <div class="help-content" id="help-taxa" style="display:none">
-            <img src="data/ajuda-taxa-juros.png" alt="Onde encontrar taxa de juros" class="help-image">
-            <p class="help-caption">Consulte seu contrato ou app Habitação Caixa</p>
-          </div>
-        </div>`;
+        `;
     },
     validate: () => {
       const el = document.getElementById(QUESTION_IDS.taxaAnual);
@@ -100,6 +98,12 @@ const questions = {
   seguro: {
     id: QUESTION_IDS.seguro,
     maskType: 'brl',
+    help: {
+      title: 'Onde encontrar os encargos?',
+      img: 'data/ajuda-encargos.png',
+      alt: 'Onde encontrar encargos',
+      caption: 'Consulte seu extrato bancário ou contrato'
+    },
     render: () => {
       const seg = parseFloat(form.seguro) || parseFloat(formQuick.seguro) || 0;
       const adm = parseFloat(form.taxaAdm) || parseFloat(formQuick.taxaAdm) || 25;
@@ -126,15 +130,7 @@ const questions = {
           <div><div class="c-label">Total de encargos mensais</div></div>
           <div class="c-val" id="val-enc">${seg > 0 ? fmtBRL(seg + adm) : ''}</div>
         </div>
-        <div class="help-section">
-          <button class="help-toggle" onclick="toggleHelp('help-encargos')">
-            ❓ Não sabe onde encontrar esses valores?
-          </button>
-          <div class="help-content" id="help-encargos" style="display:none">
-            <img src="data/ajuda-encargos.png" alt="Onde encontrar encargos" class="help-image">
-            <p class="help-caption">Consulte seu extrato bancário ou contrato</p>
-          </div>
-        </div>`;
+        `;
     },
     validate: () => {
       const el = document.getElementById(QUESTION_IDS.seguro);
@@ -253,6 +249,10 @@ const questions = {
   valorImovel: {
     id: QUESTION_IDS.valorTotal,
     maskType: 'brl',
+    help: {
+      title: 'Onde encontrar esses valores?',
+      caption: 'Consulte seu contrato ou app Habitação Caixa'
+    },
     render: () => {
       const vt  = parseFloat(formQuick.valorTotal || form.valorTotal || 0);
       const fin = parseFloat(
@@ -290,14 +290,7 @@ const questions = {
           <hr class="diff-divider">
           <div class="diff-row hl"><span class="d-label">Valor financiado (<span id="dq-perc-fin">${showBox ? fmtPerc((fin / vt) * 100, 1) : '—'}</span>)</span><span class="d-val" id="dq-fin">${showBox ? fmtBRL(fin) : '—'}</span></div>
         </div>
-        <div class="help-section">
-          <button class="help-toggle" onclick="toggleHelp('help-imovel-quick')">
-            ❓ Não sabe onde encontrar esse valor?
-          </button>
-          <div class="help-content" id="help-imovel-quick" style="display:none">
-            <p class="help-caption">Consulte seu contrato ou app Habitação Caixa</p>
-          </div>
-        </div>`;
+        `;
     },
     validate: () => {
       const elVT  = document.getElementById(QUESTION_IDS.valorTotal);
@@ -348,6 +341,12 @@ const questions = {
   estadoObraQuick: {
     id: QUESTION_IDS.saldoDevedor,
     maskType: 'brl',
+    help: {
+      title: 'Onde encontrar esses valores?',
+      img: 'data/ajuda-extrato-saldo.png',
+      alt: 'Onde encontrar saldo devedor',
+      caption: 'Consulte seu extrato bancário ou app Habitação Caixa'
+    },
     render: () => {
       const percCalc = _calcPercAutomatico();
       const diferenca = Math.abs(percCalc - (formQuick.percObra || percCalc));
@@ -394,15 +393,7 @@ const questions = {
         <div class="info-box" id="box-tr-info" style="display:none">
           <span id="tr-info-text"></span>
         </div>
-        <div class="help-section">
-          <button class="help-toggle" onclick="toggleHelp('help-saldo-quick')">
-            ❓ Não sabe onde encontrar esses valores? Clique aqui!
-          </button>
-          <div class="help-content" id="help-saldo-quick" style="display:none">
-            <img src="data/ajuda-extrato-saldo.png" alt="Onde encontrar" class="help-image">
-            <p class="help-caption">Consulte seu extrato bancário ou app Habitação Caixa</p>
-          </div>
-        </div>`;
+        `;
     },
     validate: () => {
       const elSaldo = document.getElementById(QUESTION_IDS.saldoDevedor);
@@ -457,6 +448,12 @@ const questions = {
   financiamentoTotal: {
     id: QUESTION_IDS.financiamentoTotal,
     maskType: 'brl',
+    help: {
+      title: 'Onde encontrar esses valores?',
+      img: 'data/ajuda-extrato-saldo.png',
+      alt: 'Onde encontrar saldo devedor',
+      caption: 'Consulte seu extrato bancário ou app Habitação Caixa'
+    },
     render: () => `
       <div class="field-label">Qual a situação atual do saldo?</div>
       <div class="label-hint">Consulte nos apps Caixa ou no seu contrato.</div>
@@ -478,15 +475,7 @@ const questions = {
       <div class="info-box" id="box-perc-calc" style="display: none;">
         📊 Com base nos valores acima, Darwin calculou: <strong>Aproximadamente <span id="perc-calc-valor">—</span></strong>% de evolução de obra
       </div>
-      <div class="help-section">
-        <button class="help-toggle" onclick="toggleHelp('help-saldo')">
-          ❓ Não sabe onde encontrar esses valores? Clique aqui! 
-        </button>
-        <div class="help-content" id="help-saldo" style="display:none">
-          <img src="data/ajuda-extrato-saldo.png" alt="Onde encontrar" class="help-image">
-          <p class="help-caption">Consulte seu extrato bancário ou app Habitação Caixa</p>
-        </div>
-      </div>`,
+      `,
     validate: () => {
       const elTotal = document.getElementById(QUESTION_IDS.financiamentoTotal);
       const elSaldo = document.getElementById(QUESTION_IDS.saldoDevedor);
@@ -645,7 +634,7 @@ const questions = {
           <div class="error-msg" id="err-terreno">O valor do terreno deve ser menor que o total financiado (${fmtBRL(fin)}).</div>
         </div>
         <div class="diff-box" id="box-ter" style="${parseFloat(form.valorTerreno) > 0 ? '' : 'display:none'}">
-          <div class="d-title">Composição do Saldo Devedor durante à Obra</div>
+          <div class="d-title">Composição do Saldo Devedor durante a Obra</div>
           <div class="diff-row"><span class="d-label">Total financiado</span><span class="d-val">${fmtBRL(fin)}</span></div>
           <div class="diff-row"><span class="d-label">(−) Terreno</span><span class="d-val" id="d-ter">${parseFloat(form.valorTerreno) > 0 ? fmtBRL(parseFloat(form.valorTerreno)) : '—'}</span></div>
           <hr class="diff-divider">

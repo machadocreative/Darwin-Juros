@@ -507,7 +507,7 @@ function renderResult() {
         <div class="free-preview-title">Simulador Rápido</div>
         <div class="free-preview-sub">${premium
           ? 'O slider marca quanto de % já foi pago de acordo com a tabela abaixo.'
-          : 'Arraste para simular cenários futuros em qualquer % de obra'}</div>
+          : 'Arraste para simular cenários em qualquer % de obra'}</div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
@@ -526,12 +526,10 @@ function renderResult() {
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Parcela estimada</dt>
+          <dt class="slider-result-label">Prestação simulada <strong>SEM TR</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
-        <div class="slider-result-note">${premium
-          ? ''
-          : 'Exibição da Taxa Referencial na versão completa'}</div>
+        <div class="slider-result-note">${premium ? '' : 'Exibição da Taxa Referencial na versão completa'}</div>
       </div>
       ${temFin ? `
       <div class="quick-result-grid-slider">
