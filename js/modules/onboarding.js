@@ -4,6 +4,7 @@ function novaSimulacao() {
   currentProfileId = null;
   window._editMode = null;
   migrationSkipCheck = null;
+  migrationAbort = null;
   fluxo = 'complete';
   Object.keys(form).forEach(k => { form[k] = ''; });
   form.percFinanciado      = 80.00;
@@ -45,6 +46,7 @@ function editarSimulacao() {
 
 function _iniciarEdicao() {
   migrationSkipCheck = null;
+  migrationAbort = null;
   fluxo = 'complete';
   const mesesBackup     = JSON.parse(JSON.stringify(meses));
   const profileIdBackup = currentProfileId;
@@ -169,8 +171,9 @@ function abrirRenomearPerfil(targetId) {
       <input type="hidden" id="modal-target-id" value="${escHtml(id || '')}">
       <input type="text" id="modal-nome-input" class="modal-input" placeholder="Apto 101"
         maxlength="30" value="${escHtml(nomeAtual)}"
-        oninput="document.getElementById('modal-char-count').textContent=this.value.length+' / 30'">
+        oninput="document.getElementById('modal-char-count').textContent=this.value.length+' / 30';document.getElementById('err-modal-nome').style.display='none'">
       <div class="char-count" id="modal-char-count">${nomeAtual.length} / 30</div>
+      <div class="error-msg" id="err-modal-nome" style="display:none">Já existe um perfil com esse nome. Utilize um nome diferente.</div>
       <div class="modal-actions">
         <button class="btn btn-back" onclick="fecharModalRenomear()">← Cancelar</button>
         <button class="btn btn-primary" onclick="confirmarRenomearPerfil()">Confirmar →</button>
@@ -198,7 +201,7 @@ function confirmarRenomearPerfil() {
   const duplicado = profiles.find(p => p.nome.toLowerCase() === raw.toLowerCase() && p.id !== targetId);
   if (duplicado) {
     el.classList.add('invalid');
-    showToast('⚠️ Já existe um perfil com esse nome. Utilize um nome diferente.');
+    const e = document.getElementById('err-modal-nome'); if (e) e.style.display = 'block';
     return;
   }
 

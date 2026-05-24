@@ -183,6 +183,18 @@ function prevFlowStep() {
       currentFlowStep--;
       currentStep = currentFlowStep;
     }
+    // Se o passo 0 também é migrado, o usuário chegou ao limite — aborta a migração
+    if (migrationAbort && migrationSkipCheck && currentFlowStep === 0) {
+      const key = getCurrentQuestion(currentFlowArray, 0);
+      if (migrationSkipCheck(key)) {
+        console.log('  ↩ Abortando migração, voltando para resultado QuickSim');
+        const fn = migrationAbort;
+        migrationAbort = null;
+        migrationSkipCheck = null;
+        fn();
+        return;
+      }
+    }
     console.log(`  Voltou para passo ${currentFlowStep}`);
     renderFlowStep();
   } else {
@@ -269,7 +281,7 @@ function renderBifurcacao() {
           <span class="bifurc-icon">📋</span>
           <div>
             <div class="bifurc-label">Simulação detalhada</div>
-            <div class="bifurc-sub">Recomendado para quem quer ter mais controle de todas as prestações desde o início da obra.V</div>
+            <div class="bifurc-sub">Recomendado para quem quer ter mais controle de todas as prestações desde o início da obra.</div>
           </div>
         </button>
     </div>

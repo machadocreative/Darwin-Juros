@@ -38,15 +38,20 @@ function _atualizaPercCalculado() {
   const total   = parseFloat(formQuick.totalFinanciado || 0);
   const saldo   = maskRead(elSaldo) || 0;
   const perc    = total > 0 ? (saldo / total) * 100 : 0;
-  const box = document.getElementById('box-perc-calc');
-  const val = document.getElementById('perc-calc-valor');
-  if (perc > 0 && box && val) {
-    val.textContent = perc.toFixed(1);
-    box.style.display = 'block';
-    const elPerc = document.getElementById(QUESTION_IDS.percentualObra);
-    if (elPerc) attachMask(QUESTION_IDS.percentualObra, 'perc2', perc);
-  } else if (box) {
-    box.style.display = 'none';
+  const group   = document.getElementById('group-perc-obra');
+  const hint    = document.getElementById('hint-perc-calc');
+  const elPerc  = document.getElementById(QUESTION_IDS.percentualObra);
+
+  if (perc > 0) {
+    const percFormatado = perc.toFixed(2).replace('.', ',');
+    if (group) group.style.display = 'block';
+    if (hint)  hint.textContent = `Estimamos ${percFormatado}% com base no saldo acima. Corrija se necessário.`;
+    if (elPerc) {
+      elPerc.placeholder = percFormatado;
+      if (!maskRead(elPerc)) attachMask(QUESTION_IDS.percentualObra, 'perc2', perc);
+    }
+  } else {
+    if (group) group.style.display = 'none';
   }
 }
 
@@ -121,25 +126,33 @@ function preencherMesAtual() {
 
 // ── ASSOCIAR VALOR DE TR COM O JSON PELO MÊS INFORMADO ──
 function _atualizaTRInfo() {
-  const el = document.getElementById(QUESTION_IDS.mesMedido);
+  const el  = document.getElementById(QUESTION_IDS.mesMedido);
   const mes = el?.value;
-  const box = document.getElementById('box-tr-info');
+  const box  = document.getElementById('box-tr-info');
   const text = document.getElementById('tr-info-text');
-  
+
   if (!mes || !box || !text) return;
-  
-  const ym = parseMS(mes);
-  const trDec = getTRParaMes(ym); // retorna 0 se não encontrar
-  
+
+  const ym    = parseMS(mes);
+  const trDec = getTRParaMes(ym);
+
   if (trDec > 0) {
     const trPerc = (trDec * 100).toFixed(4);
-    text.innerHTML = `📊 Taxa Referencial de ${mLabel(ym)}: <strong>${trPerc}%</strong>`;
-    box.style.display = 'block';
+    text.innerHTML = `
+      <div class="d-title">Taxa Referencial do Mês</div>
+      <div class="diff-row">
+        <span class="d-label">${mLabel(ym)}</span>
+        <span class="d-val">${trPerc}%</span>
+      </div>`;
   } else {
-    const mesLabel = mLabel(ym);
-    text.innerHTML = `⏳ Taxa Referencial indisponível para o mês informado`;
-    box.style.display = 'block';
+    text.innerHTML = `
+      <div class="d-title">Taxa Referencial do Mês</div>
+      <div class="diff-row">
+        <span class="d-label">${mLabel(ym)}</span>
+        <span class="d-val">indisponível</span>
+      </div>`;
   }
+  box.style.display = 'block';
 }
 
 // ── CÁLCULOS ──
@@ -383,6 +396,12 @@ function irParaSimulacaoCompleta() {
       case 'parcelaFinanciamento': return form.parcelaFinanciamento !== null;
       default:                    return false;
     }
+  };
+
+  migrationAbort = () => {
+    migrationSkipCheck = null;
+    migrationAbort = null;
+    renderResultQuick();
   };
 
   fluxo = 'complete';

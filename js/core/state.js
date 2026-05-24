@@ -10,6 +10,7 @@ let screen = 'profiles'; // 'profiles' | 'bifurcacao' | 'onboarding' | 'result' 
 let hasUnsavedChanges = false;
 let fluxo = 'complete'; // 'quick' | 'complete'
 let migrationSkipCheck = null; // fn(questionKey) => bool — set during QuickSim→FullSim migration
+let migrationAbort = null;    // fn() — called when user presses Voltar past all migrated steps
 
 // ── DADOS DO FORMULÁRIO (simulação completa) ──
 const form = {
