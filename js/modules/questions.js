@@ -657,7 +657,7 @@ const questions = {
         </div>
         <div class="diff-box" id="box-ter" style="${parseFloat(form.valorTerreno) > 0 ? '' : 'display:none'}">
           <div class="d-title">Composição do Saldo Devedor durante a Obra</div>
-          <div class="diff-row"><span class="d-label">Total financiado</span><span class="d-val">${fmtBRL(fin)}</span></div>
+          <div class="diff-row"><span class="d-label">Saldo devedor total</span><span class="d-val">${fmtBRL(fin)}</span></div>
           <div class="diff-row"><span class="d-label">(−) Terreno</span><span class="d-val" id="d-ter">${parseFloat(form.valorTerreno) > 0 ? fmtBRL(parseFloat(form.valorTerreno)) : '—'}</span></div>
           <hr class="diff-divider">
           <div class="diff-row hl"><span class="d-label">Crédito repassado à Construtora</span><span class="d-val" id="d-saldo">${parseFloat(form.valorTerreno) > 0 ? fmtBRL(fin - parseFloat(form.valorTerreno)) : '—'}</span></div>
@@ -717,12 +717,22 @@ const questions = {
           <button class="rc-btn" id="hist-btn-add" onclick="histAdicionarLinha()">+</button>
         </div>
       </div>
+      <div class="error-msg" id="err-hist-parcela" style="display:none">A parcela não pode ser maior que o saldo devedor.</div>
       <div class="confirm-box" id="box-somatorio" style="display:none">
         <div><div class="c-label">Total já pago</div></div>
         <div class="c-val" id="val-somatorio"></div>
       </div>`,
     validate: () => {
-      // Histórico é opcional
+      const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
+      if (fin <= 0) return true;
+      let i = 0;
+      while (document.getElementById(`hist-val-${i}`)) {
+        if ((maskRead(document.getElementById(`hist-val-${i}`)) || 0) > fin) {
+          _atualizaSomatorio();
+          return false;
+        }
+        i++;
+      }
       return true;
     },
     save: () => {
