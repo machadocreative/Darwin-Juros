@@ -273,7 +273,7 @@ function _finalizarOnboarding() {
       }
     });
     aplicaBloqueio();
-    hasUnsavedChanges = false;
+    hasUnsavedChanges = true;
   }
   screen = 'result';
   renderResult();
