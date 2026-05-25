@@ -335,7 +335,7 @@ function atualizaFin() {
 }
 
 function atualizaTer() {
-  const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
   const elTer = document.getElementById('inp-valorTerreno');
   const ter = maskRead(elTer) || 0;
   const box = document.getElementById('box-ter');

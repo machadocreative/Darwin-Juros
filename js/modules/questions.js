@@ -647,7 +647,7 @@ const questions = {
     id: QUESTION_IDS.valorTerreno,
     maskType: 'brl',
     render: () => {
-      const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
+      const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
       return `
         <div class="field-group">
           <label class="field-label">Qual o valor do Terreno?</label>
@@ -666,7 +666,7 @@ const questions = {
     },
     validate: () => {
       const elTer = document.getElementById(QUESTION_IDS.valorTerreno);
-      const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+      const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
       const v = maskRead(elTer);
       
       if (!v || v <= 0) {
