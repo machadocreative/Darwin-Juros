@@ -51,19 +51,19 @@
   <main id="main"></main>
 
   <nav class="bottom-nav" id="bottom-nav" style="display:none">
-    <button class="nav-btn active" data-tab="nova" onclick="renderHome()">
+    <button class="nav-btn active" data-tab="nova" onclick="_navGuard(renderHome)">
       <span class="nav-btn-icon">➕</span>
       <span class="nav-btn-label">Nova</span>
     </button>
-    <button class="nav-btn" data-tab="perfis" onclick="renderProfiles()">
+    <button class="nav-btn" data-tab="perfis" onclick="_navGuard(renderProfiles)">
       <span class="nav-btn-icon">📁</span>
       <span class="nav-btn-label">Perfis</span>
     </button>
-    <button class="nav-btn" data-tab="educacao" onclick="renderEducacao()">
+    <button class="nav-btn" data-tab="educacao" onclick="_navGuard(renderEducacao)">
       <span class="nav-btn-icon">🎓</span>
       <span class="nav-btn-label">Educação</span>
     </button>
-    <button class="nav-btn" data-tab="sobre" onclick="renderSobre()">
+    <button class="nav-btn" data-tab="sobre" onclick="_navGuard(renderSobre)">
       <span class="nav-btn-icon">ℹ️</span>
       <span class="nav-btn-label">Sobre</span>
     </button>

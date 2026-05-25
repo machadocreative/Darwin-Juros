@@ -401,7 +401,7 @@ function _applySliderTrack(slider, percPaga, val) {
 }
 
 // ── GERAR A TABELA COMPLETA - Sugerido por GPT ──
-function renderTabela() { screen = 'tabela'; setHtml(buildTabela(false)); }
+function renderTabela() { screen = 'tabela'; showBottomNav(); setHtml(buildTabela(false)); }
 
 // ── CONSTUIR A TABELA COMO PÁGINA INDEPENDENTE - Sugerido por GPT ──
 function buildTabela(inline = false) {
@@ -473,6 +473,7 @@ function voltarParaResultado() {
 
 // ── TELA DE RESULTADO ──
 function renderResult() {
+  showBottomNav();
   aplicaBloqueio();
   const fin     = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
   const ativas  = meses.filter(r => !r.bloqueado);
