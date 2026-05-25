@@ -1,11 +1,11 @@
 // ── ONBOARDING (Simulação Completa — 7 passos) ──
 
-function novaSimulacao() {
+function novaSimulacao(target) {
   currentProfileId = null;
   window._editMode = null;
   migrationSkipCheck = null;
   migrationAbort = null;
-  fluxo = 'complete';
+  fluxo = target === 'quick' ? 'quick' : 'complete';
   Object.keys(form).forEach(k => { form[k] = ''; });
   form.percFinanciado      = 80.00;
   form.parcelaFinanciamento = null;
@@ -14,7 +14,15 @@ function novaSimulacao() {
   formQuick.percObra             = 50;
   formQuick.parcelaFinanciamento = null;
   meses = []; currentStep = 0;
-  renderBifurcacao();
+  if (target === 'quick') {
+    hideBottomNav();
+    initFlow(FLOW_QUICKSIM); screen = 'quick'; currentStep = 0; renderFlowStep();
+  } else if (target === 'complete') {
+    hideBottomNav();
+    initFlow(FLOW_FULLSIM); screen = 'onboarding'; currentStep = 0; renderFlowStep();
+  } else {
+    renderHome();
+  }
 }
 
 // ── NAVEGAÇÃO SEGURA (com lembrete de salvar) ──

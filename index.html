@@ -48,18 +48,26 @@
 </div>
 
 <div id="root">
-  <header>
-    <a href="#" class="header-logo" onclick="goProfilesSafe(); return false;" aria-label="Meus Imóveis" style="text-decoration: none;">
-      <div class="header-logo">
-        <div class="logo-icon"><img src="assets/favicons/favicon-32x32.png" class="imgC"></div>
-        <div>
-          <span>Darwin</span>
-          <small>Sua evolução sem surpresas</small>
-        </div>
-      </div>
-    </a>
-  </header>
   <main id="main"></main>
+
+  <nav class="bottom-nav" id="bottom-nav" style="display:none">
+    <button class="nav-btn active" data-tab="nova" onclick="renderHome()">
+      <span class="nav-btn-icon">➕</span>
+      <span class="nav-btn-label">Nova</span>
+    </button>
+    <button class="nav-btn" data-tab="perfis" onclick="renderProfiles()">
+      <span class="nav-btn-icon">📁</span>
+      <span class="nav-btn-label">Perfis</span>
+    </button>
+    <button class="nav-btn" data-tab="educacao" onclick="renderEducacao()">
+      <span class="nav-btn-icon">🎓</span>
+      <span class="nav-btn-label">Educação</span>
+    </button>
+    <button class="nav-btn" data-tab="sobre" onclick="renderSobre()">
+      <span class="nav-btn-icon">ℹ️</span>
+      <span class="nav-btn-label">Sobre</span>
+    </button>
+  </nav>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -101,6 +109,7 @@
 <script src="js/modules/quickSim.js"></script>
 <script src="js/modules/result.js"></script>
 <script src="js/modules/paywall.js"></script>
+<script src="js/modules/home.js"></script>
 
 <!-- 7. Inicialização (sempre o último) -->
 <script src="js/main.js"></script>
