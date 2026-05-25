@@ -1242,7 +1242,7 @@
     color: var(--text);
     margin-bottom: 2px;
 }
-.preview-slider-title span {
+.preview-slider-sub {
     font-size: 14px;
     color: var(--muted);
     margin-bottom: 20px;
