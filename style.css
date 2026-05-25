@@ -9,19 +9,19 @@
       --card: #FFFFFF;
       --text: #1A1A18;
       --muted: #888880;
+      --muted-dark: #4c4c47;
       --accent: #1A6B4A;
       --accent-light: #E6F2EC;
       --accent-dark: #135438;
       --border: #E2E0D8;
       --danger: #C0392B;
       --danger-light: #FDF0EF;
-      --warn-bg: #FFF8E6;
-      --warn: #B7791F;
+      --warn-bg: #FFEFC6;
+      --warn: #81520D;
       --blue-bg: #EEF6FB;
       --blue: #1A5280;
       --radius: 12px;
       --font: 'DM Sans', sans-serif;
-      --mono: 'DM Mono', monospace;
     }
 
     html, body {
@@ -187,6 +187,7 @@
         border-radius: var(--radius);
         padding: 28px 24px 24px;
         animation: fadeUp .2s ease;
+        position: relative;
     }
 
     @keyframes fadeUp {
@@ -194,7 +195,7 @@
     }
 
     .step-num {
-        font-family: var(--mono);
+        font-family: var(--font);
         font-size: 11px;
         color: var(--muted);
         letter-spacing: .08em;
@@ -214,6 +215,8 @@
         margin-bottom: 20px;
         line-height: 1.5;
     }
+
+
 
     /* INPUTS */
 
@@ -276,12 +279,19 @@
 
     .field-label {
         font-size: 11px;
-        font-weight: 500;
+        font-weight: 700;
         color: var(--muted);
         margin-bottom: 6px;
         display: block;
         letter-spacing: .05em;
         text-transform: uppercase;
+    }
+
+    .label-hint {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 10px;
+        line-height: 1em;
     }
 
     .field-required {
@@ -291,6 +301,12 @@
 
     .field-group {
         margin-top:16px;
+    }
+
+    .month-input-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
     }
 
     .error-msg {
@@ -335,7 +351,7 @@
         font-size: 20px;
         font-weight: 600;
         color: var(--accent);
-        font-family: var(--mono);
+        font-family: var(--font);
         white-space: nowrap;
     }
 
@@ -346,7 +362,7 @@
         padding: 10px 14px;
         font-size: 12px;
         color: var(--warn);
-        margin-top: 8px;
+        margin-top: 10px;
         line-height: 1.5;
     }
 
@@ -380,7 +396,7 @@
     }
 
     .diff-row .d-val {
-        font-family: var(--mono);
+        font-family: var(--font);
         font-weight: 600;
         color: var(--blue);
     }
@@ -400,21 +416,7 @@
         margin: 6px 0;
     }
 
-    .months-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: var(--accent-light);
-        border: 1px solid #B2D8C4;
-        border-radius: 20px;
-        padding: 6px 14px;
-        font-size: 13px;
-        color: var(--accent);
-        font-weight: 500;
-        margin: 12px 0 0;
-    }
-
-    .months-badge.err {
+    .confirm-box.err {
         background: #FFF0F0;
         border-color: #F5C6C6;
         color: #A0392B;
@@ -452,6 +454,22 @@
     }
 
     .btn-back:hover{
+        background: var(--bg);
+    }
+
+    .btn-current-month {
+        white-space: nowrap;
+        font-family: 'DM Sans';
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--accent-light);
+        background: var(--accent);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px;
+    }
+
+    .btn-current-month:hover{
         background: var(--bg);
     }
 
@@ -723,13 +741,13 @@
     }
 
     .val-col {
-        font-family: var(--mono);
+        font-family: var(--font);
         font-size: 12px;
         text-align: right;
     }
 
     .num-col {
-        font-family: var(--mono);
+        font-family: var(--font);
         font-size: 11px;
         color: var(--muted);
         text-align: center;
@@ -743,7 +761,7 @@
       padding: 4px 6px;
       border: 1px solid var(--border);
       border-radius: 5px;
-      font-family: var(--mono);
+      font-family: var(--font);
       font-size: 12px;
       text-align: right;
       background: var(--bg);
@@ -768,7 +786,7 @@
       padding: 4px 6px;
       border: 1px solid var(--border);
       border-radius: 5px;
-      font-family: var(--mono);
+      font-family: var(--font);
       font-size: 12px;
       text-align: right;
       background: var(--bg);
@@ -1124,10 +1142,11 @@
 
 .btn-bifurc {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    width: 90%;
+    margin: auto 10px 20px 10px;
     border-radius: var(--radius);
     padding: 20px 18px;
     cursor: pointer;
@@ -1144,35 +1163,41 @@
     transform: translateY(0);
 }
 
-/* Opção A — ainda não comecei */
-.btn-bifurc.bifurc-a {
+.btn-bifurc:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Opção full — simulação detalhada */
+.btn-bifurc.bifurc-full {
     background: var(--accent-light);
     border-color: #A8D5BC;
 }
-.btn-bifurc.bifurc-a:hover {
+.btn-bifurc.bifurc-full:hover {
     border-color: var(--accent);
 }
-.btn-bifurc.bifurc-a .bifurc-icon {
+.btn-bifurc.bifurc-full .bifurc-icon {
     background: var(--accent);
     color: #fff;
 }
-.btn-bifurc.bifurc-a .bifurc-label {
+.btn-bifurc.bifurc-full .bifurc-label {
     color: var(--accent-dark);
 }
 
-/* Opção B — já estou pagando */
-.btn-bifurc.bifurc-b {
+/* Opção quick — simulação rápida */
+.btn-bifurc.bifurc-quick {
     background: #EEF6FB;
     border-color: #B2D4E8;
 }
-.btn-bifurc.bifurc-b:hover {
+.btn-bifurc.bifurc-quick:hover {
     border-color: var(--blue);
 }
-.btn-bifurc.bifurc-b .bifurc-icon {
+.btn-bifurc.bifurc-quick .bifurc-icon {
     background: var(--blue);
     color: #fff;
 }
-.btn-bifurc.bifurc-b .bifurc-label {
+.btn-bifurc.bifurc-quick .bifurc-label {
     color: var(--blue);
 }
 
@@ -1201,26 +1226,27 @@
 }
 
 /* ── FREEMIUM — SLIDER (usuário free) ── */
-.free-preview-card {
+.preview-slider-card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
     margin-bottom: 8px;
 }
-.free-preview-header {
-    padding: 18px 20px 0;
+.preview-slider-header {
+    padding: 18px 20px 15px;
 }
-.free-preview-title {
-    font-size: 15px;
+.preview-slider-title {
+    font-size: 17px;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 2px;
 }
-.free-preview-sub {
-    font-size: 12px;
+.preview-slider-title span {
+    font-size: 14px;
     color: var(--muted);
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    text-align: left;
 }
 .slider-wrap {
     padding: 0 20px;
@@ -1231,7 +1257,7 @@
     justify-content: space-between;
     font-size: 10px;
     color: var(--muted);
-    font-family: var(--mono);
+    font-family: var(--font);
     margin-bottom: 6px;
 }
 .preview-slider {
@@ -1268,14 +1294,21 @@
     box-shadow: 0 1px 6px rgba(0,0,0,.18);
     cursor: pointer;
 }
-.slider-perc-label {
+.slider-result-perc {
     text-align: center;
-    font-family: var(--mono);
-    font-size: 24px;
+    font-family: var(--font);
+    font-size: 25px;
     font-weight: 500;
     color: var(--accent);
-    margin-top: 8px;
     letter-spacing: -.02em;
+    min-width: 4ch;
+}
+.slider-pago-label {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: 6px;
 }
 .slider-result {
     background: var(--bg);
@@ -1294,34 +1327,39 @@ dl.slider-result-row.highlight {
     padding-top: 10px;
     border-top: 1px solid var(--border);
 }
-dl dt.slider-result-label {
+dl.slider-result-row dt.slider-result-label {
     font-size: 12px;
     color: var(--muted);
+    text-align: left;
 }
-dl dd.slider-result-val {
-    font-family: var(--mono);
-    font-size: 15px;
+
+dl.slider-result-row dd {
+    margin-right: 10px;
+}
+
+dl.slider-result-row dd.slider-result-val {
+    font-family: var(--font);
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
 }
-dl dd.slider-result-val.accent {
+dl.slider-result-row dd.slider-result-val.accent {
     font-size: 20px;
     color: var(--accent);
+    text-align: right;
 }
 
-dl dd.slider-result-val.accent span {
+dl.slider-result-row dd.slider-result-val.accent span {
     font-size: 15px;
 } 
 
 .slider-result-note {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 6px;
-    font-style: italic;
-    text-align: right;
+    font-size: 13px;
+    color: var(--muted-dark);
+    margin-top: 15px;
+    font-weight: 500;
+    text-align: center;
 }
-
-
 
 .free-preview-cta {
     display: flex;
@@ -1420,7 +1458,7 @@ dl dd.slider-result-val.accent span {
     font-size: 28px;
     font-weight: 700;
     color: var(--accent);
-    font-family: var(--mono);
+    font-family: var(--font);
 }
 .paywall-terms {
     font-size: 12px;
@@ -1576,25 +1614,6 @@ dl dd.slider-result-val.accent span {
   --slider-pago: #7fbfa0;
 }
  
-/* Card do slider premium: visual igual ao free mas sem o botão CTA escuro no rodapé */
-.premium-preview-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  margin-bottom: 8px;
-}
- 
-/* Reutiliza os filhos de .free-preview-card — nenhum estilo adicional necessário */
-.premium-preview-card .free-preview-header { padding: 18px 20px 0; }
-.premium-preview-card .slider-wrap { padding: 0 20px; margin-bottom: 16px; }
-.premium-preview-card .slider-result {
-  background: var(--bg);
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-  /* sem border-bottom — não há botão CTA abaixo */
-}
- 
 /* ── TABELA INLINE (premium, dentro da tela de resultado) ── */
 .tabela-inline-wrap {
   margin-top: 16px;
@@ -1622,7 +1641,7 @@ dl dd.slider-result-val.accent span {
 }
 
 /* ── RESULTADO RÁPIDO: cards de parcela estimada ── */
-.quick-result-cards {
+.quick-result-grid-top {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
@@ -1644,9 +1663,13 @@ dl dd.slider-result-val.accent span {
   border-color: #B2D8C4;
 }
 
+.quick-result-card.large {
+  margin-bottom: 10px;
+}
+
 .qrc-label {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: .05em;
@@ -1663,8 +1686,8 @@ dl dd.slider-result-val.accent span {
 }
 
 .qrc-val {
-  font-family: var(--mono);
-  font-size: 18px;
+  font-family: var(--font);
+  font-size: 20px;
   font-weight: 600;
   color: var(--text);
   line-height: 1.2;
@@ -1675,14 +1698,20 @@ dl dd.slider-result-val.accent span {
 }
 
 .qrc-note {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--muted);
   font-style: italic;
 }
 
 
-/* ── CARD DE PARCELA FINANCIAMENTO (Novo) ── */
-/* Adicionar ao style.css existente */
+/* ── CARDS COMPARATIVO COM PARCELAMENTO ── */
+.quick-result-grid-slider {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 4px;
+  padding: 10px;
+}
 
 .quick-result-card-fin {
   background: var(--card);
@@ -1704,8 +1733,8 @@ dl dd.slider-result-val.accent span {
 }
 
 .quick-result-card-fin .qrc-val {
-  font-family: var(--mono);
-  font-size: 18px;
+  font-family: var(--font);
+  font-size: 20px;
   font-weight: 600;
   color: var(--text);
   line-height: 1.2;
@@ -1719,15 +1748,26 @@ dl dd.slider-result-val.accent span {
 
 
 /* ── RESULTADO RÁPIDO: disclaimer e CTA ── */
-.quick-disclaimer {
-  background: var(--warn-bg);
-  border: 1px solid #F6E0A0;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 12px;
-  color: var(--warn);
-  margin: 12px 0;
-  line-height: 1.5;
+.quick-disclaimer-top {
+    background: #e5e5e5;
+    border: 1px solid #d3d3d3;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #6b6b6b;
+    margin: 12px 0;
+    line-height: 1.5;
+}
+
+.quick-disclaimer-end {
+    background: var(--warn-bg);
+    border: 1px solid #F6E0A0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--warn);
+    margin: 12px 0;
+    line-height: 1.5;
 }
 
 .quick-cta-card {
@@ -1758,7 +1798,7 @@ dl dd.slider-result-val.accent span {
   padding: 5px 6px 5px 32px;
   border: 1px solid var(--border);
   border-radius: 5px;
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: 12px;
   text-align: right;
   background: var(--bg);
@@ -1795,18 +1835,270 @@ dl dd.slider-result-val.accent span {
 
 /* ── AVISO INLINE: parcela de obra vs financiamento ── */
 .slider-fin-bloco {
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 12px;
-  line-height: 1.5;
-  background: var(--accent-light);
-  border: 1px solid #B2D8C4;
-  color: var(--accent);
-  transition: background .2s, border-color .2s, color .2s;
+    font-size: 12px;
+    line-height: 1.5;
+    background: #ffeccf;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: background .2s, border-color .2s, color .2s;
 }
 
 .slider-fin-bloco.slider-fin-danger {
-  background: var(--danger-light);
-  border-color: #F5C6C6;
+    background: var(--danger-light);
+    border-color: #F5C6C6;
+    color: var(--danger);
+}
+
+.slider-fin-bloco span,
+.slider-fin-bloco.slider-fin-danger span {
+    font-size: 22px !important;
+    font-weight: 800;
+}
+
+
+/* ── BOTÃO DE AJUDA (modal) ── */
+.help-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: border-color .15s, background .15s;
+}
+
+.help-btn:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.help-image {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.help-caption {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── TELA ÚNICA DE EDIÇÃO ── */
+.edit-intro-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+.edit-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 18px 12px;
+  margin-bottom: 10px;
+}
+
+.edit-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.edit-sticky-footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 10px 0 6px;
+  display: flex;
+  gap: 10px;
+  z-index: 20;
+}
+
+.edit-sticky-footer .btn {
+  flex: 1;
+  margin: 0;
+}
+
+/* ── MODAL RENOMEAR ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-box {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+  box-sizing: border-box;
+  animation: fadeIn .15s ease;
+}
+
+.modal-header {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  box-sizing: border-box;
+  transition: border-color .15s;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.modal-input.invalid {
+  border-color: var(--danger);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.modal-actions .btn {
+  flex: 1;
+  margin: 0;
+}
+
+/* rh-actions: allow wrap on narrow screens with 4 buttons */
+.rh-actions {
+  flex-wrap: wrap;
+}
+
+/* ── COLUNA VALOR REAL (tabela premium) ── */
+.rv-input {
+  width: 88px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 12px;
+  font-family: var(--font);
+  text-align: right;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color .15s;
+}
+
+.rv-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.rv-input.invalid {
+  border-color: var(--danger);
+}
+
+.rv-val {
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── CARDS: PREVISTO VS REAL ── */
+.comparison-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.comparison-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.comparison-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.comparison-card.full {
+  grid-column: 1 / -1;
+}
+
+.comp-label {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.comp-val {
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.comp-val.val-over {
   color: var(--danger);
+}
+
+.comp-val.val-under {
+  color: var(--accent);
 }

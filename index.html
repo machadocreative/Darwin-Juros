@@ -8,36 +8,55 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Darwin Juros">
   <meta name="description" content="Estime suas parcelas de evolução de obra com mais precisão.">
+
+  <!-- Open Graph (Facebook, WhatsApp, LinkedIn, Discord) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://machadocreative.github.io/Darwin-Juros/">
+  <meta property="og:title" content="Darwin Juros — Sua evolução sem surpresas">
+  <meta property="og:description" content="Calcule e acompanhe suas parcelas de evolução de obra mês a mês. Grátis, offline e sem cadastro.">
+  <meta property="og:image" content="https://machadocreative.github.io/Darwin-Juros/assets/darwin-og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Darwin Juros — app de cálculo de juros de obra">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="Darwin Juros">
+
+  <!-- Twitter Card (Twitter/X) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Darwin Juros — Sua evolução sem surpresas">
+  <meta name="twitter:description" content="Calcule e acompanhe suas parcelas de evolução de obra mês a mês.">
+  <meta name="twitter:image" content="https://machadocreative.github.io/Darwin-Juros/assets/darwin-og-image.png">
+
   <title>Darwin Juros</title>
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicons/favicon-16x16.png">
   <link rel="stylesheet" href="style.css">
+
 </head>
 <body>
 
 <div id="splash">
-  <div class="splash-icon">🏗️</div>
-  <div class="splash-title">Darwin Juros</div>
-  <div class="splash-sub">Sua evolução sem surpresas</div>
+  <div class="splash-icon"><img src="assets/favicons/favicon-32x32.png" class="imgC"></div>
+  <div class="splash-title">Darwin</div>
+  <div class="splash-sub">Calcule sua evolução antes do boleto chegar</div>
 </div>
 
 <div id="root">
   <header>
     <a href="#" class="header-logo" onclick="goProfilesSafe(); return false;" aria-label="Meus Imóveis" style="text-decoration: none;">
       <div class="header-logo">
-        <div class="logo-icon">🏗️</div>
+        <div class="logo-icon"><img src="assets/favicons/favicon-32x32.png" class="imgC"></div>
         <div>
-          <span>Darwin Juros</span>
+          <span>Darwin</span>
           <small>Sua evolução sem surpresas</small>
         </div>
       </div>
     </a>
-    <div class="header-actions">
-      <button class="btn-root" onclick="novaSimulacaoSafe()">📄  Nova</button>
-      <button class="btn-root" onclick="goProfilesSafe()">📁 Perfis</button>
-    </div>
   </header>
   <main id="main"></main>
 </div>
@@ -50,33 +69,39 @@
   <div class="celebration-card">
     <span class="celebration-emoji">🎉</span>
     <div class="celebration-title">Parabéns!</div>
-    <div class="celebration-sub">Seu novo apartamento está pronto!<br>Todas as parcelas de evolução de obra foram concluídas.</div>
-    <button class="celebration-btn" onclick="closeCelebration()">Que incrível! 🏠</button>
+    <div class="celebration-sub">Todas as parcelas de evolução de obra foram pagas.<br>Seu novo apartamento está pronto!</div>
+    <button class="celebration-btn" onclick="closeCelebration()">Que incrível! 🌟</button>
   </div>
 </div>
 
 <!-- ── SCRIPTS: ordem importa (dependências primeiro) ── -->
 
-<!-- 1. Estado global e constantes -->
+
+<!-- 1. Estado e storage -->
 <script src="js/core/state.js"></script>
 
 <!-- 2. Storage (depende de state) -->
 <script src="js/core/storage.js"></script>
 
-<!-- 3. Utilitários (dependem de state) -->
+<!-- 3. Utilitários -->
 <script src="js/utils/format.js"></script>
 <script src="js/utils/ui.js"></script>
 
-<!-- 4. Cálculo (depende de state + utils) -->
+<!-- 4. Cálculos (depende de state + utils) -->
 <script src="js/modules/calculator.js"></script>
 
-<!-- 5. Módulos de tela (dependem de tudo acima) -->
+<!-- 5. Questões e fluxos (order: questions → flows → engine) -->
+<script src="js/modules/questions.js"></script>
+<script src="js/modules/flows.js"></script>
+<script src="js/modules/flowEngine.js"></script>
+
+<!-- 6. Módulos de tela -->
 <script src="js/modules/onboarding.js"></script>
 <script src="js/modules/quickSim.js"></script>
 <script src="js/modules/result.js"></script>
 <script src="js/modules/paywall.js"></script>
 
-<!-- 6. Inicialização (deve ser o último) -->
+<!-- 7. Inicialização (sempre o último) -->
 <script src="js/main.js"></script>
 
 </body>
