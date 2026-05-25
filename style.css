@@ -166,41 +166,7 @@ body.has-nav main {
     padding-bottom: 100px;
 }
 
-/* ── PROGRESS ── */
-
-.progress-wrap {
-    display: flex;
-    gap: 5px;
-    margin-bottom: 24px;
-}
-
-.progress-dot {
-    flex: 1;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--border);
-    transition: background .3s;
-}
-
-.progress-dot.done {
-    background: var(--accent);
-}
-
-.progress-dot.active {
-    background: var(--accent);
-    opacity: .5;
-}
-
-/* ── STEP CARD ── */
-
-.step-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px 24px 24px;
-    animation: fadeUp .2s ease;
-    position: relative;
-}
+/* ── KEYFRAMES ── */
 
 @keyframes fadeUp {
     from {
@@ -264,6 +230,42 @@ body.has-nav main {
         transform: translateY(100vh) rotate(720deg);
         opacity: 0;
     }
+}
+
+/* ── PROGRESS ── */
+
+.progress-wrap {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 24px;
+}
+
+.progress-dot {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border);
+    transition: background .3s;
+}
+
+.progress-dot.done {
+    background: var(--accent);
+}
+
+.progress-dot.active {
+    background: var(--accent);
+    opacity: .5;
+}
+
+/* ── STEP CARD ── */
+
+.step-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 24px 24px;
+    animation: fadeUp .2s ease;
+    position: relative;
 }
 
 .step-num {
