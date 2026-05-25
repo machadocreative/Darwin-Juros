@@ -166,7 +166,7 @@ function atualizaSlider() {
   const elVal   = document.getElementById('slider-val');
   const elSaldo = document.getElementById('slider-saldo');
 
-  if (elVal)   elVal.innerHTML = `${fmtBRL(previsto)} <small>+ TR Mensal</small>`;
+  if (elVal)   elVal.innerHTML = `${fmtBRL(previsto)}`;
   if (elSaldo) elSaldo.textContent = fmtBRL(saldo);
 
   const bloco = document.getElementById('slider-fin-bloco');

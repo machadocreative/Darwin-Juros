@@ -354,7 +354,7 @@ function atualizaSliderQuick() {
     const diff = fin - previsto;
     bloco.className = 'slider-fin-bloco' + (diff < 0 ? ' slider-fin-danger' : '');
     bloco.innerHTML = diff < 0
-      ? `🚨 Evolução de obra supera o financiamento em <span>+<strong>${fmtBRL(Math.abs(diff))}</strong><span>`
+      ? `🚨 Evolução supera o financiamento em <span>+<strong>${fmtBRL(Math.abs(diff))}</strong><span>`
       : `<span><strong>${fmtBRL(diff)}</strong></span> para igualar a parcela de financiamento`;
   }
 }

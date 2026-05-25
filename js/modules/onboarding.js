@@ -273,7 +273,7 @@ function _finalizarOnboarding() {
       }
     });
     aplicaBloqueio();
-    hasUnsavedChanges = false;
+    hasUnsavedChanges = true;
   }
   screen = 'result';
   renderResult();
@@ -335,7 +335,7 @@ function atualizaFin() {
 }
 
 function atualizaTer() {
-  const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
   const elTer = document.getElementById('inp-valorTerreno');
   const ter = maskRead(elTer) || 0;
   const box = document.getElementById('box-ter');
@@ -427,13 +427,24 @@ function histRemoverLinha() {
 }
 
 function _atualizaSomatorio() {
-  let total = 0, i = 0;
+  const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
+  let total = 0, i = 0, hasError = false;
   while (document.getElementById(`hist-val-${i}`)) {
-    total += maskRead(document.getElementById(`hist-val-${i}`)) || 0;
+    const el = document.getElementById(`hist-val-${i}`);
+    const v = maskRead(el) || 0;
+    total += v;
+    if (fin > 0 && v > fin) {
+      el.classList.add('invalid');
+      hasError = true;
+    } else {
+      el.classList.remove('invalid');
+    }
     i++;
   }
   const box = document.getElementById('box-somatorio');
   const val = document.getElementById('val-somatorio');
+  const err = document.getElementById('err-hist-parcela');
   if (box) box.style.display = total > 0 ? 'block' : 'none';
   if (val) val.textContent   = fmtBRL(total);
+  if (err) err.style.display = hasError ? 'block' : 'none';
 }
