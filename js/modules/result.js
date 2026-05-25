@@ -502,11 +502,10 @@ function renderResult() {
   const sliderInicio = percPaga;
 
   const blocoSlider = `
-    <div class="${premium ? 'premium-preview-card' : 'free-preview-card'}">
-      <div class="free-preview-header">
-        <div class="free-preview-title">Visualizador de Prestações <span>· Arraste para simular</span></div>
-        <div class="free-preview-sub">Simule suas prestações sem o cálculo da TR. ${premium
-          ? '' : 'Simule suas prestações sem o cálculo da TR'}</div>
+    <div class="preview-slider-card">
+      <div class="preview-slider-header">
+        <div class="preview-slider-title">Visualizador de Prestações</div>
+        <div class="preview-slider-sub">Simule suas prestações sem o cálculo da TR.</div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
@@ -588,6 +587,11 @@ function renderResult() {
     ${blocoBannerPagas}
     ${blocoComparacao}
     ${blocoTabelaInline}
+
+    <div class="quick-disclaimer-end">
+      <p>Darwin não é uma ferramenta preditiva. Utilizamos a fórmula oficial de cálculo divulgada pela Caixa Econômica. Não nos responsabilizamos se previsões futuras não corresponderem à realidade, uma vez que valores cobrados serão sempre de encargo da instituição financeira.</p>
+    </div>
+        
   `);
 
   setTimeout(() => { atualizaSlider(); _initRvMasks(); _refreshBannerPagas(); }, 80);

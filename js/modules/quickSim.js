@@ -257,12 +257,13 @@ function renderResultQuick() {
     </div>
 
     <div class="quick-disclaimer-top">
-        ⚠️ <strong>IMPORTANTE: Os valores abaixo são estimativas aproximadas - sem o valor correspondente ao terreno e a Taxa Referencial. Por via de regra, considere sempre o Saldo Devedor mais aproximado para sua situação.</strong>
+        ⚠️ <strong>IMPORTANTE: O saldo devedor é calculado de forma aproxiamda em relação à evolução de obra. A simulação da parcela considera Taxa Referencial = 0 para os meses futuros.</strong>
     </div>
 
-    <div class="free-preview-card" style="margin-top:12px">
-      <div class="free-preview-header">
-        <div class="free-preview-title">Próximas Prestações <span>· Arraste para simular</span></div>
+    <div class="preview-slider-card" style="margin-top:12px">
+      <div class="preview-slider-header">
+        <div class="preview-slider-title">Visualizador de Prestações</div>
+        <div class="preview-slider-sub"><span>Arraste para simular suas próximas prestações</span></div>
       </div>
 
     <div class="slider-wrap">

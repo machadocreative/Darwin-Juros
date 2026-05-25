@@ -1226,23 +1226,23 @@
 }
 
 /* ── FREEMIUM — SLIDER (usuário free) ── */
-.free-preview-card {
+.preview-slider-card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
     margin-bottom: 8px;
 }
-.free-preview-header {
+.preview-slider-header {
     padding: 18px 20px 15px;
 }
-.free-preview-title {
+.preview-slider-title {
     font-size: 17px;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 2px;
 }
-.free-preview-title span {
+.preview-slider-title span {
     font-size: 14px;
     color: var(--muted);
     margin-bottom: 20px;
@@ -1612,25 +1612,6 @@ dl.slider-result-row dd.slider-result-val.accent span {
 /* Variável da faixa "já pago" — tom de verde mais apagado que o accent */
 :root {
   --slider-pago: #7fbfa0;
-}
- 
-/* Card do slider premium: visual igual ao free mas sem o botão CTA escuro no rodapé */
-.premium-preview-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  margin-bottom: 8px;
-}
- 
-/* Reutiliza os filhos de .free-preview-card — nenhum estilo adicional necessário */
-.premium-preview-card .free-preview-header { padding: 18px 20px 15px; }
-.premium-preview-card .slider-wrap { padding: 0 20px; margin-bottom: 16px; }
-.premium-preview-card .slider-result {
-  background: var(--bg);
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-  /* sem border-bottom — não há botão CTA abaixo */
 }
  
 /* ── TABELA INLINE (premium, dentro da tela de resultado) ── */
