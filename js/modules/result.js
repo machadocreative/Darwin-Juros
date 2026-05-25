@@ -168,10 +168,9 @@ function refreshTable() {
       else                bp.outerHTML = `<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`;
     }
   });
-  const btnAdd = document.getElementById('btn-add'), btnRem = document.getElementById('btn-rem'), rcInfo = document.getElementById('rc-info');
+  const btnAdd = document.getElementById('btn-add'), btnRem = document.getElementById('btn-rem');
   if (btnAdd) btnAdd.disabled = meses.length >= MAX_MESES;
   if (btnRem) { const last = meses[meses.length - 1]; btnRem.disabled = meses.length <= 1 || (last && last.pago); }
-  if (rcInfo) rcInfo.textContent = meses.length + ' parcela(s) · máx. ' + MAX_MESES;
   const sub = document.getElementById('result-subtitle');
   const ativasCount = meses.filter(r => !r.bloqueado).length;
   const subText = ativasCount + ' parcelas · ' + (meses[0]?.mes || '') + ' → ' + ultimoMesAtivo();
@@ -185,14 +184,14 @@ function refreshTable() {
 
 function updateSummary() {
   const ativas    = meses.filter(r => !r.bloqueado);
-  const total     = ativas.reduce((s, r) => s + r.previsto, 0);
-  const pago      = ativas.filter(r => r.pago).reduce((s, r) => s + r.previsto, 0);
-  const media     = ativas.length ? total / ativas.length : 0;
-  const totalReal = ativas.reduce((s, r) => s + (r.valorReal || 0), 0);
-  const diff      = totalReal - total;
+  const total        = ativas.reduce((s, r) => s + r.previsto, 0);
+  const pagoPrevisto = ativas.filter(r => r.pago).reduce((s, r) => s + r.previsto, 0);
+  const media        = ativas.length ? total / ativas.length : 0;
+  const totalReal    = ativas.reduce((s, r) => s + (r.valorReal || 0), 0);
+  const diff         = totalReal - total;
   const e = id => document.getElementById(id);
   if (e('sum-total')) e('sum-total').textContent = fmtBRL(total);
-  if (e('sum-pago'))  e('sum-pago').textContent  = fmtBRL(pago);
+  if (e('sum-pago'))  e('sum-pago').textContent  = fmtBRL(totalReal > 0 ? totalReal : pagoPrevisto);
   if (e('sum-media')) e('sum-media').textContent = fmtBRL(media);
   if (e('sum-comp-previsto')) e('sum-comp-previsto').textContent = fmtBRL(total);
   if (e('sum-real'))  e('sum-real').textContent  = fmtBRL(totalReal);
@@ -465,7 +464,7 @@ function renderResult() {
   const fin     = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
   const ativas  = meses.filter(r => !r.bloqueado);
   const total   = ativas.reduce((s, r) => s + r.previsto, 0);
-  const pago    = ativas.filter(r => r.pago).reduce((s, r) => s + r.previsto, 0);
+  const pagoPrevisto = ativas.filter(r => r.pago).reduce((s, r) => s + r.previsto, 0);
   const media   = ativas.length ? total / ativas.length : 0;
   const premium = isPremium();
 
@@ -484,10 +483,6 @@ function renderResult() {
         <div class="comparison-card">
           <div class="comp-label">Previsto pela fórmula</div>
           <div class="comp-val" id="sum-comp-previsto">${fmtBRL(total)}</div>
-        </div>
-        <div class="comparison-card">
-          <div class="comp-label">Inserido pelo usuário</div>
-          <div class="comp-val" id="sum-real">${fmtBRL(totalReal)}</div>
         </div>
         <div class="comparison-card full">
           <div class="comp-label">Diferença (real − previsto)</div>
@@ -572,13 +567,9 @@ function renderResult() {
           <div class="s-val" id="sum-media">${fmtBRL(media)}</div>
         </div>
         ${premium ? `
-        <div class="summary-card accent">
-          <div class="s-label">Total estimado de Juros de Obra</div>
-          <div class="s-val" id="sum-total">${fmtBRL(total)}</div>
-        </div>
         <div class="summary-card paid">
           <div class="s-label">Pago até o momento</div>
-          <div class="s-val" id="sum-pago">${fmtBRL(pago)}</div>
+          <div class="s-val" id="sum-pago">${fmtBRL(totalReal > 0 ? totalReal : pagoPrevisto)}</div>
         </div>` : ''}
       </div>
     </div>
