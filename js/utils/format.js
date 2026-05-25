@@ -15,6 +15,18 @@ function mLabelFull(s) {
   return ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][ym.m - 1] + ' de ' + ym.y;
 }
 function fmtDate(iso) { return new Date(iso).toLocaleDateString('pt-BR'); }
+function fmtDateRelative(iso) {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days === 0) return 'hoje';
+  if (days === 1) return 'ontem';
+  if (days < 7)  return `há ${days} dias`;
+  const w = Math.floor(days / 7);
+  if (w === 1)   return 'há 1 semana';
+  if (w < 4)     return `há ${w} semanas`;
+  const mo = Math.floor(days / 30);
+  if (mo === 1)  return 'há 1 mês';
+  return `há ${mo} meses`;
+}
 
 // Normaliza vírgula → ponto para parseFloat funcionar em ambos os locales
 function parseDecimal(val) { return parseFloat(String(val).replace(',', '.')); }

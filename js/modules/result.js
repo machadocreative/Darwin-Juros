@@ -1,32 +1,45 @@
 // ── TELA DE PERFIS ──
-function goProfiles() { screen = 'profiles'; renderProfiles(); }
+function goProfiles() { renderProfiles(); }
 
 function renderProfiles() {
-  const profiles = loadProfiles();
+  screen = 'profiles';
+  showBottomNav();
+  setNavActive('perfis');
+
+  const profiles = loadProfiles().sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+
   const list = profiles.length
     ? profiles.map(p => {
         const perc = ultimaPercPaga(p.meses);
-        const percLabel = perc !== null ? `✅ Última parcela paga: ${perc}% de obra` : 'Nenhuma parcela paga ainda';
         return `<div class="profile-card" id="pc-${p.id}" onclick="loadProfile('${p.id}')">
-          <div>
-            <div class="pc-name">${escHtml(p.nome)}${p.premium ? '<span class="pc-premium-badge">✦ Premium</span>' : ''}</div>
-            <div class="pc-sub">Salvo em ${fmtDate(p.savedAt)} · ${p.meses.length} parcelas</div>
-            <div class="pc-perc">${percLabel}</div>
+          <div class="pf-avatar">🏠</div>
+          <div class="pf-content">
+            <div class="pf-name">${escHtml(p.nome)}${p.premium ? ' <span class="pc-premium-badge">✦</span>' : ''}</div>
+            <div class="pf-info">${p.meses.length} parcelas · salvo ${fmtDateRelative(p.savedAt)}</div>
           </div>
-          <div class="pc-actions" onclick="event.stopPropagation()">
-            <button class="pc-btn" onclick="loadProfile('${p.id}')">Abrir</button>
-            <button class="pc-btn" onclick="abrirRenomearPerfil('${p.id}')">Renomear</button>
-            <button class="pc-btn del" id="del-${p.id}" onclick="deleteProfile('${p.id}')">Excluir</button>
+          <div class="pf-stats">
+            <div class="pf-stats-num">${perc !== null ? perc + '%' : '—'}</div>
+            <div class="pf-stats-label">Obra</div>
           </div>
+        </div>
+        <div class="pc-actions" onclick="event.stopPropagation()" style="margin-top:-6px;margin-bottom:10px;display:flex;gap:6px;padding:0 2px">
+          <button class="pc-btn" onclick="abrirRenomearPerfil('${p.id}')">✏️ Renomear</button>
+          <button class="pc-btn del" id="del-${p.id}" onclick="deleteProfile('${p.id}')">🗑️ Excluir</button>
         </div>`;
       }).join('')
-    : `<div class="empty-state"><div class="es-icon">🏢</div><p>Nenhum perfil salvo ainda.<br>Você pode salvar um perfil na tela de resultados após concluir a <strong>Simulação Completa</strong>.</p></div>`;
+    : `<div class="empty-state"><div class="es-icon">🏢</div><p>Nenhum perfil salvo ainda.<br>Inicie uma <strong>Simulação Completa</strong> para salvar seu primeiro imóvel.</p></div>`;
 
   setHtml(`
-    <div class="screen-title">Meus Imóveis</div>
-    <div class="screen-sub">Simule e salve quantos perfis quiser.</div>
+    <div class="greeting">
+      <div class="greeting-row">
+        <div class="greeting-logo">📁</div>
+        <div class="greeting-title">Meus Imóveis</div>
+      </div>
+      <div class="greeting-sub">Gerencie e acompanhe seus financiamentos</div>
+    </div>
+    ${profiles.length ? `<div class="section-label">${profiles.length} perfil${profiles.length > 1 ? 'is' : ''} salvo${profiles.length > 1 ? 's' : ''}</div>` : ''}
     <div class="profile-list">${list}</div>
-    <button class="btn btn-primary" onclick="novaSimulacao()">📄 Nova Simulação</button>
+    <button class="btn-add-profile" onclick="renderHome()">+ Adicionar novo imóvel</button>
   `);
 }
 

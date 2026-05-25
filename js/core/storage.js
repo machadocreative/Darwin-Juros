@@ -64,5 +64,6 @@ function loadProfile(id) {
   meses = JSON.parse(JSON.stringify(p.meses));
   screen = 'result';
   hasUnsavedChanges = false;
+  hideBottomNav();
   renderResult();
 }

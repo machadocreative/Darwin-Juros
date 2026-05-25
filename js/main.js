@@ -5,15 +5,7 @@ window.addEventListener('load', async () => {
   // Carrega série histórica de TR em memória antes de qualquer cálculo
   await _carregarTRHistorico();
 
-  const profiles = loadProfiles();
-  if (profiles.length > 0) {
-    screen = 'profiles';
-    goProfiles();
-  } else {
-    // Sem perfis: exibe bifurcação (rápida vs completa) — não o onboarding direto
-    screen = 'bifurcacao';
-    renderBifurcacao();
-  }
+  renderHome();
 });
 
 // ── CARREGAMENTO DO JSON DE TR ──

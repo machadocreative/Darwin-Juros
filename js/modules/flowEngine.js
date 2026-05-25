@@ -87,7 +87,7 @@ function renderFlowStep() {
           ${isLast ? 'Ver resultado →' : 'Continuar →'}
         </button>
       `}
-      <button class="btn btn-back" onclick="${isFirst ? 'renderBifurcacao()' : 'prevFlowStep()'}">
+      <button class="btn btn-back" onclick="${isFirst ? 'renderHome()' : 'prevFlowStep()'}">
         ← Voltar
       </button>
     </div>`;
