@@ -19,6 +19,14 @@ function setNavActive(tab) {
   });
 }
 
+function _navGuard(target) {
+  if ((screen === 'result' || screen === 'tabela') && hasUnsavedChanges) {
+    showSaveReminder(() => { hasUnsavedChanges = false; target(); });
+  } else {
+    target();
+  }
+}
+
 // ── TELA NOVA (Home) ──
 function renderHome() {
   screen = 'nova';
