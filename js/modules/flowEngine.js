@@ -290,6 +290,7 @@ function renderBifurcacao() {
 
 function escolherFluxo(f) {
   fluxo = f;
+  hideBottomNav();
   if (f === 'quick') {
     initFlow(FLOW_QUICKSIM); screen = 'quick'; currentStep = 0; renderFlowStep();
   } else {

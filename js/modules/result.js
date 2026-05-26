@@ -39,7 +39,7 @@ function renderProfiles() {
     </div>
     ${profiles.length ? `<div class="section-label">${profiles.length} perfil${profiles.length > 1 ? 'is' : ''} salvo${profiles.length > 1 ? 's' : ''}</div>` : ''}
     <div class="profile-list">${list}</div>
-    <button class="btn-add-profile" onclick="renderHome()">+ Adicionar novo imóvel</button>
+    <button class="btn-add-profile" onclick="renderBifurcacao()">+ Nova simulação</button>
   `);
 }
 
