@@ -30,6 +30,7 @@ function _navGuard(target) {
 // ── TELA NOVA (Home) ──
 function renderHome() {
   screen = 'nova';
+  _navPush('nova');
   showBottomNav();
   setNavActive('inicio');
 
@@ -121,6 +122,7 @@ function renderHome() {
 // ── TELA SOBRE ──
 function renderSobre() {
   screen = 'sobre';
+  _navPush('sobre');
   showBottomNav();
   setNavActive('sobre');
 

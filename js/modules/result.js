@@ -3,6 +3,7 @@ function goProfiles() { renderProfiles(); }
 
 function renderProfiles() {
   screen = 'profiles';
+  _navPush('perfis');
   showBottomNav();
   setNavActive('perfis');
 
@@ -401,7 +402,7 @@ function _applySliderTrack(slider, percPaga, val) {
 }
 
 // ── GERAR A TABELA COMPLETA - Sugerido por GPT ──
-function renderTabela() { screen = 'tabela'; showBottomNav(); setHtml(buildTabela(false)); }
+function renderTabela() { screen = 'tabela'; _navPush('tabela'); showBottomNav(); setHtml(buildTabela(false)); }
 
 // ── CONSTUIR A TABELA COMO PÁGINA INDEPENDENTE - Sugerido por GPT ──
 function buildTabela(inline = false) {
@@ -412,7 +413,7 @@ function buildTabela(inline = false) {
   return `
     ${!inline ? `
       <div class="tabela-header">
-        <button class="tabela-back-btn" onclick="voltarParaResultado()">← Resumo</button>
+        <button class="tabela-back-btn" onclick="history.back()">← Resumo</button>
         <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
       </div>
       <div class="alert" style="margin-top:12px">
@@ -459,7 +460,7 @@ function buildTabela(inline = false) {
     </div>
 
     ${!inline ? `
-      <button class="btn-reset" onclick="voltarParaResultado()">
+      <button class="btn-reset" onclick="history.back()">
         ← Voltar à tela de resultados
       </button>
     ` : ''}
@@ -473,6 +474,8 @@ function voltarParaResultado() {
 
 // ── TELA DE RESULTADO ──
 function renderResult() {
+  screen = 'result';
+  _navPush('result');
   showBottomNav();
   aplicaBloqueio();
   const fin     = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);

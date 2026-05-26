@@ -4,6 +4,7 @@ let _trhMesSel = null;
 
 function renderTRHistorico() {
   screen = 'trHistorico';
+  _navPush('trHistorico');
   showBottomNav();
   _trhMesSel = null;
 
@@ -36,7 +37,7 @@ function renderTRHistorico() {
       </div>`).join('');
 
   setHtml(`
-    <button class="btn-screen-back" onclick="renderHome()">← Voltar</button>
+    <button class="btn-screen-back" onclick="history.back()">← Voltar</button>
     <div class="screen-title">Histórico da TR</div>
     <div class="screen-sub">Taxa Referencial mensal divulgada pelo Banco Central do Brasil. Utilizada nos cálculos de evolução de obra.</div>
 

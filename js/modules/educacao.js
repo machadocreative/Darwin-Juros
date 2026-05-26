@@ -1,6 +1,7 @@
 // ── TELA EDUCAÇÃO ──
 function renderEducacao() {
   screen = 'educacao';
+  _navPush('educacao');
   showBottomNav();
   setNavActive('educacao');
 
