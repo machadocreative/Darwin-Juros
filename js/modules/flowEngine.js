@@ -87,7 +87,7 @@ function renderFlowStep() {
           ${isLast ? 'Ver resultado →' : 'Continuar →'}
         </button>
       `}
-      <button class="btn btn-back" onclick="${isFirst ? 'renderHome()' : 'prevFlowStep()'}">
+      <button class="btn btn-back" onclick="history.back()">
         ← Voltar
       </button>
     </div>`;
@@ -103,6 +103,7 @@ function renderFlowStep() {
 
   // Ajusta tela
   screen = currentFlowArray === FLOW_QUICKSIM ? 'quick' : 'onboarding';
+  _navPush(screen, { step: currentFlowStep });
   console.log('✅ renderFlowStep() completado. screen:', screen);
 }
 
@@ -265,6 +266,8 @@ function novaSimulacaoSafeFlow() {
 
 function renderBifurcacao() {
   screen = 'bifurcacao';
+  _navPush('bifurcacao');
+  showBottomNav();
   setHtml(`
     <div class="step-card">
       <div class="step-title">O que você precisa agora?</div>

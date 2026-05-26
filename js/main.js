@@ -1,3 +1,45 @@
+// ── NAVEGAÇÃO POR GESTOS / HISTORY API ──
+
+let _isPopState = false;
+
+function _navPush(screenName, extra) {
+  if (_isPopState) return;
+  history.pushState({ screen: screenName, ...(extra || {}) }, '', '');
+}
+
+window.addEventListener('popstate', (e) => {
+  const state = e.state;
+  if (!state || !state.screen) return;
+
+  _isPopState = true;
+  const s = state.screen;
+
+  if (s === 'nova') {
+    renderHome();
+  } else if (s === 'perfis') {
+    renderProfiles();
+  } else if (s === 'educacao') {
+    renderEducacao();
+  } else if (s === 'sobre') {
+    renderSobre();
+  } else if (s === 'trHistorico') {
+    renderTRHistorico();
+  } else if (s === 'bifurcacao') {
+    renderBifurcacao();
+  } else if (s === 'result') {
+    renderResult();
+  } else if (s === 'tabela') {
+    renderTabela();
+  } else if (s === 'quick' || s === 'onboarding') {
+    if (state.step !== undefined) currentFlowStep = state.step;
+    renderFlowStep();
+  } else {
+    renderHome();
+  }
+
+  _isPopState = false;
+});
+
 // ── INICIALIZAÇÃO ──
 window.addEventListener('load', async () => {
   setTimeout(() => { document.getElementById('splash').classList.add('hide'); }, 1200);
