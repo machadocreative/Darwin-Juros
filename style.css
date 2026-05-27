@@ -2281,18 +2281,24 @@ dl.slider-result-row dd.slider-result-val.accent span {
     gap: 4px;
     cursor: pointer;
     color: var(--muted);
-    transition: color .15s;
     font-family: var(--font);
 }
 
 .nav-btn-icon {
     font-size: 19px;
     line-height: 1;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .nav-btn-label {
     font-size: 10px;
     font-weight: 500;
+    transition: color .15s;
 }
 
 .nav-btn.active {
