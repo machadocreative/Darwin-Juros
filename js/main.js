@@ -28,6 +28,8 @@ window.addEventListener('popstate', (e) => {
     renderBifurcacao();
   } else if (s === 'result') {
     renderResult();
+  } else if (s === 'resultQuick') {
+    renderResultQuick();
   } else if (s === 'tabela') {
     renderTabela();
   } else if (s === 'quick' || s === 'onboarding') {

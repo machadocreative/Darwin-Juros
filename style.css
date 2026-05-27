@@ -1882,6 +1882,13 @@ dl.slider-result-row dd.slider-result-val.accent span {
     margin-bottom: 4px;
 }
 
+.qrg-inner {
+    background: var(--accent-light);
+    padding: 12px 16px;
+    margin-bottom: 0;
+    border-bottom: 1px solid #B2D8C4;
+}
+
 .quick-result-card {
     background: var(--card);
     border: 1px solid var(--border);
