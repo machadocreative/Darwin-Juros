@@ -7,7 +7,9 @@
       "Bash(git push *)",
       "Bash(git checkout *)",
       "Bash(git merge beta --no-ff -m ' *)",
-      "Bash(grep -v \"//\")"
+      "Bash(grep -v \"//\")",
+      "Bash(git stash *)",
+      "Bash(git merge *)"
     ]
   }
 }
