@@ -48,8 +48,8 @@ const questions = {
     render: () => {
       const ta = parseFloat(form.taxaAnual) || parseFloat(formQuick.taxaAnual) || 0;
       return `
-        <div class="field-label">Qual sua Taxa de Juros Anual?</div>
-        <div class="label-hint">Informe abaixo em 4 casas decimais. O app irá converter sua taxa anual para mensal.</div>
+        <div class="step-title">Qual sua Taxa de Juros Anual?</div>
+        <div class="step-hint">Informe abaixo em 4 casas decimais. O app irá converter sua taxa anual para mensal.</div>
         <div class="input-wrap">
           <input type="text" id="${QUESTION_IDS.taxaAnual}" class="has-suf" placeholder="5,4321" inputmode="numeric"
             oninput="maskOnInput(this);this.classList.remove('invalid');atualizaTaxa();_atualizaTaxaQuick()">
@@ -109,8 +109,8 @@ const questions = {
       const seg = parseFloat(form.seguro) || parseFloat(formQuick.seguro) || 0;
       const adm = parseFloat(form.taxaAdm) || parseFloat(formQuick.taxaAdm) || 25;
       return `
-        <div class="field-label">Quais os Encargos Mensais?</div>
-        <div class="label-hint">São valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
+        <div class="step-title">Quais os Encargos Mensais?</div>
+        <div class="step-hint">São valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
         <label class="field-label">1. Seguro</label>
         <div class="label-hint">O valor de seguro é único para cada comprador — Verifique no seu contrato.</div>
         <div class="input-wrap">
@@ -183,8 +183,8 @@ const questions = {
       const diferenca = Math.abs(percCalc - (formQuick.percObra || percCalc));
       const temDiscrepancia = diferenca > 10;
       return `
-        <div class="field-label">Qual o Progresso atual da Obra?</div>
-        <div class="label-hint">Consulte seu extrato bancário ou app Habitação Caixa.</div>
+        <div class="step-title">Qual o Progresso atual da Obra?</div>
+        <div class="step-hint">Consulte seu extrato bancário ou app Habitação Caixa.</div>
         <div class="field-group">
           <label class="field-label">Percentual atual de Evolução de Obra</label>
           <div class="label-hint">Baseado nos dados informados, estimamos ${percCalc.toFixed(1)}%. Está correto?</div>
@@ -275,8 +275,8 @@ const questions = {
       );
       const showBox = vt > 0 && fin > 0 && fin < vt;
       return `
-        <div class="field-label">Informe os valores abaixo</div>
-        <div class="label-hint">Preencha de acordo como descrito no seu contrato.</div>
+        <div class="step-title">Informe os valores abaixo</div>
+        <div class="step-hint">Preencha de acordo como descrito no seu contrato.</div>
         <div class="field-group">
           <label class="field-label">1. Imóvel</label>
           <div class="label-hint"></div>
@@ -369,8 +369,8 @@ const questions = {
         ? `Estimamos ${percCalc.toFixed(1)}% com base no saldo. Corrija se necessário.`
         : `Informe o percentual exato de evolução de obra.`;
       return `
-        <div class="field-label">Qual o Progresso atual da Obra?</div>
-        <div class="label-hint">Consulte seu extrato bancário ou app Habitação Caixa.</div>
+        <div class="step-title">Qual o Progresso atual da Obra?</div>
+        <div class="step-hint">Consulte seu extrato bancário ou app Habitação Caixa.</div>
         <div class="field-group">
           <label class="field-label">Saldo devedor atual</label>
           <div class="label-hint">Valor repassado à Construtora até o momento.</div>
@@ -469,8 +469,8 @@ const questions = {
       caption: 'Consulte seu extrato bancário ou app Habitação Caixa'
     },
     render: () => `
-      <div class="field-label">Qual a situação atual do saldo?</div>
-      <div class="label-hint">Consulte nos apps Caixa ou no seu contrato.</div>
+      <div class="step-title">Qual a situação atual do saldo?</div>
+      <div class="step-hint">Consulte nos apps Caixa ou no seu contrato.</div>
       <div class="field-group">
         <label class="field-label">Valor do seu Financiamento</label>
         <div class="label-hint">O total de crédito liberado pelo banco — Sem a entrada da Construtora.</div>
@@ -535,8 +535,8 @@ const questions = {
     id: QUESTION_IDS.parcelaFinanciamento,
     maskType: 'brl',
     render: () => `
-      <div class="field-label">Valor da sua 1ª parcela do financiamento? — Opcional</div>
-      <div class="label-hint">Compararemos o valor dos seus Juros de Evolução de Obra com a Parcela do Financiamento.</div>
+      <div class="step-title">Valor da sua 1ª parcela do financiamento? — Opcional</div>
+      <div class="step-hint">Compararemos o valor dos seus Juros de Evolução de Obra com a Parcela do Financiamento.</div>
       <div class="input-wrap">
         <span class="pre">R$</span>
         <input type="text" id="${QUESTION_IDS.parcelaFinanciamento}" class="has-pre" placeholder="1.234,56" inputmode="numeric"
@@ -595,8 +595,8 @@ const questions = {
     id: QUESTION_IDS.mesInicial,
     maskType: null,
     render: () => `
-      <div class="field-label">Informe as datas abaixo</div>
-      <div class="label-hint">O app irá definir quantos meses de Evolução de Obra serão simulados baseado nos prazos informados abaixo.</div>
+      <div class="step-title">Informe as datas abaixo</div>
+      <div class="step-hint">O app irá definir quantos meses de Evolução de Obra serão simulados baseado nos prazos informados abaixo.</div>
       <div class="field-group">
         <label class="field-label">1. Início dos pagamentos</label>
         <div class="label-hint">Mês da sua primeira prestação, quando inicia a obra.</div>
@@ -649,9 +649,9 @@ const questions = {
     render: () => {
       const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
       return `
+        <label class="step-title">Qual o valor do Terreno?</label>
+        <div class="step-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
         <div class="field-group">
-          <label class="field-label">Qual o valor do Terreno?</label>
-          <div class="label-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
           <div class="input-wrap"><span class="pre">R$</span><input type="text" id="${QUESTION_IDS.valorTerreno}" class="has-pre" placeholder="10.000,00" inputmode="numeric" oninput="atualizaTer();this.classList.remove('invalid');document.getElementById('err-terreno').style.display='none'"></div>
           <div class="error-msg" id="err-terreno">O valor do terreno deve ser menor que o total financiado (${fmtBRL(fin)}).</div>
         </div>
@@ -699,8 +699,8 @@ const questions = {
     maskType: 'brl',
     render: () => `
       <div class="field-group">
-        <label class="field-label">Você já pagou alguma parcela? — Opcional</label>
-        <div class="label-hint">Informe os valores dos meses já pagos para acompanhamento. Deixe em branco se quiser pular ou se ainda não pagou nenhuma parcela.<br></div>
+        <label class="step-title">Você já pagou alguma parcela? — Opcional</label>
+        <div class="step-hint">Informe os valores dos meses já pagos para acompanhamento. Deixe em branco se quiser pular ou se ainda não pagou nenhuma parcela.<br></div>
       </div>
       <div class="table-wrap" id="hist-table-wrap">
         <table>
@@ -794,7 +794,7 @@ const questions = {
     maskType: null,
     render: () => `
       <div class="field-group">
-        <label class="field-label">Como quer chamar essa simulação?</label>
+        <label class="step-title">Como quer chamar essa simulação?</label>
         <input type="text" id="${QUESTION_IDS.nomePerfil}" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao || '')}" maxlength="30" oninput="updateCharCount(this);document.getElementById('err-nome').style.display='none'">
         <div class="char-count" id="char-count">0 / 30</div>
         <div class="error-msg" id="err-nome" style="display:none">Já existe um perfil com esse nome. Utilize um nome diferente.</div>
