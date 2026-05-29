@@ -794,7 +794,7 @@ const questions = {
     render: () => `
       <div class="field-group">
         <label class="step-title">Como quer chamar essa simulação?</label>
-        <label class="step-hint">Apertamento, Casa da Mãe Joana, Coração de Mãe, Quem casa quer casa...</label>
+        <div class="step-hint">Apertamento, Casa da Mãe Joana, Coração de Mãe, Quem casa quer casa...</div>
         <input type="text" id="${QUESTION_IDS.nomePerfil}" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao || '')}" maxlength="30" oninput="updateCharCount(this);document.getElementById('err-nome').style.display='none'">
         <div class="char-count" id="char-count">0 / 30</div>
         <div class="error-msg" id="err-nome" style="display:none">Já existe um perfil com esse nome. Utilize um nome diferente.</div>
