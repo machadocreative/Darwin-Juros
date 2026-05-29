@@ -517,7 +517,7 @@ function renderResult() {
     <div class="preview-slider-card">
       <div class="preview-slider-header">
         <div class="preview-slider-title">Visualizador de Prestações</div>
-        <div class="preview-slider-sub">Simule suas prestações sem o cálculo da TR.</div>
+        <div class="preview-slider-sub"><span>Arraste para simular suas prestações</span></div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
@@ -536,7 +536,7 @@ function renderResult() {
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Prestação simulada <strong>SEM TR</strong></dt>
+          <dt class="slider-result-label">Prestação simulada<br><strong>Taxa Referencial = 0,0000%</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
@@ -566,10 +566,10 @@ function renderResult() {
       <h2>${escHtml(form.nomeSimulacao || 'Apto 101')}</h2>
       <p id="result-subtitle">${ativas.length} parcelas · ${meses[0]?.mes || ''} → ${ultimoMesAtivo()}</p>
       <div class="rh-actions">
-        <button class="rh-btn save" onclick="saveProfile()">💾 Salvar</button>
-        <button class="rh-btn" onclick="abrirRenomearPerfil()">✏️ Renomear</button>
-        <button class="rh-btn" onclick="editarSimulacao()">🔧 Editar</button>
-        <button class="rh-btn del" id="rh-btn-del" onclick="deleteProfileFromResult()">🗑️ Excluir</button>
+        <button class="pc-btn save" onclick="saveProfile()">💾 Salvar</button>
+        <button class="pc-btn" onclick="abrirRenomearPerfil()">✏️ Renomear</button>
+        <button class="pc-btn" onclick="editarSimulacao()">🔧 Editar</button>
+        <button class="pc-btn del" id="rh-btn-del" onclick="deleteProfileFromResult()">🗑️ Excluir</button>
       </div>
     </div>
 

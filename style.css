@@ -486,6 +486,7 @@ input.invalid {
     font-family: var(--font);
     font-weight: 600;
     color: var(--blue);
+    font-size: 15px;
 }
 
 .diff-row.hl .d-label {
@@ -517,7 +518,7 @@ input.invalid {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .trh-input-label {
@@ -580,15 +581,25 @@ input.invalid {
 }
 
 .btn-current-month {
+    position: absolute;
+    float: right;
+    right: 20px;
+    height: 34px;
     white-space: nowrap;
     font-family: 'DM Sans';
-    font-size: 12px;
+    font-size: 13px;
     text-transform: uppercase;
     color: var(--accent-light);
     background: var(--accent);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
 }
 
 .btn-current-month:hover {
@@ -769,26 +780,26 @@ input.invalid {
     font-weight: 500;
 }
 
-.rh-btn:hover {
+.rh-btn:hover, .pc-btn:hover {
     background: var(--bg);
 }
 
-.rh-btn.save {
+.rh-btn.save, .pc-btn.save {
     background: var(--accent-light);
     border-color: #B2D8C4;
     color: var(--accent);
 }
 
-.rh-btn.save:hover {
+.rh-btn.save:hover, .pc-btn.save:hover {
     background: #d0eadb;
 }
 
-.rh-btn.del {
+.rh-btn.del, .pc-btn.del {
     color: var(--muted);
     border-color: var(--border);
 }
 
-.rh-btn.del:hover {
+.rh-btn.del:hover, .pc-btn.del:hover {
     color: var(--danger);
     border-color: var(--danger);
     background: var(--danger-light);
@@ -1432,11 +1443,11 @@ tr.obra-done td input {
     font-size: 14px;
     color: var(--muted);
     margin-bottom: 20px;
-    text-align: left;
+    text-align: center;
 }
 
 .slider-wrap {
-    padding: 0 20px;
+    padding: 10px 20px;
     margin-bottom: 16px;
 }
 
@@ -1562,6 +1573,7 @@ dl.slider-result-row dd.slider-result-val.accent span {
 
 .slider-fin-bloco {
     font-size: 12px;
+    letter-spacing: .05em;
     line-height: 1.5;
     background: #ffeccf;
     border: 1px solid var(--border);
@@ -1883,10 +1895,8 @@ dl.slider-result-row dd.slider-result-val.accent span {
 }
 
 .qrg-inner {
-    background: var(--accent-light);
-    padding: 12px 16px;
+    padding: 10px 0 20px 0;
     margin-bottom: 0;
-    border-bottom: 1px solid #B2D8C4;
 }
 
 .quick-result-card {
@@ -1941,7 +1951,6 @@ dl.slider-result-row dd.slider-result-val.accent span {
 .qrc-note {
     font-size: 13px;
     color: var(--muted);
-    font-style: italic;
 }
 
 .quick-result-grid-slider {
@@ -1982,7 +1991,6 @@ dl.slider-result-row dd.slider-result-val.accent span {
 .quick-result-card-fin .qrc-note {
     font-size: 10px;
     color: var(--muted);
-    font-style: italic;
 }
 
 .quick-disclaimer-top {
@@ -2064,7 +2072,7 @@ dl.slider-result-row dd.slider-result-val.accent span {
     border-radius: 50%;
     border: 1.5px solid var(--border);
     background: var(--bg);
-    cursor: pointer;
+    cursor: help;
     font-size: 16px;
     display: flex;
     align-items: center;
@@ -2411,7 +2419,6 @@ dl.slider-result-row dd.slider-result-val.accent span {
 
 .pc-btn {
     background: rgba(255,255,255,.15);
-    color: #fff;
     border: 1px solid rgba(255,255,255,.2);
     border-radius: 10px;
     padding: 12px 10px;

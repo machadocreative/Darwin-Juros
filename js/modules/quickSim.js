@@ -41,6 +41,8 @@ function _atualizaPercCalculado() {
   const group   = document.getElementById('group-perc-obra');
   const hint    = document.getElementById('hint-perc-calc');
   const elPerc  = document.getElementById(QUESTION_IDS.percentualObra);
+  const boxDisc = document.getElementById('box-discrepancia');
+  const txtDisc = document.getElementById('text-discrepancia');
 
   if (perc > 0) {
     const percFormatado = perc.toFixed(2).replace('.', ',');
@@ -50,8 +52,20 @@ function _atualizaPercCalculado() {
       elPerc.placeholder = percFormatado;
       if (!maskRead(elPerc)) attachMask(QUESTION_IDS.percentualObra, 'perc2', perc);
     }
+    // Discrepância dinâmica
+    const percInformado = maskRead(elPerc) || perc;
+    const diferenca = Math.abs(perc - percInformado);
+    if (boxDisc && txtDisc) {
+      if (diferenca > 10) {
+        txtDisc.textContent = `⚠️ Atenção: há uma diferença de ${diferenca.toFixed(1)}% entre o % calculado e o informado. Verifique se os valores estão corretos.`;
+        boxDisc.style.display = 'block';
+      } else {
+        boxDisc.style.display = 'none';
+      }
+    }
   } else {
     if (group) group.style.display = 'none';
+    if (boxDisc) boxDisc.style.display = 'none';
   }
 }
 
@@ -131,7 +145,11 @@ function _atualizaTRInfo() {
   const box  = document.getElementById('box-tr-info');
   const text = document.getElementById('tr-info-text');
 
-  if (!mes || !box || !text) return;
+  if (!mes) {
+    if (box) box.style.display = 'none';
+    return;
+  }
+  if (!box || !text) return;
 
   const ym    = parseMS(mes);
   const trDec = getTRParaMes(ym);
@@ -246,7 +264,7 @@ function renderResultQuick() {
       <div class="quick-result-card">
         <div class="qrc-label">Evolução de Obra</div>
         <div class="qrc-val">${fmtPerc(percInformado, 2)}</div>
-        <div class="qrc-note">Medição para ${mesLabel}</div>
+        <div class="qrc-note">Atualizado em ${mesLabel}</div>
       </div>
     </div>
 
@@ -257,16 +275,17 @@ function renderResultQuick() {
     <div class="preview-slider-card" style="margin-top:12px">
       <div class="preview-slider-header">
         <div class="preview-slider-title">Visualizador de Prestações</div>
-        <div class="preview-slider-sub"><span>Arraste para simular suas próximas prestações</span></div>
-      </div>
 
-      <div class="quick-result-grid-top qrg-inner">
-        ${card1Html}
-        <div class="quick-result-card">
-          <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) + ' · ' + mesLabel : ''}</div>
-          <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
-          <div class="qrc-note">${temTR ? 'Embutido na prestação' : '-'}</div>
+        <div class="quick-result-grid-top qrg-inner">
+          ${card1Html}
+          <div class="quick-result-card">
+            <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) + ' · ' + mesLabel : ''}</div>
+            <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
+            <div class="qrc-note">${temTR ? 'Embutido na prestação' : '-'}</div>
+          </div>
         </div>
+
+        <div class="preview-slider-sub"><span>Arraste para simular suas próximas prestações</span></div>
       </div>
 
       <div class="slider-wrap">
@@ -292,7 +311,7 @@ function renderResultQuick() {
       ${temFin ? `
         <div class="quick-result-grid-slider">
           <div class="quick-result-card accent">
-            <div class="qrc-label">1ª Parcela do Financiamento</div>
+            <div class="qrc-label">1ª parcela do Financiamento</div>
             <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
           </div>
           <div id="slider-fin-bloco" class="slider-fin-bloco"></div>

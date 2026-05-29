@@ -100,7 +100,24 @@ function renderEditScreen() {
 
       <div class="edit-section">
         <div class="edit-section-title">Datas</div>
-        ${questions.mesInicial.render()}
+        ${isPremium() ? `
+          <div class="step-hint">O mês de início está bloqueado. Você pode alterar apenas a data de entrega prevista.</div>
+          <div class="field-group">
+            <label class="field-label">1. Início dos pagamentos</label>
+            <div class="label-hint">Mês da sua primeira prestação, quando inicia a obra.</div>
+            <input type="month" id="${QUESTION_IDS.mesInicial}" value="${form.mesInicial}" disabled style="opacity:.5;cursor:not-allowed">
+            <div class="info-box" style="margin-top:8px;font-size:13px">🔒 Bloqueado após o desbloqueio premium. Para iniciar em outro mês, crie uma nova simulação.</div>
+          </div>
+          <br>
+          <div class="field-group">
+            <label class="field-label">2. Data de entrega prevista</label>
+            <div class="label-hint">Mês previsto para a última prestação de juros de Evolução de Obra. A amortização do Financiamento inicia no mês seguinte a este.</div>
+            <input type="month" id="${QUESTION_IDS.mesEntrega}" value="${form.mesEntrega}" oninput="atualizaMesesStep0();this.classList.remove('invalid');document.getElementById('err-mes-entrega').style.display='none'">
+            <div class="error-msg" id="err-mes-entrega" style="display:none">A data de entrega deve ser após a 1ª parcela.</div>
+          </div>
+          <div id="badge-meses"></div>
+          <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que for necessário.</div>
+        ` : questions.mesInicial.render()}
       </div>
 
       <div class="edit-section">
@@ -150,7 +167,11 @@ function confirmarEdicao() {
   questions.taxaAnual.save();
   questions.seguro.save();
   questions.parcelaFinanciamento.save();
-  questions.mesInicial.save();
+  if (isPremium()) {
+    form.mesEntrega = document.getElementById(QUESTION_IDS.mesEntrega)?.value || form.mesEntrega;
+  } else {
+    questions.mesInicial.save();
+  }
   if (!isPremium()) questions.historicoPagamentos.save();
   questions.nomePerfil.save();
 

@@ -361,16 +361,24 @@ const questions = {
       alt: 'Imagem explicando onde encontrar como encontrar o valor do saldo devedor no aplicativo Caixa',
       caption: 'Consulte seu extrato bancário ou app Habitação Caixa'
     },
-    render: () => {
-      const percCalc = _calcPercAutomatico();
-      const diferenca = Math.abs(percCalc - (formQuick.percObra || percCalc));
-      const temDiscrepancia = diferenca > 10 && percCalc > 0;
-      const hintPerc = percCalc > 0
-        ? `Estimamos ${percCalc.toFixed(1)}% com base no saldo. Corrija se necessário.`
-        : `Informe o percentual exato de evolução de obra.`;
-      return `
+    render: () => `
         <div class="step-title">Qual o Progresso atual da Obra?</div>
         <div class="step-hint">Consulte seu extrato bancário ou app Habitação Caixa.</div>
+
+        <div class="field-group">
+          <label class="field-label">Mês da Medição</label>
+          <div class="label-hint">A qual mês essa % de obra se refere?</div>
+          <div class="month-input-row">
+            <input type="month" id="${QUESTION_IDS.mesMedido}" value=""
+              oninput="this.classList.remove('invalid');document.getElementById('err-mes-medido').style.display='none';_atualizaTRInfo()">
+            <button type="button" class="btn-current-month" onclick="preencherMesAtual()">Inserir Mês atual</button>
+          </div>
+          <div class="error-msg" id="err-mes-medido" style="display:none">Informe o mês da medição.</div>
+        </div>
+        <div class="diff-box" id="box-tr-info" style="display:none">
+          <span id="tr-info-text"></span>
+        </div>
+
         <div class="field-group">
           <label class="field-label">Saldo devedor atual</label>
           <div class="label-hint">Valor repassado à Construtora até o momento.</div>
@@ -381,34 +389,22 @@ const questions = {
           </div>
           <div class="error-msg" id="err-saldo" style="display:none"></div>
         </div>
+
         <div class="field-group" id="group-perc-obra" style="display:none">
           <label class="field-label">Percentual atual de Evolução de Obra</label>
           <div class="label-hint" id="hint-perc-calc">Informe o percentual exato de evolução de obra.</div>
           <div class="input-wrap">
             <input type="text" id="${QUESTION_IDS.percentualObra}" class="has-suf" placeholder="00,00" inputmode="numeric"
-              oninput="maskOnInput(this);_limitPercQuick(this);this.classList.remove('invalid')">
+              oninput="maskOnInput(this);_limitPercQuick(this);this.classList.remove('invalid');document.getElementById('err-perc-obra').style.display='none'">
             <span class="suf">%</span>
           </div>
           <div class="error-msg" id="err-perc-obra" style="display:none">Informe uma evolução entre 0,01% e 100%.</div>
         </div>
-        ${temDiscrepancia ? `
-          <div class="info-box" style="background:var(--warn-bg);border-color:#F6E0A0">
-            ⚠️ Atenção: há uma diferença de ${diferenca.toFixed(1)}% entre o % calculado e o informado. Verifique se os valores estão corretos.
-          </div>` : ''}
-        <div class="field-group">
-          <label class="field-label">Mês dessa Medição</label>
-          <div class="label-hint">A qual mês essa % de obra se refere?</div>
-          <div class="month-input-row">
-            <input type="month" id="${QUESTION_IDS.mesMedido}" value="" oninput="this.classList.remove('invalid');document.getElementById('err-mes-medido').style.display='none';_atualizaTRInfo()">
-            <button type="button" class="btn-current-month" onclick="preencherMesAtual()">Inserir Mês atual</button>
-          </div>
-          <div class="error-msg" id="err-mes-medido" style="display:none">Informe o mês da medição.</div>
+
+        <div class="info-box" id="box-discrepancia" style="display:none;background:var(--warn-bg);border-color:#F6E0A0">
+          <span id="text-discrepancia"></span>
         </div>
-        <div class="diff-box" id="box-tr-info" style="display:none">
-          <span id="tr-info-text"></span>
-        </div>
-        `;
-    },
+      `,
     validate: () => {
       const elSaldo = document.getElementById(QUESTION_IDS.saldoDevedor);
       const elPerc  = document.getElementById(QUESTION_IDS.percentualObra);
@@ -416,6 +412,11 @@ const questions = {
       const saldo = maskRead(elSaldo);
       const v     = maskRead(elPerc);
       const mes   = elMes?.value;
+      if (!mes) {
+        elMes?.classList.add('invalid');
+        const em = document.getElementById('err-mes-medido'); if (em) em.style.display = 'block';
+        return false;
+      }
       if (!saldo || saldo <= 0) {
         elSaldo?.classList.add('invalid');
         const es = document.getElementById('err-saldo'); if (es) { es.textContent = 'Informe o saldo devedor atual.'; es.style.display = 'block'; }
@@ -432,11 +433,6 @@ const questions = {
         const ep = document.getElementById('err-perc-obra'); if (ep) ep.style.display = 'block';
         return false;
       }
-      if (!mes) {
-        elMes?.classList.add('invalid');
-        const em = document.getElementById('err-mes-medido'); if (em) em.style.display = 'block';
-        return false;
-      }
       return true;
     },
     save: () => {
@@ -451,11 +447,14 @@ const questions = {
       const elSaldo = document.getElementById(QUESTION_IDS.saldoDevedor);
       const elPerc  = document.getElementById(QUESTION_IDS.percentualObra);
       const elMes   = document.getElementById(QUESTION_IDS.mesMedido);
-      if (elSaldo) elSaldo.oninput = () => { maskValue(elSaldo, 'brl');   elSaldo.classList.remove('invalid'); const es = document.getElementById('err-saldo'); if (es) es.style.display = 'none'; _atualizaPercCalculado(); };
+      if (elSaldo) elSaldo.oninput = () => { maskValue(elSaldo, 'brl'); elSaldo.classList.remove('invalid'); const es = document.getElementById('err-saldo'); if (es) es.style.display = 'none'; _atualizaPercCalculado(); };
       if (elPerc)  elPerc.oninput  = () => { maskValue(elPerc,  'perc2'); _limitPercQuick(elPerc); elPerc.classList.remove('invalid'); const ep = document.getElementById('err-perc-obra'); if (ep) ep.style.display = 'none'; };
-      if (elMes && formQuick.mesMedido) elMes.value = formQuick.mesMedido;
-      _atualizaPercCalculado();
+      if (elMes) {
+        if (formQuick.mesMedido) elMes.value = formQuick.mesMedido;
+        elMes.oninput = () => { elMes.classList.remove('invalid'); const em = document.getElementById('err-mes-medido'); if (em) em.style.display = 'none'; _atualizaTRInfo(); };
+      }
       _atualizaTRInfo();
+      _atualizaPercCalculado();
     }
   },
 
@@ -795,6 +794,7 @@ const questions = {
     render: () => `
       <div class="field-group">
         <label class="step-title">Como quer chamar essa simulação?</label>
+        <label class="step-hint">Apertamento, Casa da Mãe Joana, Coração de Mãe, Quem casa quer casa...</label>
         <input type="text" id="${QUESTION_IDS.nomePerfil}" placeholder="Apto 101" value="${escHtml(form.nomeSimulacao || '')}" maxlength="30" oninput="updateCharCount(this);document.getElementById('err-nome').style.display='none'">
         <div class="char-count" id="char-count">0 / 30</div>
         <div class="error-msg" id="err-nome" style="display:none">Já existe um perfil com esse nome. Utilize um nome diferente.</div>

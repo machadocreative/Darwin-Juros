@@ -39,24 +39,23 @@ function renderTRHistorico() {
   setHtml(`
     <button class="btn-screen-back" onclick="history.back()">← Voltar</button>
     <div class="screen-title">Histórico da TR</div>
-    <div class="screen-sub">Taxa Referencial mensal divulgada pelo Banco Central do Brasil. Utilizada nos cálculos de evolução de obra.</div>
+    <div class="screen-sub">Taxa Referencial mensal divulgada pelo Banco Central do Brasil. Utilizada nos cálculos de evolução de obra. Clique nos meses abaixo para simular o somatório da sua taxa de juros com a respectiva TR de cada mês.</div>
 
     <div class="diff-box trh-sticky">
-      <div class="d-title">Simule sua taxa com a TR</div>
       <div class="trh-input-row">
-        <label class="trh-input-label">Sua taxa de juros anual</label>
+      <div class="d-title">Digite sua Taxa de Juros Anual</div>
         <div class="input-wrap">
-          <input type="text" id="trh-taxa-input" class="has-suf" placeholder="5,0000" inputmode="numeric">
+          <input type="text" id="trh-taxa-input" class="has-suf" placeholder="5,0000" inputmode="numeric" style="width: 100px; right: 0px; position: absolute; top: -20px;">
           <span class="suf">% a.a.</span>
         </div>
       </div>
+      <hr class="diff-divider">
       <div id="trh-breakdown" style="display:none">
-        <div class="diff-row"><span class="d-label">Sua taxa de juros mensal</span><span class="d-val" id="trh-mensal">—</span></div>
+        <div class="diff-row"><span class="d-label">Taxa de Juros a.m.</span><span class="d-val" id="trh-mensal">—</span></div>
         <div class="diff-row"><span class="d-label">(+) TR de <span id="trh-mes-label">—</span></span><span class="d-val" id="trh-tr-val">—</span></div>
         <hr class="diff-divider">
         <div class="diff-row hl"><span class="d-label">Sua taxa de juros neste mês</span><span class="d-val" id="trh-soma-val">—</span></div>
       </div>
-      <div class="info-box" id="trh-hint">💡 Digite sua taxa anual e selecione um mês para ver o cálculo.</div>
     </div>
 
     ${rows}
