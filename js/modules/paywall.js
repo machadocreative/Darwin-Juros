@@ -4,9 +4,16 @@ function showPaywall() {
   if (existing) existing.remove();
 
   const mesIniLabel = form.mesInicial
-    ? `<div class="confirm-box" style="margin:10px 0 0;text-align:left">
+    ? `<div class="confirm-box" style="margin:8px 0 0;text-align:left">
         <div class="c-label">Data de início atual</div>
         <div class="c-val">${mLabelFull(form.mesInicial)}</div>
+      </div>`
+    : '';
+
+  const vtLabel = form.valorTotal
+    ? `<div class="confirm-box" style="margin:8px 0 0;text-align:left">
+        <div class="c-label">Valor total do imóvel atual</div>
+        <div class="c-val">${fmtBRL(parseFloat(form.valorTotal))}</div>
       </div>`
     : '';
 
@@ -18,8 +25,9 @@ function showPaywall() {
       <div class="paywall-icon">🔓</div>
       <div class="paywall-title">Libere a tabela completa de parcelas</div>
       <div class="paywall-sub">Veja todas as parcelas já com o valor da Taxa Referencial mês a mês · Edite % de obra livremente · Acompanhe o que já foi pago</div>
-      <div class="info-box" style="margin:14px 0 0;text-align:left">⚠️ <strong>Atenção:</strong> após o desbloqueio, a <strong>data de início</strong> da simulação não poderá mais ser editada. Certifique-se de que está correta antes de prosseguir.</div>
+      <div class="info-box" style="margin:14px 0 0;text-align:left">⚠️ <strong>Atenção:</strong> após o desbloqueio, a <strong>data de início</strong> e o <strong>valor total do imóvel</strong> não poderão mais ser editados. Certifique-se de que estão corretos antes de prosseguir.</div>
       ${mesIniLabel}
+      ${vtLabel}
       <div class="paywall-price">
         <span class="paywall-amount">R$ 4,99</span>
         <span class="paywall-terms">Pagamento único · Sem assinatura</span>
@@ -64,6 +72,7 @@ function aplicarCupom() {
 
 function _showPremiumConfirmacao() {
   const mesLabel = form.mesInicial ? mLabelFull(form.mesInicial) : '(não informado)';
+  const vtLabel  = form.valorTotal  ? fmtBRL(parseFloat(form.valorTotal)) : '(não informado)';
   const overlay = document.createElement('div');
   overlay.id = 'premium-confirmacao-overlay';
   overlay.className = 'paywall-overlay';
@@ -72,11 +81,15 @@ function _showPremiumConfirmacao() {
       <div class="paywall-icon">✅</div>
       <div class="paywall-title">Acesso completo liberado!</div>
       <div class="paywall-sub">Sua simulação agora tem acesso à tabela completa de parcelas.</div>
-      <div class="confirm-box" style="margin:16px 0 8px;text-align:left">
+      <div class="confirm-box" style="margin:16px 0 4px;text-align:left">
         <div class="c-label">🔒 Data de início bloqueada</div>
         <div class="c-val">${mesLabel}</div>
       </div>
-      <div class="info-box" style="text-align:left">Esta data não poderá mais ser editada. Para iniciar em outro mês, crie uma nova simulação.</div>
+      <div class="confirm-box" style="margin:0 0 8px;text-align:left">
+        <div class="c-label">🔒 Valor total do imóvel bloqueado</div>
+        <div class="c-val">${vtLabel}</div>
+      </div>
+      <div class="info-box" style="text-align:left">Esses campos não poderão mais ser editados. Para usar outros valores, crie uma nova simulação.</div>
       <button class="paywall-btn-pay" style="opacity:1;pointer-events:all" onclick="document.getElementById('premium-confirmacao-overlay').remove();renderResult()">Ver resultado →</button>
     </div>
   `;

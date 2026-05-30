@@ -521,6 +521,10 @@ input.invalid {
     margin-bottom: 12px;
 }
 
+.trh-input-row .d-title {
+    margin-bottom: 0;
+}
+
 .trh-input-label {
     font-size: 12px;
     color: var(--blue);

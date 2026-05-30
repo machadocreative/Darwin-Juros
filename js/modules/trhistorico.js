@@ -45,7 +45,7 @@ function renderTRHistorico() {
       <div class="trh-input-row">
       <div class="d-title">Digite sua Taxa de Juros Anual</div>
         <div class="input-wrap">
-          <input type="text" id="trh-taxa-input" class="has-suf" placeholder="5,0000" inputmode="numeric" style="width: 100px; right: 0px; position: absolute; top: -20px;">
+          <input type="text" id="trh-taxa-input" class="has-suf" placeholder="5,0000" inputmode="numeric">
           <span class="suf">% a.a.</span>
         </div>
       </div>

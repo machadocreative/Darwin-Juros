@@ -66,6 +66,11 @@ function _iniciarEdicao() {
 
 // ── TELA ÚNICA DE EDIÇÃO ──
 function renderEditScreen() {
+  const premium = isPremium();
+  const _vtFmt  = (parseFloat(form.valorTotal) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const _finAmt = parseFloat(form.valorTotal || 0) * (parseFloat(form.percFinanciado || 80) / 100);
+  const _finFmt = _finAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   const html = `
     <div class="edit-screen">
       <div class="step-card edit-intro-card">
@@ -75,7 +80,23 @@ function renderEditScreen() {
 
       <div class="edit-section">
         <div class="edit-section-title">Valor do Imóvel</div>
-        ${questions.valorImovel.render()}
+        ${premium ? `
+          <div class="field-group">
+            <label class="field-label">1. Imóvel</label>
+            <div class="input-wrap">
+              <span class="pre">R$</span>
+              <input type="text" id="${QUESTION_IDS.valorTotal}" class="has-pre" value="${_vtFmt}" disabled style="opacity:.5;cursor:not-allowed">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">2. Financiamento</label>
+            <div class="input-wrap">
+              <span class="pre">R$</span>
+              <input type="text" id="${QUESTION_IDS.financiamentoTotal}" class="has-pre" value="${_finFmt}" disabled style="opacity:.5;cursor:not-allowed">
+            </div>
+          </div>
+          <div class="info-box" style="margin-top:8px;font-size:13px">🔒 Bloqueado após o desbloqueio premium. Para alterar esses valores, crie uma nova simulação.</div>
+        ` : questions.valorImovel.render()}
       </div>
 
       <div class="edit-section">
@@ -142,20 +163,23 @@ function renderEditScreen() {
   setHtml(html);
 
   setTimeout(() => {
-    questions.valorImovel.init();
+    if (!premium) questions.valorImovel.init();
     questions.valorTerreno.init();
     questions.taxaAnual.init();
     questions.seguro.init();
     questions.parcelaFinanciamento.init();
     questions.mesInicial.init();
-    if (!isPremium()) questions.historicoPagamentos.init();
+    if (!premium) questions.historicoPagamentos.init();
     questions.nomePerfil.init();
   }, 80);
 }
 
 function confirmarEdicao() {
-  if (!questions.valorImovel.validate())  return;
-  questions.valorImovel.save(); // necessário antes de valorTerreno e parcelaFinanciamento validarem
+  const premium = isPremium();
+  if (!premium) {
+    if (!questions.valorImovel.validate()) return;
+    questions.valorImovel.save(); // necessário antes de valorTerreno e parcelaFinanciamento validarem
+  }
   if (!questions.valorTerreno.validate()) return;
   if (!questions.taxaAnual.validate())    return;
   if (!questions.seguro.validate())       return;
@@ -167,12 +191,12 @@ function confirmarEdicao() {
   questions.taxaAnual.save();
   questions.seguro.save();
   questions.parcelaFinanciamento.save();
-  if (isPremium()) {
+  if (premium) {
     form.mesEntrega = document.getElementById(QUESTION_IDS.mesEntrega)?.value || form.mesEntrega;
   } else {
     questions.mesInicial.save();
   }
-  if (!isPremium()) questions.historicoPagamentos.save();
+  if (!premium) questions.historicoPagamentos.save();
   questions.nomePerfil.save();
 
   _finalizarOnboarding();
