@@ -15,7 +15,7 @@ let migrationAbort = null;    // fn() — called when user presses Voltar past a
 // ── DADOS DO FORMULÁRIO (simulação completa) ──
 const form = {
   mesInicial: '', mesEntrega: '',
-  valorTotal: '', percFinanciado: 80,
+  valorTotal: '', valorFinanciado: '', percFinanciado: 80,
   valorTerreno: '',
   seguro: '', taxaAdm: '',
   taxaAnual: '',

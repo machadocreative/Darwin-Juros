@@ -333,8 +333,9 @@ const questions = {
       const fin = maskRead(document.getElementById(QUESTION_IDS.financiamentoTotal));
       formQuick.valorTotal      = vt;
       formQuick.totalFinanciado = fin;
-      form.valorTotal    = String(vt || '');
-      form.percFinanciado = (vt > 0 && fin > 0) ? parseFloat(((fin / vt) * 100).toFixed(2)) : 80;
+      form.valorTotal      = String(vt || '');
+      form.valorFinanciado = String(fin || '');
+      form.percFinanciado  = (vt > 0 && fin > 0) ? parseFloat(((fin / vt) * 100).toFixed(2)) : 80;
     },
     init: () => {
       const vtVal  = formQuick.valorTotal || form.valorTotal || '';

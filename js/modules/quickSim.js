@@ -244,7 +244,7 @@ function renderResultQuick() {
   const parcelaAtual = _calcTotalParcelaAtual();
 
   const card1Html = `
-    <div class="quick-result-card">
+    <div class="result-card">
       <div class="qrc-label">Parcela atual<br>Vence em ${proxMesLabel}</div>
       <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
       <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem TR'}</div>
@@ -255,13 +255,13 @@ function renderResultQuick() {
       <h2>Simulação Rápida</h2>
     </div>
 
-    <div class="quick-result-grid-top">
-      <div class="quick-result-card accent">
+    <div class="result-grid">
+      <div class="result-card accent">
         <div class="qrc-label">Saldo devedor</div>
         <div class="qrc-val">${fmtBRL(formQuick.saldoAtual)}</div>
         <div class="qrc-note">de ${fmtBRL(formQuick.totalFinanciado)}</div>
       </div>
-      <div class="quick-result-card">
+      <div class="result-card">
         <div class="qrc-label">Evolução de Obra</div>
         <div class="qrc-val">${fmtPerc(percInformado, 2)}</div>
         <div class="qrc-note">Medição: ${mesLabel}</div>
@@ -276,9 +276,9 @@ function renderResultQuick() {
       <div class="preview-slider-header">
         <div class="preview-slider-title">Visualizador de Prestações</div>
 
-        <div class="quick-result-grid-top qrg-inner">
+        <div class="result-grid result-grid-inner">
           ${card1Html}
-          <div class="quick-result-card">
+          <div class="result-card">
             <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) + ' · ' + mesLabel : ''}</div>
             <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
             <div class="qrc-note">${temTR ? 'Embutido na prestação' : '-'}</div>
@@ -309,8 +309,8 @@ function renderResultQuick() {
         </dl>
       </div>
       ${temFin ? `
-        <div class="quick-result-grid-slider">
-          <div class="quick-result-card accent">
+        <div class="result-grid-slider">
+          <div class="result-card accent">
             <div class="qrc-label">1ª parcela do Financiamento</div>
             <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
           </div>

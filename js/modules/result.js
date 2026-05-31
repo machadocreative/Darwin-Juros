@@ -478,13 +478,14 @@ function renderResult() {
   _navPush('result');
   showBottomNav();
   aplicaBloqueio();
-  const fin      = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const fin      = parseFloat(form.valorFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
   const ativas   = meses.filter(r => !r.bloqueado);
   const total    = ativas.reduce((s, r) => s + r.previsto, 0);
   const pagoPrevisto = ativas.filter(r => r.pago).reduce((s, r) => s + r.previsto, 0);
   const media    = ativas.length ? total / ativas.length : 0;
   const premium  = isPremium();
   const totalReal = ativas.reduce((s, r) => s + (r.valorReal || 0), 0);
+  const totalPago = totalReal > 0 ? totalReal : pagoPrevisto;
 
   setHtml(`
     <div class="result-header">
@@ -498,21 +499,19 @@ function renderResult() {
       </div>
     </div>
 
-    <div class="sticky-summary">
-      <div class="summary-grid">
-        <div class="summary-card">
-          <div class="s-label">Valor Financiado</div>
-          <div class="s-val">${fmtBRL(fin)}</div>
-        </div>
-        <div class="summary-card">
-          <div class="s-label">Valor médio estimado</div>
-          <div class="s-val">${fmtBRL(media)}</div>
-        </div>
-        ${premium ? `
-        <div class="summary-card paid">
-          <div class="s-label">Pago até o momento</div>
-          <div class="s-val">${fmtBRL(totalReal > 0 ? totalReal : pagoPrevisto)}</div>
-        </div>` : ''}
+    <div class="result-card accent result-card-full">
+      <div class="qrc-label">Valor Financiado</div>
+      <div class="qrc-val">${fmtBRL(fin)}</div>
+    </div>
+    <div class="result-grid" style="margin-top:10px">
+      <div class="result-card">
+        <div class="qrc-label">Parcela média estimada</div>
+        <div class="qrc-val">${fmtBRL(media)}</div>
+      </div>
+      <div class="result-card">
+        <div class="qrc-label">Pago até o momento</div>
+        <div class="qrc-val" id="res-total-pago">${fmtBRL(totalPago)}</div>
+        <div class="qrc-note">${totalPago > 0 ? (premium ? '✦ Premium' : 'via histórico') : 'Nenhum registro'}</div>
       </div>
     </div>
 
@@ -523,7 +522,7 @@ function renderResult() {
       </button>
       <button class="feat-btn" onclick="${premium ? 'renderTabela()' : 'renderMiniTabela()'}">
         <span class="feat-icon">📋</span>
-        <span class="feat-label">Tabela de Pagamentos</span>
+        <span class="feat-label">Histórico de Parcelas</span>
         ${premium ? '<span class="feat-badge feat-badge-premium">✦ Premium</span>' : ''}
       </button>
       <button class="feat-btn feat-soon" disabled>
@@ -547,6 +546,12 @@ function renderResult() {
         <span class="feat-badge feat-badge-soon">Em breve</span>
       </button>
     </div>
+
+    ${!premium ? `
+    <button class="free-preview-cta" onclick="showPaywall()" style="margin-top:20px">
+      🔓 Libere mais funcionalidades
+      <span class="cta-price">R$ 4,99</span>
+    </button>` : ''}
 
     <div class="quick-disclaimer-end">
       <p>Darwin não é uma ferramenta preditiva. Utilizamos a fórmula oficial de cálculo divulgada pela Caixa Econômica. Não nos responsabilizamos se previsões futuras não corresponderem à realidade, uma vez que valores cobrados serão sempre de encargo da instituição financeira.</p>
@@ -596,8 +601,8 @@ function renderSliderResult() {
         </dl>
       </div>
       ${temFin ? `
-      <div class="quick-result-grid-slider">
-        <div class="quick-result-card accent">
+      <div class="result-grid-slider">
+        <div class="result-card accent">
           <div class="qrc-label">1ª Parcela do Financiamento</div>
           <div class="qrc-val">${fmtBRL(form.parcelaFinanciamento)}</div>
         </div>
@@ -605,7 +610,7 @@ function renderSliderResult() {
       </div>` : ''}
       ${!premium ? `
       <button class="free-preview-cta" onclick="showPaywall()">
-        🔓 Ver tabela completa de parcelas
+        🔓 Libere mais funcionalidades
         <span class="cta-price">R$ 4,99</span>
       </button>` : ''}
     </div>
@@ -634,11 +639,9 @@ function renderMiniTabela() {
 
   if (decorridos < 0) {
     setHtml(`
-      <div class="tabela-header">
-        <button class="tabela-back-btn" onclick="history.back()">← Resumo</button>
-        <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
-      </div>
-      <div class="info-box" style="margin-top:16px">A simulação ainda não iniciou. A tabela de pagamentos estará disponível a partir de ${mLabel(ymIni)}.</div>
+      <div class="screen-title">Histórico de Parcelas</div>
+      <button class="btn btn-back" onclick="history.back()" style="margin-bottom:16px">← Voltar à tela de resultados</button>
+      <div class="info-box">A simulação ainda não iniciou. O histórico estará disponível a partir de ${mLabel(ymIni)}.</div>
     `);
     return;
   }
@@ -650,23 +653,23 @@ function renderMiniTabela() {
       <td class="num-col">${i + 1}</td>
       <td class="td-mes">${escHtml(r.mes)}</td>
       <td class="td-right">
-        <div class="input-wrap">
+        <div class="input-wrap mini-val-wrap">
           <span class="pre" style="font-size:12px">R$</span>
-          <input type="text" id="mini-val-${i}" class="has-pre" inputmode="numeric" placeholder="—">
+          <input type="text" id="mini-val-${i}" class="has-pre mini-val-input" inputmode="numeric" placeholder="—">
         </div>
       </td>
       <td class="td-center">
-        <span id="mini-badge-${i}" class="${r.pago ? 'badge-pago' : 'badge-nao'}">${r.pago ? '✓ Pago' : '—'}</span>
+        <span id="mini-badge-${i}" class="${r.pago ? 'badge-pago' : 'badge-nao'}">${r.pago ? '✓' : '—'}</span>
       </td>
     </tr>`).join('');
 
   setHtml(`
-    <div class="tabela-header">
-      <button class="tabela-back-btn" onclick="history.back()">← Resumo</button>
-      <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
-    </div>
-    <div class="info-box" style="margin-top:12px">💡 Registre os valores pagos mês a mês. A parcela é marcada como paga automaticamente ao inserir um valor.
-      ${totalSim < decorridos ? '<br>⚠️ A data de entrega está no passado — ajuste-a em <strong>Editar</strong> se necessário.' : ''}
+    <div class="screen-title">Histórico de Parcelas</div>
+    <button class="btn btn-back" onclick="history.back()" style="margin-bottom:16px">← Voltar à tela de resultados</button>
+    ${totalSim < decorridos ? '<div class="info-box" style="margin-bottom:12px">⚠️ A data de entrega está no passado — ajuste-a em <strong>Editar</strong> se necessário.</div>' : ''}
+    <div class="mini-somatorio-sticky" id="mini-somatorio">
+      <span class="mini-soma-label">Total pago</span>
+      <span class="mini-soma-val" id="mini-total-val">${fmtBRL(0)}</span>
     </div>
     <div class="table-wrap">
       <table>
@@ -674,18 +677,13 @@ function renderMiniTabela() {
           <th class="th-center">#</th>
           <th>Mês</th>
           <th class="th-right">Valor pago</th>
-          <th class="th-center">Situação</th>
+          <th class="th-center">Pago?</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div class="confirm-box" id="mini-somatorio" style="display:none">
-      <div class="c-label">Total registrado</div>
-      <div class="c-val" id="mini-total-val">—</div>
-    </div>
-    <button class="btn-reset" onclick="history.back()">← Voltar à tela de resultados</button>
-    <button class="free-preview-cta" onclick="showPaywall()" style="margin-top:12px">
-      🔓 Desbloquear tabela completa
+    <button class="free-preview-cta" onclick="showPaywall()" style="margin-top:16px">
+      🔓 Libere mais funcionalidades
       <span class="cta-price">R$ 4,99</span>
     </button>
   `);
@@ -730,8 +728,6 @@ function _updateMiniSomatorio(countRows) {
   for (let i = 0; i < countRows; i++) {
     if (ativas[i]?.valorReal) total += ativas[i].valorReal;
   }
-  const box = document.getElementById('mini-somatorio');
   const val = document.getElementById('mini-total-val');
-  if (box) box.style.display = total > 0 ? '' : 'none';
   if (val) val.textContent = fmtBRL(total);
 }
