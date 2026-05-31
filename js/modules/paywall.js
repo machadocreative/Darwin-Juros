@@ -80,16 +80,16 @@ function _showPremiumConfirmacao() {
     <div class="paywall-card">
       <div class="paywall-icon">✅</div>
       <div class="paywall-title">Acesso completo liberado!</div>
-      <div class="paywall-sub">Sua simulação agora tem acesso à tabela completa de parcelas.</div>
+      <div class="paywall-sub">Seu perfil agora tem acesso aos recursos Premium</div>
       <div class="confirm-box" style="margin:16px 0 4px;text-align:left">
-        <div class="c-label">🔒 Data de início bloqueada</div>
         <div class="c-val">${mesLabel}</div>
+        <div class="c-label">🔒 Data de início bloqueada</div>
       </div>
       <div class="confirm-box" style="margin:0 0 8px;text-align:left">
-        <div class="c-label">🔒 Valor total do imóvel bloqueado</div>
         <div class="c-val">${vtLabel}</div>
+        <div class="c-label">🔒 Valor total do imóvel bloqueado</div>
       </div>
-      <div class="info-box" style="text-align:left">Esses campos não poderão mais ser editados. Para usar outros valores, crie uma nova simulação.</div>
+      <div class="info-box" style="text-align: left; margin-bottom: 15px;">Esses campos não poderão mais ser editados. Para simular com outros valores, crie uma nova simulação.</div>
       <button class="paywall-btn-pay" style="opacity:1;pointer-events:all" onclick="document.getElementById('premium-confirmacao-overlay').remove();renderResult()">Ver resultado →</button>
     </div>
   `;

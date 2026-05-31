@@ -5,7 +5,7 @@
 
 // Fluxo rápido (5 passos)
 const FLOW_QUICKSIM = [
-  'valorImovel',        // 01 / 05 — Valor total do imóvel + Financiamento
+  'financiamentoQuick', // 01 / 05 — Valor do Financiamento
   'taxaAnual',               // 02 / 05 — Taxa de Juros Anual
   'seguro',                  // 03 / 05 — Encargos mensais (Seguro + Taxa Adm)
   'estadoObraQuick',         // 04 / 05 — Saldo devedor + % Obra + Mês da Medição
@@ -14,14 +14,13 @@ const FLOW_QUICKSIM = [
 
 // Fluxo completo (8 passos)
 const FLOW_FULLSIM = [
-  'valorImovel',              // 01 / 08 — Valor Total + Valor Financiado (calcula % internamente)
-  'valorTerreno',             // 02 / 08 — Valor do Terreno
-  'taxaAnual',                // 03 / 08 — Taxa de Juros Anual
-  'seguro',                   // 04 / 08 — Seguro + Taxa Administrativa
-  'parcelaFinanciamento',     // 05 / 08 — 1ª Parcela do Financiamento (opcional)
-  'mesInicial',               // 06 / 08 — Datas iniciais
-  'historicoPagamentos',      // 07 / 08 — Histórico de Pagamentos (opcional)
-  'nomePerfil'                // 08 / 08 — Nome da Simulação
+  'valorImovel',              // 01 / 07 — Valor Total + Valor Financiado (calcula % internamente)
+  'valorTerreno',             // 02 / 07 — Valor do Terreno
+  'taxaAnual',                // 03 / 07 — Taxa de Juros Anual
+  'seguro',                   // 04 / 07 — Seguro + Taxa Administrativa
+  'parcelaFinanciamento',     // 05 / 07 — 1ª Parcela do Financiamento (opcional)
+  'mesInicial',               // 06 / 07 — Datas iniciais
+  'nomePerfil'                // 07 / 07 — Nome da Simulação
 ];
 
 // Função auxiliar para obter o total de steps de um fluxo

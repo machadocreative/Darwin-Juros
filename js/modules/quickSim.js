@@ -183,14 +183,14 @@ function _calcSaldoNoPerc() {
 }
 
 // Parcela sem TR
-function _calcParcelaSemTR(saldo) {
+function _calcParcelaFutura(saldo) {
   const tm  = (parseFloat(formQuick.taxaAnual) / 100) / 12;
   const enc = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
   return tm * saldo + enc;
 }
 
 // Parcela estimada no % atual (usa saldo REAL + TR obtida silenciosamente)
-function _calcParcelaAtual() {
+function _calcTotalParcelaAtual() {
   const saldo = parseFloat(formQuick.saldoAtual || 0);
   const tm = (parseFloat(formQuick.taxaAnual) / 100) / 12;
   const enc = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
@@ -199,8 +199,8 @@ function _calcParcelaAtual() {
   return (tm + tr) * saldo + enc;
 }
 
-// TR em R$ (obtida silenciosamente via mês)
-function _calcTREmReais() {
+// TR em R$: (0 + tr) × saldoAtual — sem encargos
+function _calcTRParcela() {
   if (!formQuick.mesMedido) return { trPerc: null, trReais: null };
   const ym    = parseMS(formQuick.mesMedido);
   const trDec = getTRParaMes(ym);
@@ -234,14 +234,14 @@ function renderResultQuick() {
   const temFin = formQuick.parcelaFinanciamento > 0;
   const sliderMin = Math.max(5, Math.ceil(percInformado / 5) * 5);
 
-  const { trPerc, trReais } = _calcTREmReais();
+  const { trPerc, trReais } = _calcTRParcela();
   const temTR = trPerc !== null && trPerc > 0;
 
   const ymAtual = parseMS(formQuick.mesMedido);
   const ymSeguinte = _nextMesLabel(ymAtual);
   const proxMesLabel = mLabel(ymSeguinte);
 
-  const parcelaAtual = _calcParcelaAtual();
+  const parcelaAtual = _calcTotalParcelaAtual();
 
   const card1Html = `
     <div class="quick-result-card">
@@ -257,14 +257,14 @@ function renderResultQuick() {
 
     <div class="quick-result-grid-top">
       <div class="quick-result-card accent">
-        <div class="qrc-label">Saldo devedor atual</div>
+        <div class="qrc-label">Saldo devedor</div>
         <div class="qrc-val">${fmtBRL(formQuick.saldoAtual)}</div>
         <div class="qrc-note">de ${fmtBRL(formQuick.totalFinanciado)}</div>
       </div>
       <div class="quick-result-card">
         <div class="qrc-label">Evolução de Obra</div>
         <div class="qrc-val">${fmtPerc(percInformado, 2)}</div>
-        <div class="qrc-note">Atualizado em ${mesLabel}</div>
+        <div class="qrc-note">Medição: ${mesLabel}</div>
       </div>
     </div>
 
@@ -321,9 +321,9 @@ function renderResultQuick() {
     <div class="quick-cta-card">
       <div class="quick-cta-title">Quer uma projeção mês a mês?</div>
       <div class="quick-cta-sub">Você pode aproveitar os dados inseridos da sua simulação rápida e partir para a versão detalhada.<br>
-      Com a simulação detalhada, você acessa a tabela com todas as parcelas, acompanha pagamentos e evolução mês a mês.</div>
+      Com a simulação completa, você tem acesso à tabela com todas as parcelas, acompanha pagamentos e evolução mês a mês.</div>
       <button class="btn btn-primary" onclick="irParaSimulacaoCompleta()">
-        Prosseguir para Simulação Completa →
+        Simulação Completa →
       </button>
       <button class="btn btn-back" onclick="reiniciarSimulacaoRapida()">
         ← Refazer simulação rápida
@@ -383,8 +383,9 @@ function atualizaSliderQuick() {
 
 // ── REINICIAR ──
 function reiniciarSimulacaoRapida() {
+  const savedFin = formQuick.totalFinanciado;
   Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
-  formQuick.percObra = 50;
+  formQuick.totalFinanciado = savedFin;
   currentStep = 0;
   initFlow(FLOW_QUICKSIM); renderFlowStep();
 }
@@ -396,13 +397,8 @@ function irParaSimulacaoCompleta() {
   form.taxaAnual = String(formQuick.taxaAnual || '');
   form.parcelaFinanciamento = formQuick.parcelaFinanciamento || null;
 
-  if (formQuick.valorTotal && formQuick.totalFinanciado) {
-    form.valorTotal    = String(formQuick.valorTotal);
-    form.percFinanciado = parseFloat(((formQuick.totalFinanciado / formQuick.valorTotal) * 100).toFixed(2));
-  } else {
-    form.valorTotal    = '';
-    form.percFinanciado = 80;
-  }
+  form.valorTotal    = '';
+  form.percFinanciado = 80;
 
   form.mesInicial          = '';
   form.mesEntrega          = '';
@@ -411,9 +407,9 @@ function irParaSimulacaoCompleta() {
   form.historicoPagamentos = [];
 
   // Define quais telas pular por já terem dados do QuickSim
+  // valorImovel nunca é pulado — usuário informa valorTotal; financiamentoTotal vem pré-populado
   migrationSkipCheck = (questionKey) => {
     switch (questionKey) {
-      case 'valorImovel':         return !!(form.valorTotal && form.percFinanciado);
       case 'taxaAnual':           return !!form.taxaAnual;
       case 'seguro':              return !!form.seguro;
       case 'parcelaFinanciamento': return form.parcelaFinanciamento !== null;

@@ -11,7 +11,6 @@ function novaSimulacao(target) {
   form.parcelaFinanciamento = null;
   form.historicoPagamentos = [];
   Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
-  formQuick.percObra             = 50;
   formQuick.parcelaFinanciamento = null;
   meses = []; currentStep = 0;
   if (target === 'quick') {
@@ -142,14 +141,6 @@ function renderEditScreen() {
       </div>
 
       <div class="edit-section">
-        <div class="edit-section-title">Histórico de Pagamentos — Opcional</div>
-        ${isPremium()
-          ? `<div class="info-box">💡 Na versão premium, os pagamentos são gerenciados diretamente na tabela de resultados. Marque ou edite parcelas pagas a partir da tela de resultados.</div>`
-          : questions.historicoPagamentos.render()
-        }
-      </div>
-
-      <div class="edit-section">
         <div class="edit-section-title">Nome da Simulação</div>
         ${questions.nomePerfil.render()}
       </div>
@@ -169,7 +160,6 @@ function renderEditScreen() {
     questions.seguro.init();
     questions.parcelaFinanciamento.init();
     questions.mesInicial.init();
-    if (!premium) questions.historicoPagamentos.init();
     questions.nomePerfil.init();
   }, 80);
 }
@@ -196,7 +186,6 @@ function confirmarEdicao() {
   } else {
     questions.mesInicial.save();
   }
-  if (!premium) questions.historicoPagamentos.save();
   questions.nomePerfil.save();
 
   _finalizarOnboarding();

@@ -32,7 +32,7 @@ const formQuick = {
   taxaAnual:             '',   // % a.a.
   seguro:                '',   // R$
   taxaAdm:               '',   // R$
-  percObra:              50,   // % — evolução de obra informada/calculada
+  percObra:              '',   // % — evolução de obra informada/calculada
   mesMedido:             '',   // YYYY-MM — mês de referência da medição
   parcelaFinanciamento:  null  // R$ — opcional, para comparação no resultado
 };

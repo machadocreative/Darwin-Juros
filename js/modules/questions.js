@@ -5,7 +5,7 @@
 // O fluxo (FLOW_QUICKSIM ou FLOW_FULLSIM) determina qual questão aparece onde
 
 // ════════════════════════════════════════════════════════════════════════════════
-// IDS CENTRALIZADOS — FONTE ÚNICA DE VERDADE
+// IDS CENTRALIZADOS
 // ════════════════════════════════════════════════════════════════════════════════
 
 const QUESTION_IDS = {
@@ -189,7 +189,7 @@ const questions = {
           <label class="field-label">Percentual atual de Evolução de Obra</label>
           <div class="label-hint">Baseado nos dados informados, estimamos ${percCalc.toFixed(1)}%. Está correto?</div>
           <div class="input-wrap">
-            <input type="text" id="${QUESTION_IDS.percentualObra}" class="has-suf" placeholder="00,00" inputmode="numeric"
+            <input type="text" id="${QUESTION_IDS.percentualObra}" class="has-suf" placeholder="${percCalc.toFixed(1)}%" inputmode="numeric"
               oninput="maskOnInput(this);_limitPercQuick(this);this.classList.remove('invalid');document.getElementById('err-perc-obra').style.display='none'">
             <span class="suf">%</span>
           </div>
@@ -349,6 +349,45 @@ const questions = {
       if (elVT)  elVT.oninput  = () => { maskValue(elVT,  'brl'); elVT.classList.remove('invalid');  const ev = document.getElementById('err-valor-imovel'); if (ev) ev.style.display = 'none'; _atualizaImovelQuick(); };
       if (elFin) elFin.oninput = () => { maskValue(elFin, 'brl'); elFin.classList.remove('invalid'); const ef = document.getElementById('err-financiamento'); if (ef) ef.style.display = 'none'; _atualizaImovelQuick(); };
       _atualizaImovelQuick();
+    }
+  },
+
+  financiamentoQuick: {
+    id: QUESTION_IDS.financiamentoTotal,
+    maskType: 'brl',
+    render: () => `
+      <div class="step-title">Qual o valor do seu Financiamento?</div>
+      <div class="step-hint">O crédito liberado pelo banco — sem a entrada da construtora e/ou subsídios. Consulte seu contrato ou app Habitação Caixa.</div>
+      <div class="field-group">
+        <div class="input-wrap">
+          <span class="pre">R$</span>
+          <input type="text" id="${QUESTION_IDS.financiamentoTotal}" class="has-pre" placeholder="240.000,00" inputmode="numeric"
+            oninput="maskOnInput(this);this.classList.remove('invalid');document.getElementById('err-financiamento').style.display='none'">
+        </div>
+        <div class="error-msg" id="err-financiamento" style="display:none">Informe o valor do financiamento.</div>
+      </div>`,
+    validate: () => {
+      const elFin = document.getElementById(QUESTION_IDS.financiamentoTotal);
+      const fin = maskRead(elFin);
+      if (!fin || fin <= 0) {
+        elFin?.classList.add('invalid');
+        const e = document.getElementById('err-financiamento');
+        if (e) { e.textContent = 'Informe o valor do financiamento.'; e.style.display = 'block'; }
+        return false;
+      }
+      return true;
+    },
+    save: () => {
+      formQuick.totalFinanciado = maskRead(document.getElementById(QUESTION_IDS.financiamentoTotal));
+    },
+    init: () => {
+      attachMask(QUESTION_IDS.financiamentoTotal, 'brl', formQuick.totalFinanciado || '');
+      const elFin = document.getElementById(QUESTION_IDS.financiamentoTotal);
+      if (elFin) elFin.oninput = () => {
+        maskValue(elFin, 'brl');
+        elFin.classList.remove('invalid');
+        const e = document.getElementById('err-financiamento'); if (e) e.style.display = 'none';
+      };
     }
   },
 

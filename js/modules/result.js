@@ -478,53 +478,108 @@ function renderResult() {
   _navPush('result');
   showBottomNav();
   aplicaBloqueio();
-  const fin     = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
-  const ativas  = meses.filter(r => !r.bloqueado);
-  const total   = ativas.reduce((s, r) => s + r.previsto, 0);
+  const fin      = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const ativas   = meses.filter(r => !r.bloqueado);
+  const total    = ativas.reduce((s, r) => s + r.previsto, 0);
   const pagoPrevisto = ativas.filter(r => r.pago).reduce((s, r) => s + r.previsto, 0);
-  const media   = ativas.length ? total / ativas.length : 0;
-  const premium = isPremium();
-
-  const temFin    = parseFloat(form.parcelaFinanciamento || 0) > 0;
+  const media    = ativas.length ? total / ativas.length : 0;
+  const premium  = isPremium();
   const totalReal = ativas.reduce((s, r) => s + (r.valorReal || 0), 0);
 
-  // Bloco de comparação Previsto vs Real (premium, aparece quando há valorReal)
-  const blocoComparacao = premium ? (() => {
-    const diff = totalReal - total;
-    const diffStr = (diff >= 0 ? '+' : '−') + ' ' + fmtBRL(Math.abs(diff));
-    const diffClass = diff > 100 ? ' val-over' : diff < -100 ? ' val-under' : '';
-    return `
-    <div class="comparison-section" id="bloco-comparacao" style="${totalReal > 0 ? '' : 'display:none'}">
-      <div class="comparison-section-title">Previsto vs Real</div>
-      <div class="comparison-grid">
-        <div class="comparison-card">
-          <div class="comp-label">Previsto pela fórmula</div>
-          <div class="comp-val" id="sum-comp-previsto">${fmtBRL(total)}</div>
-        </div>
-        <div class="comparison-card full">
-          <div class="comp-label">Diferença (real − previsto)</div>
-          <div class="comp-val${diffClass}" id="sum-diff">${diffStr}</div>
-        </div>
+  setHtml(`
+    <div class="result-header">
+      <h2>${escHtml(form.nomeSimulacao || 'Apto 101')}</h2>
+      <p id="result-subtitle">${ativas.length} parcelas · ${meses[0]?.mes || ''} → ${ultimoMesAtivo()}</p>
+      <div class="rh-actions">
+        <button class="pc-btn save" onclick="saveProfile()">💾 Salvar</button>
+        <button class="pc-btn" onclick="abrirRenomearPerfil()">✏️ Renomear</button>
+        <button class="pc-btn" onclick="editarSimulacao()">🔧 Editar</button>
+        <button class="pc-btn del" id="rh-btn-del" onclick="deleteProfileFromResult()">🗑️ Excluir</button>
       </div>
-    </div>`;
-  })() : '';
+    </div>
 
-  // Slider: premium parte da última % paga; free parte de 50%
-  const percPaga     = premium ? _ultimaPercPagaAtual() : 50;
-  const sliderInicio = percPaga;
+    <div class="sticky-summary">
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="s-label">Valor Financiado</div>
+          <div class="s-val">${fmtBRL(fin)}</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Valor médio estimado</div>
+          <div class="s-val">${fmtBRL(media)}</div>
+        </div>
+        ${premium ? `
+        <div class="summary-card paid">
+          <div class="s-label">Pago até o momento</div>
+          <div class="s-val">${fmtBRL(totalReal > 0 ? totalReal : pagoPrevisto)}</div>
+        </div>` : ''}
+      </div>
+    </div>
 
-  const blocoSlider = `
-    <div class="preview-slider-card">
+    <div class="feature-grid">
+      <button class="feat-btn" onclick="renderSliderResult()">
+        <span class="feat-icon">📊</span>
+        <span class="feat-label">Visualizador de Prestações</span>
+      </button>
+      <button class="feat-btn" onclick="${premium ? 'renderTabela()' : 'renderMiniTabela()'}">
+        <span class="feat-icon">📋</span>
+        <span class="feat-label">Tabela de Pagamentos</span>
+        ${premium ? '<span class="feat-badge feat-badge-premium">✦ Premium</span>' : ''}
+      </button>
+      <button class="feat-btn feat-soon" disabled>
+        <span class="feat-icon">📤</span>
+        <span class="feat-label">Exportar Excel</span>
+        <span class="feat-badge feat-badge-soon">Em breve</span>
+      </button>
+      <button class="feat-btn feat-soon" disabled>
+        <span class="feat-icon">🖼️</span>
+        <span class="feat-label">Exportar Imagem</span>
+        <span class="feat-badge feat-badge-soon">Em breve</span>
+      </button>
+      <button class="feat-btn feat-soon" disabled>
+        <span class="feat-icon">🏦</span>
+        <span class="feat-label">Banco vs Realidade</span>
+        <span class="feat-badge feat-badge-soon">Em breve</span>
+      </button>
+      <button class="feat-btn feat-soon" disabled>
+        <span class="feat-icon">📅</span>
+        <span class="feat-label">Timeline Visual</span>
+        <span class="feat-badge feat-badge-soon">Em breve</span>
+      </button>
+    </div>
+
+    <div class="quick-disclaimer-end">
+      <p>Darwin não é uma ferramenta preditiva. Utilizamos a fórmula oficial de cálculo divulgada pela Caixa Econômica. Não nos responsabilizamos se previsões futuras não corresponderem à realidade, uma vez que valores cobrados serão sempre de encargo da instituição financeira.</p>
+    </div>
+  `);
+}
+
+// ── SLIDER (tela dedicada) ──
+function renderSliderResult() {
+  screen = 'sliderResult';
+  _navPush('sliderResult');
+  showBottomNav();
+  aplicaBloqueio();
+
+  const premium  = isPremium();
+  const temFin   = parseFloat(form.parcelaFinanciamento || 0) > 0;
+  const percPaga = premium ? _ultimaPercPagaAtual() : 50;
+
+  setHtml(`
+    <div class="tabela-header">
+      <button class="tabela-back-btn" onclick="history.back()">← Resumo</button>
+      <div class="tabela-title">Visualizador de Prestações</div>
+    </div>
+    <div class="preview-slider-card" style="margin-top:12px">
       <div class="preview-slider-header">
-        <div class="preview-slider-title">Visualizador de Prestações</div>
-        <div class="preview-slider-sub"><span>Arraste para simular suas prestações</span></div>
+        <div class="preview-slider-sub"><span>Arraste para simular diferentes estágios de obra</span></div>
       </div>
       <div class="slider-wrap">
         <div class="slider-labels">
           <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <input type="range" id="preview-slider" class="preview-slider"
-          min="0" max="100" step="${premium ? 1 : 10}" value="${sliderInicio}"
+          min="0" max="100" step="${premium ? 1 : 10}" value="${percPaga}"
           oninput="atualizaSlider()">
         ${premium ? `<div class="slider-pago-label" id="slider-pago-label" style="${percPaga > 0 ? '' : 'visibility:hidden'}">${percPaga > 0 ? percPaga + '% · já pago' : '—'}</div>` : ''}
       </div>
@@ -553,54 +608,130 @@ function renderResult() {
         🔓 Ver tabela completa de parcelas
         <span class="cta-price">R$ 4,99</span>
       </button>` : ''}
-    </div>`;
-
-// ── CHAMAR A TABELA INLINE DENTRO DO PREMIUM
-  const blocoTabelaInline = premium ? buildTabela(true) : '';
-
-  // Banner inline de pagas pendentes (universal — fluxo A e B)
-  const blocoBannerPagas = _buildBannerPagas();
-
-  setHtml(`
-    <div class="result-header">
-      <h2>${escHtml(form.nomeSimulacao || 'Apto 101')}</h2>
-      <p id="result-subtitle">${ativas.length} parcelas · ${meses[0]?.mes || ''} → ${ultimoMesAtivo()}</p>
-      <div class="rh-actions">
-        <button class="pc-btn save" onclick="saveProfile()">💾 Salvar</button>
-        <button class="pc-btn" onclick="abrirRenomearPerfil()">✏️ Renomear</button>
-        <button class="pc-btn" onclick="editarSimulacao()">🔧 Editar</button>
-        <button class="pc-btn del" id="rh-btn-del" onclick="deleteProfileFromResult()">🗑️ Excluir</button>
-      </div>
     </div>
-
-    <div class="sticky-summary">
-      <div class="summary-grid">
-        <div class="summary-card">
-          <div class="s-label">Valor Financiado</div>
-          <div class="s-val">${fmtBRL(fin)}</div>
-        </div>
-        <div class="summary-card">
-          <div class="s-label">Valor médio estimado</div>
-          <div class="s-val" id="sum-media">${fmtBRL(media)}</div>
-        </div>
-        ${premium ? `
-        <div class="summary-card paid">
-          <div class="s-label">Pago até o momento</div>
-          <div class="s-val" id="sum-pago">${fmtBRL(totalReal > 0 ? totalReal : pagoPrevisto)}</div>
-        </div>` : ''}
-      </div>
-    </div>
-
-    ${blocoSlider}
-    ${blocoBannerPagas}
-    ${blocoComparacao}
-    ${blocoTabelaInline}
-
-    <div class="quick-disclaimer-end">
-      <p>Darwin não é uma ferramenta preditiva. Utilizamos a fórmula oficial de cálculo divulgada pela Caixa Econômica. Não nos responsabilizamos se previsões futuras não corresponderem à realidade, uma vez que valores cobrados serão sempre de encargo da instituição financeira.</p>
-    </div>
-        
   `);
 
-  setTimeout(() => { atualizaSlider(); _initRvMasks(); _refreshBannerPagas(); }, 80);
+  setTimeout(() => { atualizaSlider(); if (premium) _syncSliderPremium(); }, 80);
+}
+
+// ── MINI TABELA (tela de pagamentos — versão gratuita) ──
+function renderMiniTabela() {
+  screen = 'tabela';
+  _navPush('tabela');
+  showBottomNav();
+  aplicaBloqueio();
+
+  const ativas = meses.filter(r => !r.bloqueado);
+  if (!ativas.length) { history.back(); return; }
+
+  const now    = new Date();
+  const ymNow  = { y: now.getFullYear(), m: now.getMonth() + 1 };
+  const ymIni  = parseMS(form.mesInicial);
+  const ymFim  = parseMS(form.mesEntrega);
+
+  const decorridos = mBetween(ymIni, ymNow);
+  const totalSim   = mBetween(ymIni, ymFim);
+
+  if (decorridos < 0) {
+    setHtml(`
+      <div class="tabela-header">
+        <button class="tabela-back-btn" onclick="history.back()">← Resumo</button>
+        <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
+      </div>
+      <div class="info-box" style="margin-top:16px">A simulação ainda não iniciou. A tabela de pagamentos estará disponível a partir de ${mLabel(ymIni)}.</div>
+    `);
+    return;
+  }
+
+  const countRows = Math.min(decorridos + 1, totalSim + 1, ativas.length);
+
+  const rows = ativas.slice(0, countRows).map((r, i) => `
+    <tr id="mini-row-${i}" class="${r.pago ? 'pago-row' : ''}">
+      <td class="num-col">${i + 1}</td>
+      <td class="td-mes">${escHtml(r.mes)}</td>
+      <td class="td-right">
+        <div class="input-wrap">
+          <span class="pre" style="font-size:12px">R$</span>
+          <input type="text" id="mini-val-${i}" class="has-pre" inputmode="numeric" placeholder="—">
+        </div>
+      </td>
+      <td class="td-center">
+        <span id="mini-badge-${i}" class="${r.pago ? 'badge-pago' : 'badge-nao'}">${r.pago ? '✓ Pago' : '—'}</span>
+      </td>
+    </tr>`).join('');
+
+  setHtml(`
+    <div class="tabela-header">
+      <button class="tabela-back-btn" onclick="history.back()">← Resumo</button>
+      <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
+    </div>
+    <div class="info-box" style="margin-top:12px">💡 Registre os valores pagos mês a mês. A parcela é marcada como paga automaticamente ao inserir um valor.
+      ${totalSim < decorridos ? '<br>⚠️ A data de entrega está no passado — ajuste-a em <strong>Editar</strong> se necessário.' : ''}
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th class="th-center">#</th>
+          <th>Mês</th>
+          <th class="th-right">Valor pago</th>
+          <th class="th-center">Situação</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="confirm-box" id="mini-somatorio" style="display:none">
+      <div class="c-label">Total registrado</div>
+      <div class="c-val" id="mini-total-val">—</div>
+    </div>
+    <button class="btn-reset" onclick="history.back()">← Voltar à tela de resultados</button>
+    <button class="free-preview-cta" onclick="showPaywall()" style="margin-top:12px">
+      🔓 Desbloquear tabela completa
+      <span class="cta-price">R$ 4,99</span>
+    </button>
+  `);
+
+  setTimeout(() => _initMiniTabelaMasks(countRows), 80);
+}
+
+function _initMiniTabelaMasks(countRows) {
+  const ativas = meses.filter(r => !r.bloqueado);
+  for (let i = 0; i < countRows; i++) {
+    const r = ativas[i];
+    if (!r) break;
+    const mesIdx = meses.indexOf(r);
+    attachMask('mini-val-' + i, 'brl', r.valorReal || '');
+    const el = document.getElementById('mini-val-' + i);
+    if (!el) continue;
+    el.oninput = () => {
+      maskValue(el, 'brl');
+      const v = maskRead(el);
+      if (v && v > 0) {
+        r.pago      = true;
+        r.valorReal = v;
+      } else {
+        r.pago      = false;
+        r.valorReal = null;
+      }
+      hasUnsavedChanges = true;
+      _syncValorRealToForm(mesIdx);
+      const badge = document.getElementById('mini-badge-' + i);
+      if (badge) { badge.className = r.pago ? 'badge-pago' : 'badge-nao'; badge.textContent = r.pago ? '✓ Pago' : '—'; }
+      const row = document.getElementById('mini-row-' + i);
+      if (row) row.className = r.pago ? 'pago-row' : '';
+      _updateMiniSomatorio(countRows);
+    };
+  }
+  _updateMiniSomatorio(countRows);
+}
+
+function _updateMiniSomatorio(countRows) {
+  const ativas = meses.filter(r => !r.bloqueado);
+  let total = 0;
+  for (let i = 0; i < countRows; i++) {
+    if (ativas[i]?.valorReal) total += ativas[i].valorReal;
+  }
+  const box = document.getElementById('mini-somatorio');
+  const val = document.getElementById('mini-total-val');
+  if (box) box.style.display = total > 0 ? '' : 'none';
+  if (val) val.textContent = fmtBRL(total);
 }

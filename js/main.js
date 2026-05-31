@@ -30,8 +30,10 @@ window.addEventListener('popstate', (e) => {
     renderResult();
   } else if (s === 'resultQuick') {
     renderResultQuick();
+  } else if (s === 'sliderResult') {
+    renderSliderResult();
   } else if (s === 'tabela') {
-    renderTabela();
+    if (isPremium()) renderTabela(); else renderMiniTabela();
   } else if (s === 'quick' || s === 'onboarding') {
     if (state.step !== undefined) currentFlowStep = state.step;
     renderFlowStep();
