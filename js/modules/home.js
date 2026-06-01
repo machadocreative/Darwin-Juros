@@ -85,11 +85,11 @@ function renderHome() {
         <div class="fc-title">Evolução da obra</div>
         <div class="fc-desc">Gráfico mês a mês do avanço da sua obra</div>
       </div>
-      <div class="feature-card" onclick="renderTRHistorico()">
-        <span class="fc-badge new">Disponível</span>
-        <div class="fc-icon">📈</div>
-        <div class="fc-title">Histórico da TR</div>
-        <div class="fc-desc">Taxa Referencial mês a mês desde 2020</div>
+      <div class="feature-card disabled" onclick="showToast('Em breve! 🚧')">
+        <span class="fc-badge">Em breve</span>
+        <div class="fc-icon">🔔</div>
+        <div class="fc-title">Alertas de TR</div>
+        <div class="fc-desc">Notificação quando a TR do mês for divulgada</div>
       </div>
       <div class="feature-card disabled" onclick="showToast('Em breve! 🚧')">
         <span class="fc-badge">Em breve</span>
