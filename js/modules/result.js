@@ -411,15 +411,7 @@ function buildTabela(inline = false) {
   const lastPago = meses[meses.length - 1]?.pago || false;
 
   return `
-    ${!inline ? `
-      <div class="tabela-header">
-        <button class="tabela-back-btn" onclick="history.back()">← Resumo</button>
-        <div class="tabela-title">${escHtml(form.nomeSimulacao || 'Apto 101')}</div>
-      </div>
-      <div class="alert" style="margin-top:12px">
-        💡 Edite % de obra e Taxa Referencial.
-      </div>
-    ` : ''}
+    ${!inline ? `<div class="screen-title">Tabela de Parcelas</div>` : ''}
 
     <div class="table-wrap">
       <table>
@@ -460,9 +452,7 @@ function buildTabela(inline = false) {
     </div>
 
     ${!inline ? `
-      <button class="btn-reset" onclick="history.back()">
-        ← Voltar à tela de resultados
-      </button>
+      <button class="btn-screen-back" onclick="history.back()" style="margin-top:20px">← Voltar à tela de resultados</button>
     ` : ''}
   `;
 }
@@ -571,10 +561,7 @@ function renderSliderResult() {
   const percPaga = premium ? _ultimaPercPagaAtual() : 50;
 
   setHtml(`
-    <div class="tabela-header">
-      <button class="tabela-back-btn" onclick="history.back()">← Resumo</button>
-      <div class="tabela-title">Visualizador de Prestações</div>
-    </div>
+    <div class="screen-title">Visualizador de Prestações</div>
     <div class="preview-slider-card" style="margin-top:12px">
       <div class="preview-slider-header">
         <div class="preview-slider-sub"><span>Arraste para simular diferentes estágios de obra</span></div>
@@ -614,6 +601,7 @@ function renderSliderResult() {
         <span class="cta-price">R$ 4,99</span>
       </button>` : ''}
     </div>
+    <button class="btn-screen-back" onclick="history.back()" style="margin-top:20px">← Voltar à tela de resultados</button>
   `);
 
   setTimeout(() => { atualizaSlider(); if (premium) _syncSliderPremium(); }, 80);
@@ -640,8 +628,8 @@ function renderMiniTabela() {
   if (decorridos < 0) {
     setHtml(`
       <div class="screen-title">Histórico de Parcelas</div>
-      <button class="btn btn-back" onclick="history.back()" style="margin-bottom:16px">← Voltar à tela de resultados</button>
-      <div class="info-box">A simulação ainda não iniciou. O histórico estará disponível a partir de ${mLabel(ymIni)}.</div>
+      <div class="info-box" style="margin-top:12px">A simulação ainda não iniciou. O histórico estará disponível a partir de ${mLabel(ymIni)}.</div>
+      <button class="btn-screen-back" onclick="history.back()" style="margin-top:20px">← Voltar à tela de resultados</button>
     `);
     return;
   }
@@ -665,8 +653,7 @@ function renderMiniTabela() {
 
   setHtml(`
     <div class="screen-title">Histórico de Parcelas</div>
-    <button class="btn btn-back" onclick="history.back()" style="margin-bottom:16px">← Voltar à tela de resultados</button>
-    ${totalSim < decorridos ? '<div class="info-box" style="margin-bottom:12px">⚠️ A data de entrega está no passado — ajuste-a em <strong>Editar</strong> se necessário.</div>' : ''}
+    ${totalSim < decorridos ? '<div class="info-box" style="margin-top:12px;margin-bottom:12px">⚠️ A data de entrega está no passado — ajuste-a em <strong>Editar</strong> se necessário.</div>' : ''}
     <div class="mini-somatorio-sticky" id="mini-somatorio">
       <span class="mini-soma-label">Total pago</span>
       <span class="mini-soma-val" id="mini-total-val">${fmtBRL(0)}</span>
@@ -686,6 +673,7 @@ function renderMiniTabela() {
       🔓 Libere mais funcionalidades
       <span class="cta-price">R$ 4,99</span>
     </button>
+    <button class="btn-screen-back" onclick="history.back()" style="margin-top:12px">← Voltar à tela de resultados</button>
   `);
 
   setTimeout(() => _initMiniTabelaMasks(countRows), 80);

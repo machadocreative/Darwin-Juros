@@ -633,7 +633,11 @@ const questions = {
   mesInicial: {
     id: QUESTION_IDS.mesInicial,
     maskType: null,
-    render: () => `
+    render: () => {
+      const ini = form.mesInicial;
+      const fim = form.mesEntrega;
+      const showInfo = ini && fim && mBetween(parseMS(ini), parseMS(fim)) >= 1;
+      return `
       <div class="step-title">Informe as datas abaixo</div>
       <div class="step-hint">O app irá definir quantos meses de Evolução de Obra serão simulados baseado nos prazos informados abaixo.</div>
       <div class="field-group">
@@ -649,7 +653,8 @@ const questions = {
         <div class="error-msg" id="err-mes-entrega" style="display:none">A data de entrega deve ser após a 1ª parcela.</div>
       </div>
       <div id="badge-meses"></div>
-      <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que for necessário.</div>`,
+      <div class="info-box" id="info-box-entrega" style="${showInfo ? '' : 'display:none'}">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que for necessário.</div>`;
+    },
     validate: () => {
       const elIni = document.getElementById(QUESTION_IDS.mesInicial);
       const elFim = document.getElementById(QUESTION_IDS.mesEntrega);

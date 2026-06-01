@@ -133,7 +133,9 @@ function adicionarLinha() {
   });
   aplicaBloqueio();
   hasUnsavedChanges = true;
-  renderResult();
+  const lastYm = addM(parseMS(form.mesInicial), meses.length - 1);
+  form.mesEntrega = `${lastYm.y}-${String(lastYm.m).padStart(2, '0')}`;
+  if (screen === 'tabela') renderTabela(); else renderResult();
 }
 
 function removerLinha() {
@@ -142,7 +144,9 @@ function removerLinha() {
   meses.pop();
   aplicaBloqueio();
   hasUnsavedChanges = true;
-  renderResult();
+  const lastYm = addM(parseMS(form.mesInicial), meses.length - 1);
+  form.mesEntrega = `${lastYm.y}-${String(lastYm.m).padStart(2, '0')}`;
+  if (screen === 'tabela') renderTabela(); else renderResult();
 }
 
 // ── SLIDER DE % DE EVOLUÇÃO ──

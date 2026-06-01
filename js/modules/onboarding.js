@@ -136,7 +136,7 @@ function renderEditScreen() {
             <div class="error-msg" id="err-mes-entrega" style="display:none">A data de entrega deve ser após a 1ª parcela.</div>
           </div>
           <div id="badge-meses"></div>
-          <div class="info-box">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que for necessário.</div>
+          <div class="info-box" id="info-box-entrega">💡 A entrega do seu imóvel poderá ser antecipada ou sofrer atrasos — Altere essa data sempre que for necessário.</div>
         ` : questions.mesInicial.render()}
       </div>
 
@@ -275,14 +275,10 @@ function _finalizarOnboarding() {
     const backup   = edit.mesesBackup;
 
     const novoTotal = newTable.length;
-    const linhasPagasASerPerdidas = backup.slice(novoTotal).filter(r => r.pago && !r.bloqueado);
-    if (linhasPagasASerPerdidas.length > 0) {
-      if (!window._confirmouReducaoPrazo) {
-        window._confirmouReducaoPrazo = true;
-        currentStep--;
-        showToast('⚠️ O novo prazo é menor que o original. ' + linhasPagasASerPerdidas.length + ' parcela(s) paga(s) serão perdidas. Clique em continuar novamente para confirmar.');
-        return;
-      }
+    const linhasAfetadas = backup.slice(novoTotal).filter(r => (r.pago || r.valorReal != null) && !r.bloqueado);
+    if (linhasAfetadas.length > 0 && !window._confirmouReducaoPrazo) {
+      _mostrarModalPerdaDados(linhasAfetadas);
+      return;
     }
     window._confirmouReducaoPrazo = false;
 
@@ -315,13 +311,32 @@ function _finalizarOnboarding() {
       }
     });
     aplicaBloqueio();
-    hasUnsavedChanges = true;
+    saveProfile(false, 'Perfil salvo com sucesso!');
   }
   screen = 'result';
   renderResult();
 }
 
 
+
+function _mostrarModalPerdaDados(linhasAfetadas) {
+  const mesesLabel = linhasAfetadas.map(r => r.mes).join(', ');
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-perda-overlay';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-header">⚠️ Dados serão perdidos</div>
+      <p style="margin:12px 0 4px">Ao continuar, <strong>${linhasAfetadas.length}</strong> mês(es) será(ão) removido(s):</p>
+      <p style="margin-bottom:12px;color:var(--muted)"><strong>${mesesLabel}</strong></p>
+      <p>Parcelas pagas ou com valores registrados nesses meses serão perdidas permanentemente.</p>
+      <div class="modal-actions" style="margin-top:16px">
+        <button class="btn btn-back" onclick="document.getElementById('modal-perda-overlay').remove();window._confirmouReducaoPrazo=false">← Cancelar</button>
+        <button class="btn btn-primary" onclick="document.getElementById('modal-perda-overlay').remove();window._confirmouReducaoPrazo=true;_finalizarOnboarding()">Confirmar →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
 
 // ── ATUALIZAÇÕES INLINE DOS CAMPOS ──
 
@@ -339,11 +354,16 @@ function atualizaMesesStep0() {
 
 // Badge de meses genérico (reutilizado em atualizaMeses se necessário)
 function _renderBadgeMeses(ini, fim) {
-  const badge = document.getElementById('badge-meses');
-  if (!badge || !ini || !fim) return;
+  const badge   = document.getElementById('badge-meses');
+  const infoBox = document.getElementById('info-box-entrega');
+  if (!badge || !ini || !fim) {
+    if (infoBox) infoBox.style.display = 'none';
+    return;
+  }
   const iniParsed = parseMS(ini), fimParsed = parseMS(fim);
   const n = mBetween(iniParsed, fimParsed);
   const totalParcelas = n + 1;
+  if (infoBox) infoBox.style.display = n >= 1 ? '' : 'none';
   if (n >= 1 && totalParcelas <= MAX_MESES)
     badge.innerHTML = `
       <div class="confirm-box">

@@ -16,7 +16,7 @@ function ultimaPercPaga(mesArr) {
   return null;
 }
 
-function saveProfile(premiumFlag) {
+function saveProfile(premiumFlag, toastMsg = 'Alterações salvas com sucesso!') {
   const profiles = loadProfiles();
   const existente = profiles.find(p => p.id === (currentProfileId || ''));
   const data = {
@@ -33,7 +33,7 @@ function saveProfile(premiumFlag) {
   currentProfileId = data.id;
   saveProfiles(profiles);
   hasUnsavedChanges = false;
-  showToast('Perfil salvo com sucesso!');
+  showToast(toastMsg);
 }
 
 function deleteProfile(id) {
