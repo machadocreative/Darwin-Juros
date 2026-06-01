@@ -23,13 +23,13 @@ function showPaywall() {
   overlay.innerHTML = `
     <div class="paywall-card">
       <div class="paywall-icon">🔓</div>
-      <div class="paywall-title">Libere a tabela completa de parcelas</div>
-      <div class="paywall-sub">Veja todas as parcelas já com o valor da Taxa Referencial mês a mês · Edite % de obra livremente · Acompanhe o que já foi pago</div>
-      <div class="info-box" style="margin:14px 0 0;text-align:left">⚠️ <strong>Atenção:</strong> após o desbloqueio, a <strong>data de início</strong> e o <strong>valor total do imóvel</strong> não poderão mais ser editados. Certifique-se de que estão corretos antes de prosseguir.</div>
+      <div class="paywall-title">Libere funcionalidades premium</div>
+      <div class="paywall-sub">Previsão e acompanhamento de parcelas mês a mês com maior precisão · % de evolução de obra para cada prestação · Histórico de parcelas pagas com o valor da Taxa Referencial · Mais funcionaliades em breve </div>
+      <div class="info-box" style="margin:14px 0 0;text-align:left">⚠️ <strong>Atenção:</strong> O desbloqueio é feito individualmente para cada perfil. Após o pagamento, alguns dados ficam bloqueados para edição. A <strong>data de início</strong> e o <strong>valor total do imóvel</strong> não poderão mais ser editados.<br>Caso deseje corrigir estes dados, realize esta correção e confirme antes de prosseguir.</div>
       ${mesIniLabel}
       ${vtLabel}
       <div class="paywall-price">
-        <span class="paywall-amount">R$ 4,99</span>
+        <span class="paywall-amount">R$ 10,99</span>
         <span class="paywall-terms">Pagamento único · Sem assinatura</span>
       </div>
       <button class="paywall-btn-pay" disabled title="Em breve">💳 Pagar</button>
