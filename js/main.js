@@ -61,6 +61,8 @@ window.addEventListener('popstate', (e) => {
     renderTRHistorico();
   } else if (s === 'bifurcacao') {
     renderBifurcacao();
+  } else if (s === 'editScreen') {
+    renderEditScreen();
   } else if (s === 'result') {
     renderResult();
   } else if (s === 'resultQuick') {

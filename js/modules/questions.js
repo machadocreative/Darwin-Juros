@@ -266,12 +266,7 @@ const questions = {
     },
     render: () => {
       const vt  = parseFloat(formQuick.valorTotal || form.valorTotal || 0);
-      const fin = parseFloat(
-        formQuick.totalFinanciado ||
-        (form.valorTotal && form.percFinanciado
-          ? parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100)
-          : 0)
-      );
+      const fin = parseFloat(formQuick.totalFinanciado || form.valorFinanciado || 0);
       const showBox = vt > 0 && fin > 0 && fin < vt;
       return `
         <div class="step-title">Informe os valores abaixo</div>
@@ -301,7 +296,7 @@ const questions = {
           <div class="diff-row"><span class="d-label">Valor total do imóvel</span><span class="d-val" id="dq-total">${showBox ? fmtBRL(vt) : '—'}</span></div>
           <div class="diff-row"><span class="d-label">(−) Entrada / Descontos</span><span class="d-val" id="dq-entrada">${showBox ? fmtBRL(vt - fin) : '—'}</span></div>
           <hr class="diff-divider">
-          <div class="diff-row hl"><span class="d-label">Valor financiado (<span id="dq-perc-fin">${showBox ? fmtPerc((fin / vt) * 100, 1) : '—'}</span>)</span><span class="d-val" id="dq-fin">${showBox ? fmtBRL(fin) : '—'}</span></div>
+          <div class="diff-row hl"><span class="d-label">Valor financiado (<span id="dq-perc-fin">${showBox ? fmtPerc((fin / vt) * 100, 2) : '—'}</span>)</span><span class="d-val" id="dq-fin">${showBox ? fmtBRL(fin) : '—'}</span></div>
         </div>
         `;
     },
@@ -332,15 +327,13 @@ const questions = {
       const fin = maskRead(document.getElementById(QUESTION_IDS.financiamentoTotal));
       formQuick.valorTotal      = vt;
       formQuick.totalFinanciado = fin;
-      form.valorTotal     = String(vt || '');
-      form.percFinanciado = (vt > 0 && fin > 0) ? parseFloat(((fin / vt) * 100).toFixed(2)) : 80;
+      form.valorTotal      = String(vt || '');
+      form.valorFinanciado = fin || null;
+      form.percFinanciado  = (vt > 0 && fin > 0) ? parseFloat(((fin / vt) * 100).toFixed(2)) : 80;
     },
     init: () => {
       const vtVal  = formQuick.valorTotal || form.valorTotal || '';
-      const finRaw = formQuick.totalFinanciado ||
-        (form.valorTotal && form.percFinanciado
-          ? parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100)
-          : '');
+      const finRaw = formQuick.totalFinanciado || form.valorFinanciado || '';
       attachMask(QUESTION_IDS.valorTotal,         'brl', vtVal);
       attachMask(QUESTION_IDS.financiamentoTotal, 'brl', finRaw ? String(finRaw) : '');
       const elVT  = document.getElementById(QUESTION_IDS.valorTotal);
@@ -588,9 +581,7 @@ const questions = {
       const el = document.getElementById(QUESTION_IDS.parcelaFinanciamento);
       const v = maskRead(el);
       if (v && v > 0) {
-        const total = fluxo === 'quick'
-          ? parseFloat(formQuick.totalFinanciado || 0)
-          : parseFloat(form.valorTotal || 0) * (parseFloat(form.percFinanciado || 80) / 100);
+        const total = parseFloat(formQuick.totalFinanciado || form.valorFinanciado || 0);
         if (total > 0 && v > total) {
           el?.classList.add('invalid');
           const e = document.getElementById('err-parcela'); if (e) e.style.display = 'block';
@@ -692,7 +683,7 @@ const questions = {
     id: QUESTION_IDS.valorTerreno,
     maskType: 'brl',
     render: () => {
-      const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
+      const fin = parseFloat(formQuick.totalFinanciado || form.valorFinanciado) || 0;
       return `
         <label class="step-title">Qual o valor do Terreno?</label>
         <div class="step-hint">Nos contratos da Caixa/Minha Casa Minha Vida, consta no <strong>item 1.7</strong>.</div>
@@ -711,7 +702,7 @@ const questions = {
     },
     validate: () => {
       const elTer = document.getElementById(QUESTION_IDS.valorTerreno);
-      const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+      const fin = parseFloat(formQuick.totalFinanciado || form.valorFinanciado) || 0;
       const v = maskRead(elTer);
       
       if (!v || v <= 0) {
@@ -768,7 +759,7 @@ const questions = {
         <div class="c-val" id="val-somatorio"></div>
       </div>`,
     validate: () => {
-      const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
+      const fin = parseFloat(formQuick.totalFinanciado || form.valorFinanciado) || 0;
       if (fin <= 0) return true;
       let i = 0;
       while (document.getElementById(`hist-val-${i}`)) {

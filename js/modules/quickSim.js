@@ -16,7 +16,7 @@ function _atualizaImovelQuick() {
     document.getElementById('dq-total').textContent   = fmtBRL(vt);
     document.getElementById('dq-entrada').textContent = fmtBRL(entrada);
     document.getElementById('dq-fin').textContent     = fmtBRL(fin);
-    document.getElementById('dq-perc-fin').textContent = fmtPerc(percFin, 1);
+    document.getElementById('dq-perc-fin').textContent = fmtPerc(percFin, 2);
     if (box) box.style.display = 'block';
   } else {
     if (box) box.style.display = 'none';
@@ -409,8 +409,9 @@ function irParaSimulacaoCompleta() {
   form.taxaAnual = String(formQuick.taxaAnual || '');
   form.parcelaFinanciamento = formQuick.parcelaFinanciamento || null;
 
-  form.valorTotal    = '';
-  form.percFinanciado = 80;
+  form.valorTotal      = '';
+  form.percFinanciado  = 80;
+  form.valorFinanciado = null;
 
   form.mesInicial          = '';
   form.mesEntrega          = '';

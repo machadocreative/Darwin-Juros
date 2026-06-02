@@ -1,6 +1,6 @@
 // ── HELPERS DE CÁLCULO ──
 function calcFin() {
-  return parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  return parseFloat(form.valorFinanciado) || 0;
 }
 
 // Saldo máximo repassado à construtora = financiamento - terreno

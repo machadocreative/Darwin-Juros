@@ -8,6 +8,7 @@ function novaSimulacao(target) {
   fluxo = target === 'quick' ? 'quick' : 'complete';
   Object.keys(form).forEach(k => { form[k] = ''; });
   form.percFinanciado      = 80.00;
+  form.valorFinanciado     = null;
   form.parcelaFinanciamento = null;
   form.historicoPagamentos = [];
   Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
@@ -48,9 +49,10 @@ function _iniciarEdicao() {
 
 // ── TELA ÚNICA DE EDIÇÃO ──
 function renderEditScreen() {
+  _navPush('editScreen');
   const premium = isPremium();
   const _vtFmt  = (parseFloat(form.valorTotal) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const _finAmt = parseFloat(form.valorTotal || 0) * (parseFloat(form.percFinanciado || 80) / 100);
+  const _finAmt = parseFloat(form.valorFinanciado || 0);
   const _finFmt = _finAmt.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const html = `
@@ -176,8 +178,7 @@ function confirmarEdicao() {
 
 function cancelarEdicao() {
   window._editMode = null;
-  screen = 'result';
-  renderResult();
+  history.back();
 }
 
 // ── MODAL RENOMEAR PERFIL ──
@@ -296,8 +297,7 @@ function _finalizarOnboarding() {
     aplicaBloqueio();
     saveProfile(false, 'Perfil salvo com sucesso!');
   }
-  screen = 'result';
-  renderResult();
+  _navResetFlow('result', () => { screen = 'result'; renderResult(); });
 }
 
 
@@ -359,7 +359,7 @@ function _renderBadgeMeses(ini, fim) {
     badge.innerHTML = `<div class="confirm-box err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
 }
 function atualizaTer() {
-  const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const fin = parseFloat(formQuick.totalFinanciado || form.valorFinanciado) || 0;
   const elTer = document.getElementById('inp-valorTerreno');
   const ter = maskRead(elTer) || 0;
   const box = document.getElementById('box-ter');
@@ -451,7 +451,7 @@ function histRemoverLinha() {
 }
 
 function _atualizaSomatorio() {
-  const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100) || 0;
+  const fin = parseFloat(formQuick.totalFinanciado || form.valorFinanciado) || 0;
   let total = 0, i = 0, hasError = false;
   while (document.getElementById(`hist-val-${i}`)) {
     const el = document.getElementById(`hist-val-${i}`);
