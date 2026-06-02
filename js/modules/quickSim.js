@@ -376,18 +376,30 @@ function atualizaSliderQuick() {
     const diff = fin - previsto;
     bloco.className = 'slider-fin-bloco' + (diff < 0 ? ' slider-fin-danger' : '');
     bloco.innerHTML = diff < 0
-      ? `🚨 Evolução supera o financiamento em <span>+<strong>${fmtBRL(Math.abs(diff))}</strong><span>`
+      ? `🚨 Evolução supera o financiamento em <span>+<strong>${fmtBRL(Math.abs(diff))}</strong></span>`
       : `<span><strong>${fmtBRL(diff)}</strong></span> para igualar a parcela de financiamento`;
   }
 }
 
 // ── REINICIAR ──
 function reiniciarSimulacaoRapida() {
-  const savedFin = formQuick.totalFinanciado;
+  const savedFin    = formQuick.totalFinanciado;
+  const savedTaxa   = formQuick.taxaAnual;
+  const savedSeguro = formQuick.seguro;
+  const savedAdm    = formQuick.taxaAdm;
   Object.keys(formQuick).forEach(k => { formQuick[k] = ''; });
   formQuick.totalFinanciado = savedFin;
+  formQuick.taxaAnual       = savedTaxa;
+  formQuick.seguro          = savedSeguro;
+  formQuick.taxaAdm         = savedAdm;
   currentStep = 0;
-  initFlow(FLOW_QUICKSIM); renderFlowStep();
+  // _navResetFlow deve capturar _navFlowDepth antes de initFlow o zerar.
+  // Por isso: reseta o histórico primeiro, e inicia o fluxo dentro do callback.
+  hideBottomNav();
+  _navResetFlow('bifurcacao', () => {
+    initFlow(FLOW_QUICKSIM);
+    renderFlowStep();
+  });
 }
 
 // ── CTA: migrar para simulação detalhada ──

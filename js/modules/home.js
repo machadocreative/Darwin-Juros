@@ -61,16 +61,16 @@ function renderHome() {
       <div class="pc-eyebrow">Começar agora</div>
       <div class="pc-title">Calcule sua próxima parcela</div>
       <div class="pc-sub">Escolha o modo de simulação que combina com você</div>
-      <div class="pc-btns">
-        <button class="pc-btn" onclick="novaSimulacao('quick')">
-          <span class="pc-btn-icon">⚡</span>
-          <span class="pc-btn-label">Rápida</span>
-          <span class="pc-btn-hint">~2 minutos</span>
+      <div class="sim-btns">
+        <button class="sim-btn" onclick="novaSimulacao('quick')">
+          <span class="sim-btn-icon">⚡</span>
+          <span class="sim-btn-label">Rápida</span>
+          <span class="sim-btn-hint">~2 minutos</span>
         </button>
-        <button class="pc-btn" onclick="novaSimulacao('complete')">
-          <span class="pc-btn-icon">📋</span>
-          <span class="pc-btn-label">Completa</span>
-          <span class="pc-btn-hint">~5 minutos</span>
+        <button class="sim-btn" onclick="novaSimulacao('complete')">
+          <span class="sim-btn-icon">📋</span>
+          <span class="sim-btn-label">Completa</span>
+          <span class="sim-btn-hint">~5 minutos</span>
         </button>
       </div>
     </div>
@@ -158,9 +158,9 @@ function renderSobre() {
     </div>
 
     <div class="about-block">
-      <div class="ab-title">💡 Por que terão versões pagas?</div>
+      <div class="ab-title">💰 Versão premium?</div>
       <div class="ab-text">
-        O pagamento é um incentivo ao tempo gasto no desenvolvimento do aplicativo. Ainda que o código tenha sido elaborado pela IA, a designer (humana!) estará sempre testando os fluxos, buscando erros, encontrando formas de deixar o aplicativo e o processo de pagamento dos Juros de Evolução de obra mais didáticos e acessíveis. O pagamento do Darwin Premium é meramente simbólico para não prejudicar as pessoas que já passam por tanto aperto para pagar as prestações.
+        O pagamento é um incentivo ao tempo gasto no desenvolvimento do aplicativo. Ainda que as linhas de código tenham sido elaboradas por inteligência artificial, a designer (humana!) estará sempre testando os fluxos, buscando erros, encontrando formas de deixar o aplicativo e o processo de pagamento dos Juros de Evolução de obra mais didáticos e acessíveis. O pagamento do Darwin Premium é meramente simbólico para não prejudicar as pessoas que já passam por tanto aperto para pagar as prestações.
         <br><br>
         <strong>Se você chegou até aqui, use o código DARWIN10 para liberar os recursos pagos.</strong> Este cupom só estará disponível na versão beta.
       </div>

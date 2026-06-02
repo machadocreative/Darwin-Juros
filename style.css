@@ -712,7 +712,7 @@ input.invalid {
 }
 
 .pc-btn {
-    background: none;
+    background: var(--card);
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 5px 10px;
@@ -723,7 +723,8 @@ input.invalid {
 }
 
 .pc-btn:hover {
-    background: var(--bg);
+    color: var(--warn-bg);
+    border-color: var(--warn-bg);
 }
 
 .pc-btn.del:hover {
@@ -879,7 +880,7 @@ input.invalid {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow-x: auto;
+    overflow-x: hidden;
     margin-bottom: 8px;
 }
 
@@ -887,6 +888,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
+    table-layout: fixed;
 }
 
 thead tr {
@@ -911,7 +913,8 @@ td {
     vertical-align: middle;
 }
 
-tr:last-child td {
+tr:last-child td,
+tr.sub-row:last-child td {
     border-bottom: none;
 }
 
@@ -930,6 +933,32 @@ tr.obra-done td input {
     pointer-events: none;
 }
 
+/* Linhas duplas (main + sub) da tabela premium */
+tr.main-row td {
+    padding-top: 10px;
+    padding-bottom: 3px;
+    border-bottom: none;
+}
+
+tr.sub-row td {
+    padding-top: 0;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+}
+
+tr.main-row.pago-row td,
+tr.sub-row.pago-row td {
+    background: #F5FBF7;
+}
+
+tr.main-row.obra-done td,
+tr.sub-row.obra-done td {
+    background: #F8F8F6;
+    color: var(--muted);
+}
+
 .val-col {
     font-family: var(--font);
     font-size: 12px;
@@ -941,12 +970,34 @@ tr.obra-done td input {
     font-size: 11px;
     color: var(--muted);
     text-align: center;
-    min-width: 26px;
+    width: 28px;
 }
 
 .td-mes {
     white-space: nowrap;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.td-taxa {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+}
+
+.td-valor-principal {
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--font);
+    text-align: right;
+}
+
+.perc-static {
+    font-family: var(--font);
     font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+    display: block;
 }
 
 .td-right {
@@ -959,6 +1010,18 @@ tr.obra-done td input {
 
 .td-prev {
     font-weight: 500;
+}
+
+.td-vence-val {
+    display: block;
+    font-weight: 500;
+}
+
+.td-vence-mes {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 1px;
 }
 
 .th-right {
@@ -999,29 +1062,6 @@ tr.obra-done td input {
     opacity: .7;
 }
 
-.tr-input {
-    width: 82px;
-    padding: 4px 6px;
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    font-family: var(--font);
-    font-size: 12px;
-    text-align: right;
-    background: var(--bg);
-    outline: none;
-    transition: border .15s;
-    -webkit-appearance: none;
-    appearance: none;
-}
-
-.tr-input:focus {
-    border-color: var(--accent);
-}
-
-.tr-input.invalid {
-    border-color: var(--danger) !important;
-    background: var(--danger-light);
-}
 
 .rv-input {
     width: 88px;
@@ -1047,8 +1087,9 @@ tr.obra-done td input {
 
 .rv-val {
     font-family: var(--font);
-    font-size: 13px;
-    color: var(--muted);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
 }
 
 .hist-val-input {
@@ -2067,6 +2108,20 @@ dl.slider-result-row dd.slider-result-val.accent span {
     color: var(--muted);
 }
 
+.qrc-badge-refinado {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-light, #e8f5ee);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 1px 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: .01em;
+}
+
 .result-grid-slider {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -2524,14 +2579,14 @@ dl.slider-result-row dd.slider-result-val.accent span {
     position: relative;
 }
 
-.pc-btns {
+.sim-btns {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     position: relative;
 }
 
-.pc-btn {
+.sim-btn {
     background: rgba(255,255,255,.15);
     border: 1px solid rgba(255,255,255,.2);
     border-radius: 10px;
@@ -2539,6 +2594,7 @@ dl.slider-result-row dd.slider-result-val.accent span {
     font-family: var(--font);
     font-size: 13px;
     font-weight: 500;
+    color: #fff;
     cursor: pointer;
     transition: background .15s;
     display: flex;
@@ -2548,19 +2604,19 @@ dl.slider-result-row dd.slider-result-val.accent span {
     text-align: center;
 }
 
-.pc-btn:hover {
+.sim-btn:hover {
     background: rgba(255,255,255,.25);
 }
 
-.pc-btn-icon {
-    font-size: 18px;
+.sim-btn-icon {
+    font-size: 24px;
 }
 
-.pc-btn-label {
+.sim-btn-label {
     font-weight: 600;
 }
 
-.pc-btn-hint {
+.sim-btn-hint {
     font-size: 11px;
     color: rgba(255,255,255,.7);
     font-weight: 400;

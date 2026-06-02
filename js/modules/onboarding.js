@@ -24,23 +24,6 @@ function novaSimulacao(target) {
   }
 }
 
-// ── NAVEGAÇÃO SEGURA (com lembrete de salvar) ──
-function goProfilesSafe() {
-  if ((screen === 'result' || screen === 'tabela') && hasUnsavedChanges) {
-    showSaveReminder(() => { hasUnsavedChanges = false; goProfiles(); });
-  } else {
-    goProfiles();
-  }
-}
-
-function novaSimulacaoSafe() {
-  if ((screen === 'result' || screen === 'tabela') && hasUnsavedChanges) {
-    showSaveReminder(() => { hasUnsavedChanges = false; novaSimulacao(); });
-  } else {
-    novaSimulacao();
-  }
-}
-
 // ── EDITAR SIMULAÇÃO EXISTENTE ──
 // Volta ao onboarding A mantendo todos os dados já preenchidos.
 function editarSimulacao() {
@@ -375,27 +358,6 @@ function _renderBadgeMeses(ini, fim) {
   else
     badge.innerHTML = `<div class="confirm-box err">⚠️ A data de entrega deve ser após a 1ª parcela.</div>`;
 }
-function atualizaFin() {
-  const elVT = document.getElementById('inp-valorTotal');
-  const elPF = document.getElementById('inp-percFinanciado');
-  const vt = maskRead(elVT) || 0;
-  const p = maskRead(elPF) || 80;
-  const fin = vt * (p / 100);
-  const nfin = vt - fin;
-  const box = document.getElementById('box-fin');
-  if (box) box.style.display = vt > 0 ? 'block' : 'none';
-  const elTotal = document.getElementById('val-total');
-  const elFin = document.getElementById('val-fin');
-  const elNfin = document.getElementById('val-nfin');
-  const elPercLabel = document.getElementById('val-perc-label');
-  const elNfinPerc = document.getElementById('val-nfin-perc');
-  if (elTotal) elTotal.textContent = fmtBRL(vt);
-  if (elFin)   elFin.textContent = fmtBRL(fin);
-  if (elNfin)  elNfin.textContent = fmtBRL(nfin);
-  if (elPercLabel) elPercLabel.textContent = p;
-  if (elNfinPerc)  elNfinPerc.textContent = parseFloat((100 - p).toFixed(1));
-}
-
 function atualizaTer() {
   const fin = parseFloat(formQuick.totalFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
   const elTer = document.getElementById('inp-valorTerreno');

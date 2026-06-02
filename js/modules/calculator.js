@@ -1,3 +1,21 @@
+// ── HELPERS DE CÁLCULO ──
+function calcFin() {
+  return parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+}
+
+// Saldo máximo repassado à construtora = financiamento - terreno
+function calcSaldoMaximo() {
+  return calcFin() - parseFloat(form.valorTerreno || 0);
+}
+
+// Saldo devedor atual = saldo da última parcela ativa paga; se nenhuma paga, retorna o terreno (saldo inicial)
+function calcSaldoAtual() {
+  const ativas = meses.filter(r => !r.bloqueado);
+  const pagas  = ativas.filter(r => r.pago);
+  if (!pagas.length) return parseFloat(form.valorTerreno || 0);
+  return pagas[pagas.length - 1].saldo;
+}
+
 // ── PREMIUM ──
 // O status premium fica gravado dentro do próprio perfil no localStorage.
 function isPremium() {
@@ -19,7 +37,7 @@ function ativarPremiumPerfil() {
 
 // ── CÁLCULO ──
 function calcTable() {
-  const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const fin = calcFin();
   const ter = parseFloat(form.valorTerreno);
   const enc = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
   const tm  = parseFloat(form.taxaAnual) / 100 / 12;
@@ -48,7 +66,7 @@ function calcTable() {
 
 function recalcRow(i) {
   const r   = meses[i];
-  const fin = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const fin = calcFin();
   const ter = parseFloat(form.valorTerreno);
   const enc = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
   const tm  = parseFloat(form.taxaAnual) / 100 / 12;
@@ -79,7 +97,7 @@ function ultimoMesAtivo() {
 
 function adicionarLinha() {
   if (meses.length >= MAX_MESES) return;
-  const fin   = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const fin   = calcFin();
   const ter   = parseFloat(form.valorTerreno);
   const enc   = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
   const tm    = parseFloat(form.taxaAnual) / 100 / 12;
@@ -118,7 +136,7 @@ function removerLinha() {
 // ── SLIDER DE % DE EVOLUÇÃO ──
 // TR sempre zerada em todos os sliders (free, premium, rápido)
 function calcPreviewSlider(perc) {
-  const fin   = parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
+  const fin   = calcFin();
   const ter   = parseFloat(form.valorTerreno);
   const enc   = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
   const tm    = parseFloat(form.taxaAnual) / 100 / 12;

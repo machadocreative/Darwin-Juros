@@ -149,39 +149,68 @@ function validateTRBlur(i) {
 
 // ── REFRESH DA TABELA (atualização sem re-render completo) ──
 function refreshTable() {
+  const rowCls = r => 'main-row' + (r.bloqueado ? ' obra-done' : r.pago ? ' pago-row' : '');
+  const subCls = r => 'sub-row'  + (r.bloqueado ? ' obra-done' : r.pago ? ' pago-row' : '');
+
   meses.forEach((r, i) => {
     const row = document.getElementById('row-' + i); if (!row) return;
-    row.className = r.bloqueado ? 'obra-done' : r.pago ? 'pago-row' : '';
-    const pi = document.getElementById('pi-' + i);
-    if (pi) {
-      pi.disabled = r.bloqueado;
-      if (!r.bloqueado) pi.value = r.perc;
-      pi.classList.toggle('perc-locked', r.pago && !r.bloqueado);
+    row.className = rowCls(r);
+
+    const subrow = document.getElementById('subrow-' + i);
+    if (subrow) subrow.className = subCls(r);
+
+    // % Obra: pode ser input ou span dependendo do estado
+    const percCell = row.cells[2]; // 3ª célula da main-row (após num e mes com rowspan)
+    if (percCell) {
+      if (r.bloqueado) {
+        percCell.innerHTML = `<span class="perc-static">—</span>`;
+      } else if (r.pago) {
+        percCell.innerHTML = `<span class="perc-static">${r.perc}%</span>`;
+      } else {
+        const pi = document.getElementById('pi-' + i);
+        if (pi) {
+          pi.value = r.perc;
+        } else {
+          percCell.innerHTML = `<input id="pi-${i}" class="perc-input" type="text" inputmode="decimal" value="${r.perc}"
+            onchange="updatePerc(${i},this.value)" onblur="validatePercBlur(${i})">`;
+        }
+      }
     }
-    const ti = document.getElementById('ti-' + i);
-    if (ti) ti.disabled = r.bloqueado;
+
+    // Saldo devedor
     const rs = document.getElementById('rs-' + i);
     if (rs) rs.textContent = r.bloqueado ? '—' : fmtBRL(r.saldo);
-    const rp = document.getElementById('rp-' + i);
-    if (rp) rp.textContent = r.bloqueado ? '—' : fmtBRL(r.previsto);
+
+    // Valor (previsto ou real) — célula com rowspan
     const rv = document.getElementById('rv-' + i);
     if (rv) {
       if (r.bloqueado) {
         rv.innerHTML = '—';
       } else if (r.pago) {
-        rv.innerHTML = r.valorReal ? `<span class="rv-val">${fmtBRL(r.valorReal)}</span>` : '—';
+        rv.innerHTML = r.valorReal
+          ? `<span class="rv-val">${fmtBRL(r.valorReal)}</span>`
+          : `<span class="rv-val" style="color:var(--muted)">${fmtBRL(r.previsto)}</span>`;
       } else {
-        rv.innerHTML = `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="—">`;
+        rv.innerHTML = `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="${fmtBRL(r.previsto)}">`;
         setTimeout(() => _initSingleRvMask(i), 0);
       }
     }
+
+    // Badge pago
     const bp = document.getElementById('bp-' + i);
     if (bp) {
-      if (r.bloqueado)    bp.outerHTML = `<span id="bp-${i}" class="badge-blocked">—</span>`;
-      else if (r.pago)    bp.outerHTML = `<button id="bp-${i}" class="badge-pago" onclick="togglePago(${i})">✓ Pago</button>`;
-      else                bp.outerHTML = `<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`;
+      if (r.bloqueado)  bp.outerHTML = `<span id="bp-${i}" class="badge-blocked">—</span>`;
+      else if (r.pago)  bp.outerHTML = `<button id="bp-${i}" class="badge-pago" onclick="togglePago(${i})">✓ Pago</button>`;
+      else              bp.outerHTML = `<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`;
+    }
+
+    // Sub-linha: taxa
+    if (subrow) {
+      const taxaCell = subrow.cells[0];
+      if (taxaCell) taxaCell.textContent = _taxaSubLabel(r);
     }
   });
+
   const btnAdd = document.getElementById('btn-add'), btnRem = document.getElementById('btn-rem');
   if (btnAdd) btnAdd.disabled = meses.length >= MAX_MESES;
   if (btnRem) { const last = meses[meses.length - 1]; btnRem.disabled = meses.length <= 1 || (last && last.pago); }
@@ -189,32 +218,42 @@ function refreshTable() {
   const ativasCount = meses.filter(r => !r.bloqueado).length;
   const subText = ativasCount + ' parcelas · ' + (meses[0]?.mes || '') + ' → ' + ultimoMesAtivo();
   if (sub) sub.textContent = subText;
-  // Atualiza banner de pagas pendentes
   _refreshBannerPagas();
-  // Sincroniza faixa do slider premium
   _syncSliderPremium();
   updateSummary();
 }
 
 function updateSummary() {
   const ativas    = meses.filter(r => !r.bloqueado);
-  const total        = ativas.reduce((s, r) => s + r.previsto, 0);
-  const pagoPrevisto = ativas.filter(r => r.pago).reduce((s, r) => s + r.previsto, 0);
-  const media        = ativas.length ? total / ativas.length : 0;
-  const totalReal    = ativas.reduce((s, r) => s + (r.valorReal || 0), 0);
-  const diff         = totalReal - total;
+  const pagas     = ativas.filter(r => r.pago);
+  const total     = ativas.reduce((s, r) => s + r.previsto, 0);
+  const media     = ativas.length ? total / ativas.length : 0;
+  const totalPago = pagas.reduce((s, r) => s + (r.valorReal || r.previsto), 0);
+  const totalReal = pagas.reduce((s, r) => s + (r.valorReal || 0), 0);
+  const totalHibrid = ativas.reduce((s, r) => s + (r.valorReal || r.previsto), 0);
+  const totalRealBruto = ativas.reduce((s, r) => s + (r.valorReal || 0), 0);
+  const diff      = totalRealBruto - total;
   const e = id => document.getElementById(id);
   if (e('sum-total')) e('sum-total').textContent = fmtBRL(total);
-  if (e('sum-pago'))  e('sum-pago').textContent  = fmtBRL(totalReal > 0 ? totalReal : pagoPrevisto);
+  if (e('sum-pago'))  e('sum-pago').textContent  = fmtBRL(pagas.length > 0 ? totalPago : 0);
   if (e('sum-media')) e('sum-media').textContent = fmtBRL(media);
   if (e('sum-comp-previsto')) e('sum-comp-previsto').textContent = fmtBRL(total);
-  if (e('sum-real'))  e('sum-real').textContent  = fmtBRL(totalReal);
+  if (e('sum-real'))  e('sum-real').textContent  = fmtBRL(totalRealBruto);
   if (e('sum-diff')) {
     e('sum-diff').textContent = (diff >= 0 ? '+' : '−') + ' ' + fmtBRL(Math.abs(diff));
     e('sum-diff').className = 'comp-val' + (diff > 100 ? ' val-over' : diff < -100 ? ' val-under' : '');
   }
   const blocoComp = document.getElementById('bloco-comparacao');
-  if (blocoComp) blocoComp.style.display = totalReal > 0 ? '' : 'none';
+  if (blocoComp) blocoComp.style.display = totalRealBruto > 0 ? '' : 'none';
+
+  // Cards da tela da tabela
+  if (e('res-total-real'))   e('res-total-real').textContent   = fmtBRL(totalReal);
+  if (e('res-total-prev'))   e('res-total-prev').textContent   = fmtBRL(total);
+  if (e('res-total-hibrido')) e('res-total-hibrido').textContent = fmtBRL(totalHibrid);
+
+  // Saldo devedor atual em todas as telas que o exibem
+  const elSaldoAtual = document.getElementById('res-saldo-atual');
+  if (elSaldoAtual) elSaldoAtual.textContent = fmtBRL(calcSaldoAtual());
 }
 
 // ── VALOR REAL: edição inline na tabela ──
@@ -255,41 +294,62 @@ function _initRvMasks() {
   meses.forEach((_, i) => _initSingleRvMask(i));
 }
 
-// ── HELPER: linhas da tabela ──
+// ── HELPER: string de taxa para sub-linha ──
+function _taxaSubLabel(r) {
+  const tm = parseFloat(form.taxaAnual) / 100 / 12;
+  const tmPct = (tm * 100).toFixed(4);
+  if (r.bloqueado) return '—';
+  const trPct = (r.tr * 100).toFixed(4);
+  const totalPct = ((tm + r.tr) * 100).toFixed(4);
+  const trLabel = r.tr > 0 ? trPct + '%' : 'indisponível';
+  return `Juros: ${tmPct}% · TR: ${trLabel} · Total: ${totalPct}%`;
+}
+
+// ── HELPER: linhas da tabela (estrutura dupla main-row + sub-row) ──
 function _buildTableRows() {
-  return meses.map((r, i) => `
-    <tr id="row-${i}" class="${r.bloqueado ? 'obra-done' : r.pago ? 'pago-row' : ''}">
-      <td class="num-col">${i + 1}</td>
-      <td class="td-mes">${escHtml(r.mes)}</td>
-      <td class="td-right">
-        <input id="pi-${i}" class="perc-input${r.pago ? ' perc-locked' : ''}" type="text" inputmode="decimal" value="${r.perc}"
-          ${r.bloqueado ? 'disabled' : ''}
-          onchange="updatePerc(${i},this.value)"
-          onblur="validatePercBlur(${i})">
-      </td>
-      <td id="rs-${i}" class="val-col">${r.bloqueado ? '—' : fmtBRL(r.saldo)}</td>
-      <td class="td-right">
-        <input id="ti-${i}" class="tr-input" type="text" inputmode="decimal" value="${(r.tr * 100).toFixed(4)}"
-          ${r.bloqueado ? 'disabled' : ''}
-          onchange="updateTR(${i},this.value)"
-          onblur="validateTRBlur(${i})">
-      </td>
-      <td id="rp-${i}" class="val-col td-prev">${r.bloqueado ? '—' : fmtBRL(r.previsto)}</td>
-      <td id="rv-${i}" class="val-col td-right">
-        ${r.bloqueado
-          ? '—'
-          : r.pago
-            ? (r.valorReal ? `<span class="rv-val">${fmtBRL(r.valorReal)}</span>` : '—')
-            : `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="—">`}
-      </td>
-      <td class="td-center">
-        ${r.bloqueado
-          ? `<span id="bp-${i}" class="badge-blocked">—</span>`
-          : r.pago
-            ? `<button id="bp-${i}" class="badge-pago" onclick="togglePago(${i})">✓ Pago</button>`
-            : `<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`}
-      </td>
-    </tr>`).join('');
+  const ini = parseMS(form.mesInicial);
+  const rowClass = r => r.bloqueado ? 'obra-done' : r.pago ? 'pago-row' : '';
+  return meses.map((r, i) => {
+    const cls = rowClass(r);
+
+    // Célula de % Obra: input se editável, span se pago ou bloqueado
+    const percCell = r.bloqueado
+      ? `<span class="perc-static">—</span>`
+      : r.pago
+        ? `<span class="perc-static">${r.perc}%</span>`
+        : `<input id="pi-${i}" class="perc-input" type="text" inputmode="decimal" value="${r.perc}"
+             onchange="updatePerc(${i},this.value)"
+             onblur="validatePercBlur(${i})">`;
+
+    // Célula de valor (previsto ou real)
+    const valorCell = r.bloqueado
+      ? '—'
+      : r.pago
+        ? (r.valorReal
+            ? `<span class="rv-val">${fmtBRL(r.valorReal)}</span>`
+            : `<span class="rv-val" style="color:var(--muted)">${fmtBRL(r.previsto)}</span>`)
+        : `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="${fmtBRL(r.previsto)}">`;
+
+    // Badge pago
+    const badge = r.bloqueado
+      ? `<span id="bp-${i}" class="badge-blocked">—</span>`
+      : r.pago
+        ? `<button id="bp-${i}" class="badge-pago" onclick="togglePago(${i})">✓ Pago</button>`
+        : `<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`;
+
+    return `
+    <tr id="row-${i}" class="main-row${cls ? ' ' + cls : ''}">
+      <td class="num-col" rowspan="2">${i + 1}</td>
+      <td class="td-mes" rowspan="2">${escHtml(r.mes)}</td>
+      <td class="td-right" style="font-size:12px">${percCell}</td>
+      <td id="rs-${i}" class="val-col" style="font-size:12px">${r.bloqueado ? '—' : fmtBRL(r.saldo)}</td>
+      <td id="rv-${i}" class="td-valor-principal" rowspan="2">${valorCell}</td>
+      <td class="td-center" rowspan="2">${badge}</td>
+    </tr>
+    <tr id="subrow-${i}" class="sub-row${cls ? ' ' + cls : ''}">
+      <td colspan="2" class="td-taxa">${_taxaSubLabel(r)}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ── BANNER INLINE: parcelas pendentes de confirmação ──
@@ -309,10 +369,6 @@ function _contarAteUltimaPaga() {
   const ativas = meses.filter(r => !r.bloqueado);
   const ultimaPagaIdx = ativas.reduce((acc, r, i) => r.pago ? i : acc, -1);
   return ultimaPagaIdx + 1;
-}
-
-function _buildBannerPagas() {
-  return '';
 }
 
 function _abrirModalPagas(pendentes, ate) {
@@ -408,22 +464,60 @@ function renderTabela() { screen = 'tabela'; _navPush('tabela'); showBottomNav()
 function buildTabela(inline = false) {
   aplicaBloqueio();
 
-  const lastPago = meses[meses.length - 1]?.pago || false;
+  const lastPago   = meses[meses.length - 1]?.pago || false;
+  const saldoMax   = calcSaldoMaximo();
+  const saldoAtual = calcSaldoAtual();
+  const temPagas   = meses.filter(r => !r.bloqueado && r.pago).length > 0;
+  const ativas     = meses.filter(r => !r.bloqueado);
+  const pagas      = ativas.filter(r => r.pago);
+
+  const totalReal   = pagas.reduce((s, r) => s + (r.valorReal || 0), 0);
+  const totalPrev   = ativas.reduce((s, r) => s + r.previsto, 0);
+  const totalHibrid = ativas.reduce((s, r) => s + (r.valorReal || r.previsto), 0);
 
   return `
     ${!inline ? `<div class="screen-title">Tabela de Parcelas</div>` : ''}
+
+    <div class="result-card accent result-card-full" style="margin-bottom:10px">
+      <div class="qrc-label">Total pago (real)</div>
+      <div class="qrc-val" id="res-total-real">${fmtBRL(totalReal)}</div>
+      <div class="qrc-note">Soma dos valores inseridos por você</div>
+    </div>
+    <div class="result-grid" style="margin-bottom:12px">
+      <div class="result-card">
+        <div class="qrc-label">Total previsto</div>
+        <div class="qrc-val" id="res-total-prev">${fmtBRL(totalPrev)}</div>
+        <div class="qrc-note">Estimativa do app</div>
+      </div>
+      <div class="result-card">
+        <div class="qrc-label">Estimativa total</div>
+        <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
+        <div class="qrc-note">Real onde disponível + previsto</div>
+      </div>
+    </div>
+
+    <div class="result-grid" style="margin-bottom:12px">
+      <div class="result-card">
+        <div class="qrc-label">Saldo devedor máximo</div>
+        <div class="qrc-val">${fmtBRL(saldoMax)}</div>
+        <div class="qrc-note">Financiamento − Terreno</div>
+      </div>
+      <div class="result-card">
+        <div class="qrc-label">Saldo devedor atual</div>
+        <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
+        <div class="qrc-note">${temPagas ? 'Na última parcela paga' : 'Nenhuma parcela paga'}</div>
+      </div>
+    </div>
 
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th class="th-center">#</th>
+            <th class="th-center" style="width:28px">#</th>
             <th>Mês</th>
             <th class="th-right">% Obra</th>
             <th class="th-right">Saldo dev.</th>
-            <th class="th-right">TR %</th>
-            <th class="th-right">Previsto</th>
-            <th class="th-right">Valor Real</th>
+            <th class="th-right">Valor</th>
             <th class="th-center">Pago?</th>
           </tr>
         </thead>
@@ -468,14 +562,30 @@ function renderResult() {
   _navPush('result');
   showBottomNav();
   aplicaBloqueio();
-  const fin      = parseFloat(form.valorFinanciado) || parseFloat(form.valorTotal) * (parseFloat(form.percFinanciado) / 100);
-  const ativas   = meses.filter(r => !r.bloqueado);
-  const total    = ativas.reduce((s, r) => s + r.previsto, 0);
-  const pagoPrevisto = ativas.filter(r => r.pago).reduce((s, r) => s + r.previsto, 0);
-  const media    = ativas.length ? total / ativas.length : 0;
-  const premium  = isPremium();
-  const totalReal = ativas.reduce((s, r) => s + (r.valorReal || 0), 0);
-  const totalPago = totalReal > 0 ? totalReal : pagoPrevisto;
+  const fin          = calcFin();
+  const saldoMax     = calcSaldoMaximo();
+  const ativas       = meses.filter(r => !r.bloqueado);
+  const pagas        = ativas.filter(r => r.pago);
+  const total        = ativas.reduce((s, r) => s + r.previsto, 0);
+  const media        = ativas.length ? total / ativas.length : 0;
+  const premium      = isPremium();
+  const saldoAtual   = premium ? calcSaldoAtual() : null;
+
+  // Para cada parcela paga: usa valorReal se disponível, senão previsto
+  const totalPago = pagas.reduce((s, r) => s + (r.valorReal || r.previsto), 0);
+  const temPago   = pagas.length > 0;
+  const temReal   = pagas.some(r => r.valorReal);
+
+  // Nota do card "pago": indica precisão do valor
+  const notaPago = !temPago
+    ? 'Nenhum registro'
+    : temReal
+      ? (premium ? '✦ Combinando real + estimado' : 'Combinando real + estimado')
+      : (premium ? '✦ Valor estimado' : 'Valor estimado');
+
+  // Estimativa total da obra: usa real onde disponível, previsto para o restante
+  const totalObra = ativas.reduce((s, r) => s + (r.valorReal || r.previsto), 0);
+  const proporcaoReal = ativas.length ? pagas.filter(r => r.valorReal).length / ativas.length : 0;
 
   setHtml(`
     <div class="result-header">
@@ -495,14 +605,40 @@ function renderResult() {
     </div>
     <div class="result-grid" style="margin-top:10px">
       <div class="result-card">
-        <div class="qrc-label">Parcela média estimada</div>
-        <div class="qrc-val">${fmtBRL(media)}</div>
+        <div class="qrc-label">Saldo devedor máximo</div>
+        <div class="qrc-val">${fmtBRL(saldoMax)}</div>
+        <div class="qrc-note">Financiamento − Terreno</div>
       </div>
+      ${premium ? `
+      <div class="result-card" id="card-saldo-atual">
+        <div class="qrc-label">Saldo devedor atual</div>
+        <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
+        <div class="qrc-note">${pagas.length > 0 ? 'Na última parcela paga' : 'Nenhuma parcela paga'}</div>
+      </div>` : ''}
+    </div>
+    <div class="result-grid" style="margin-top:10px">
       <div class="result-card">
         <div class="qrc-label">Pago até o momento</div>
         <div class="qrc-val" id="res-total-pago">${fmtBRL(totalPago)}</div>
-        <div class="qrc-note">${totalPago > 0 ? (premium ? '✦ Premium' : 'via histórico') : 'Nenhum registro'}</div>
+        <div class="qrc-note">${notaPago}</div>
       </div>
+      <div class="result-card">
+        <div class="qrc-label">Parcela média estimada</div>
+        <div class="qrc-val">${fmtBRL(media)}</div>
+      </div>
+    </div>
+
+    <div class="result-card result-card-full" style="margin-top:10px">
+      <div class="qrc-label">Total estimado de juros de obra
+        ${premium && proporcaoReal > 0 ? `<span class="qrc-badge-refinado">✦ ${Math.round(proporcaoReal * 100)}% refinado</span>` : ''}
+      </div>
+      <div class="qrc-val">${fmtBRL(totalObra)}</div>
+      <div class="qrc-note">${premium && proporcaoReal === 0
+        ? 'Estimativa — refine inserindo os valores reais no Histórico de Parcelas'
+        : premium
+          ? 'Combinando valores reais com estimativas futuras'
+          : 'Estimativa — TR futura, % de obra e prazo podem variar'
+      }</div>
     </div>
 
     <div class="feature-grid">
@@ -556,9 +692,12 @@ function renderSliderResult() {
   showBottomNav();
   aplicaBloqueio();
 
-  const premium  = isPremium();
-  const temFin   = parseFloat(form.parcelaFinanciamento || 0) > 0;
-  const percPaga = premium ? _ultimaPercPagaAtual() : 50;
+  const premium    = isPremium();
+  const temFin     = parseFloat(form.parcelaFinanciamento || 0) > 0;
+  const percPaga   = premium ? _ultimaPercPagaAtual() : 50;
+  const saldoMax   = calcSaldoMaximo();
+  const saldoAtual = premium ? calcSaldoAtual() : null;
+  const temPagas   = premium && meses.filter(r => !r.bloqueado && r.pago).length > 0;
 
   setHtml(`
     <div class="screen-title">Visualizador de Prestações</div>
@@ -587,6 +726,19 @@ function renderSliderResult() {
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
+      ${premium ? `
+      <div class="result-grid" style="margin-top:10px">
+        <div class="result-card">
+          <div class="qrc-label">Saldo devedor máximo</div>
+          <div class="qrc-val">${fmtBRL(saldoMax)}</div>
+          <div class="qrc-note">Financiamento − Terreno</div>
+        </div>
+        <div class="result-card">
+          <div class="qrc-label">Saldo devedor atual</div>
+          <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
+          <div class="qrc-note">${temPagas ? 'Na última parcela paga' : 'Nenhuma parcela paga'}</div>
+        </div>
+      </div>` : ''}
       ${temFin ? `
       <div class="result-grid-slider">
         <div class="result-card accent">

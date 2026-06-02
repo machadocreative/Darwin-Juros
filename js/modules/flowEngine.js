@@ -15,7 +15,8 @@ function initFlow(flowArray) {
   console.log('🚀 initFlow() chamada com:', flowArray);
   currentFlowArray = flowArray;
   currentFlowStep = 0;
-  currentStep = 0; // sincroniza com a variável global
+  currentStep = 0;
+  _navFlowDepth = 0; // reinicia contador de profundidade de histórico
   fluxo = flowArray === FLOW_QUICKSIM ? 'quick' : 'complete';
   console.log('✅ Fluxo inicializado. currentFlowArray:', currentFlowArray);
   console.log('✅ Fluxo tipo:', fluxo);
@@ -243,22 +244,6 @@ function _formatStepNumber(current, total) {
 // ────────────────────────────────────────────────────────────────
 // NAVEGAÇÃO SEGURA (com lembrete de salvar)
 // ────────────────────────────────────────────────────────────────
-
-function goProfilesSafeFlow() {
-  if ((screen === 'result' || screen === 'tabela') && hasUnsavedChanges) {
-    showSaveReminder(() => { hasUnsavedChanges = false; goProfiles(); });
-  } else {
-    goProfiles();
-  }
-}
-
-function novaSimulacaoSafeFlow() {
-  if ((screen === 'result' || screen === 'tabela') && hasUnsavedChanges) {
-    showSaveReminder(() => { hasUnsavedChanges = false; novaSimulacao(); });
-  } else {
-    novaSimulacao();
-  }
-}
 
 // ────────────────────────────────────────────────────────────────
 // BIFURCAÇÃO INICIAL

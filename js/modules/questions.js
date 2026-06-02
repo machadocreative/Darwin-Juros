@@ -10,7 +10,6 @@
 
 const QUESTION_IDS = {
   // Questões compartilhadas
-  percFinanciado: 'inp-percFinanciado',
   taxaAnual: 'inp-taxaAnual',
   seguro: 'inp-seguro',
   taxaAdm: 'inp-taxaAdm',
@@ -333,9 +332,8 @@ const questions = {
       const fin = maskRead(document.getElementById(QUESTION_IDS.financiamentoTotal));
       formQuick.valorTotal      = vt;
       formQuick.totalFinanciado = fin;
-      form.valorTotal      = String(vt || '');
-      form.valorFinanciado = String(fin || '');
-      form.percFinanciado  = (vt > 0 && fin > 0) ? parseFloat(((fin / vt) * 100).toFixed(2)) : 80;
+      form.valorTotal     = String(vt || '');
+      form.percFinanciado = (vt > 0 && fin > 0) ? parseFloat(((fin / vt) * 100).toFixed(2)) : 80;
     },
     init: () => {
       const vtVal  = formQuick.valorTotal || form.valorTotal || '';
@@ -468,10 +466,13 @@ const questions = {
         const es = document.getElementById('err-saldo'); if (es) { es.textContent = 'Saldo devedor não pode ser maior que o valor financiado.'; es.style.display = 'block'; }
         return false;
       }
-      if (!v || v <= 0 || v > 100) {
-        elPerc?.classList.add('invalid');
-        const ep = document.getElementById('err-perc-obra'); if (ep) ep.style.display = 'block';
-        return false;
+      const groupPerc = document.getElementById('group-perc-obra');
+      if (groupPerc && groupPerc.style.display !== 'none') {
+        if (!v || v <= 0 || v > 100) {
+          elPerc?.classList.add('invalid');
+          const ep = document.getElementById('err-perc-obra'); if (ep) ep.style.display = 'block';
+          return false;
+        }
       }
       return true;
     },
