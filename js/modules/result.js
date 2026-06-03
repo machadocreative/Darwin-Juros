@@ -150,7 +150,11 @@ function validateTRBlur(i) {
 // ── REFRESH DA TABELA (atualização sem re-render completo) ──
 function refreshTable() {
   const rowCls = r => 'main-row' + (r.bloqueado ? ' obra-done' : r.pago ? ' pago-row' : '');
-  const subCls = r => 'sub-row'  + (r.bloqueado ? ' obra-done' : r.pago ? ' pago-row' : '');
+  const subCls = r => {
+    const subrow = document.getElementById('subrow-' + meses.indexOf(r));
+    const hidden = subrow?.classList.contains('sub-row-hidden') ? ' sub-row-hidden' : '';
+    return 'sub-row' + (r.bloqueado ? ' obra-done' : r.pago ? ' pago-row' : '') + hidden;
+  };
 
   meses.forEach((r, i) => {
     const row = document.getElementById('row-' + i); if (!row) return;
@@ -159,8 +163,8 @@ function refreshTable() {
     const subrow = document.getElementById('subrow-' + i);
     if (subrow) subrow.className = subCls(r);
 
-    // % Obra: pode ser input ou span dependendo do estado
-    const percCell = row.cells[2]; // 3ª célula da main-row (após num e mes com rowspan)
+    // % Obra: col index 2 (sem rowspan agora)
+    const percCell = row.cells[2];
     if (percCell) {
       if (r.bloqueado) {
         percCell.innerHTML = `<span class="perc-static">—</span>`;
@@ -177,11 +181,7 @@ function refreshTable() {
       }
     }
 
-    // Saldo devedor
-    const rs = document.getElementById('rs-' + i);
-    if (rs) rs.textContent = r.bloqueado ? '—' : fmtBRL(r.saldo);
-
-    // Valor (previsto ou real) — célula com rowspan
+    // Valor (previsto ou real)
     const rv = document.getElementById('rv-' + i);
     if (rv) {
       if (r.bloqueado) {
@@ -204,11 +204,9 @@ function refreshTable() {
       else              bp.outerHTML = `<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`;
     }
 
-    // Sub-linha: taxa
-    if (subrow) {
-      const taxaCell = subrow.cells[0];
-      if (taxaCell) taxaCell.textContent = _taxaSubLabel(r);
-    }
+    // Sub-row: conteúdo completo atualizado
+    const subContent = document.getElementById('sub-content-' + i);
+    if (subContent) subContent.innerHTML = _subRowContent(r);
   });
 
   const btnAdd = document.getElementById('btn-add'), btnRem = document.getElementById('btn-rem');
@@ -247,9 +245,8 @@ function updateSummary() {
   if (blocoComp) blocoComp.style.display = totalRealBruto > 0 ? '' : 'none';
 
   // Cards da tela da tabela
-  if (e('res-total-real'))   e('res-total-real').textContent   = fmtBRL(totalReal);
-  if (e('res-total-prev'))   e('res-total-prev').textContent   = fmtBRL(total);
-  if (e('res-total-hibrido')) e('res-total-hibrido').textContent = fmtBRL(totalHibrid);
+  if (e('res-total-real')) e('res-total-real').textContent = fmtBRL(totalReal);
+  if (e('res-total-prev')) e('res-total-prev').textContent = fmtBRL(total);
 
   // Saldo devedor atual em todas as telas que o exibem
   const elSaldoAtual = document.getElementById('res-saldo-atual');
@@ -294,25 +291,32 @@ function _initRvMasks() {
   meses.forEach((_, i) => _initSingleRvMask(i));
 }
 
-// ── HELPER: string de taxa para sub-linha ──
-function _taxaSubLabel(r) {
-  const tm = parseFloat(form.taxaAnual) / 100 / 12;
-  const tmPct = (tm * 100).toFixed(4);
-  if (r.bloqueado) return '—';
-  const trPct = (r.tr * 100).toFixed(4);
-  const totalPct = ((tm + r.tr) * 100).toFixed(4);
-  const trLabel = r.tr > 0 ? trPct + '%' : 'indisponível';
-  return `Juros: ${tmPct}% · TR: ${trLabel} · Total: ${totalPct}%`;
+// ── HELPER: toggle expand/collapse da sub-row ──
+function toggleSubRow(i) {
+  const sub = document.getElementById('subrow-' + i);
+  const btn = document.getElementById('sub-toggle-' + i);
+  if (!sub || !btn) return;
+  const hidden = sub.classList.toggle('sub-row-hidden');
+  btn.textContent = hidden ? '▸' : '▾';
 }
 
-// ── HELPER: linhas da tabela (estrutura dupla main-row + sub-row) ──
+// ── HELPER: conteúdo da sub-row (atualizado em tempo real) ──
+function _subRowContent(r) {
+  if (r.bloqueado) return '—';
+  const tm = parseFloat(form.taxaAnual) / 100 / 12;
+  const totalPct = ((tm + r.tr) * 100).toFixed(4);
+  const taxaStr = r.tr > 0
+    ? `TOTAL JUROS: ${totalPct}%`
+    : `TOTAL JUROS: ${(tm * 100).toFixed(4)}% (TR indisponível)`;
+  return `SALDO DEVEDOR: ${fmtBRL(r.saldo)}&nbsp;&nbsp;&nbsp;${taxaStr}&nbsp;&nbsp;&nbsp;PREVISTO: ${fmtBRL(r.previsto)}`;
+}
+
+// ── HELPER: linhas da tabela (main-row + sub-row destacada) ──
 function _buildTableRows() {
-  const ini = parseMS(form.mesInicial);
   const rowClass = r => r.bloqueado ? 'obra-done' : r.pago ? 'pago-row' : '';
   return meses.map((r, i) => {
     const cls = rowClass(r);
 
-    // Célula de % Obra: input se editável, span se pago ou bloqueado
     const percCell = r.bloqueado
       ? `<span class="perc-static">—</span>`
       : r.pago
@@ -321,7 +325,6 @@ function _buildTableRows() {
              onchange="updatePerc(${i},this.value)"
              onblur="validatePercBlur(${i})">`;
 
-    // Célula de valor (previsto ou real)
     const valorCell = r.bloqueado
       ? '—'
       : r.pago
@@ -330,7 +333,6 @@ function _buildTableRows() {
             : `<span class="rv-val" style="color:var(--muted)">${fmtBRL(r.previsto)}</span>`)
         : `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="${fmtBRL(r.previsto)}">`;
 
-    // Badge pago
     const badge = r.bloqueado
       ? `<span id="bp-${i}" class="badge-blocked">—</span>`
       : r.pago
@@ -339,15 +341,17 @@ function _buildTableRows() {
 
     return `
     <tr id="row-${i}" class="main-row${cls ? ' ' + cls : ''}">
-      <td class="num-col" rowspan="2">${i + 1}</td>
-      <td class="td-mes" rowspan="2">${escHtml(r.mes)}</td>
-      <td class="td-right" style="font-size:12px">${percCell}</td>
-      <td id="rs-${i}" class="val-col" style="font-size:12px">${r.bloqueado ? '—' : fmtBRL(r.saldo)}</td>
-      <td id="rv-${i}" class="td-valor-principal" rowspan="2">${valorCell}</td>
-      <td class="td-center" rowspan="2">${badge}</td>
+      <td class="num-col">${i + 1}</td>
+      <td class="td-mes">${escHtml(r.mes)}</td>
+      <td class="td-right">${percCell}</td>
+      <td id="rv-${i}" class="td-valor-principal">${valorCell}</td>
+      <td class="td-center">${badge}</td>
+      <td class="td-center td-toggle">
+        ${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">▾</button>`}
+      </td>
     </tr>
     <tr id="subrow-${i}" class="sub-row${cls ? ' ' + cls : ''}">
-      <td colspan="2" class="td-taxa">${_taxaSubLabel(r)}</td>
+      <td colspan="6" class="td-sub-content" id="sub-content-${i}">${_subRowContent(r)}</td>
     </tr>`;
   }).join('');
 }
@@ -485,27 +489,14 @@ function buildTabela(inline = false) {
     </div>
     <div class="result-grid" style="margin-bottom:12px">
       <div class="result-card">
-        <div class="qrc-label">Total previsto</div>
-        <div class="qrc-val" id="res-total-prev">${fmtBRL(totalPrev)}</div>
-        <div class="qrc-note">Estimativa do app</div>
-      </div>
-      <div class="result-card">
-        <div class="qrc-label">Estimativa total</div>
-        <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
-        <div class="qrc-note">Real onde disponível + previsto</div>
-      </div>
-    </div>
-
-    <div class="result-grid" style="margin-bottom:12px">
-      <div class="result-card">
-        <div class="qrc-label">Saldo devedor máximo</div>
-        <div class="qrc-val">${fmtBRL(saldoMax)}</div>
-        <div class="qrc-note">Financiamento − Terreno</div>
-      </div>
-      <div class="result-card">
         <div class="qrc-label">Saldo devedor atual</div>
         <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
         <div class="qrc-note">${temPagas ? 'Na última parcela paga' : 'Nenhuma parcela paga'}</div>
+      </div>
+      <div class="result-card">
+        <div class="qrc-label">Total previsto a pagar</div>
+        <div class="qrc-val" id="res-total-prev">${fmtBRL(totalPrev)}</div>
+        <div class="qrc-note">Estimativa do app</div>
       </div>
     </div>
 
@@ -513,12 +504,12 @@ function buildTabela(inline = false) {
       <table>
         <thead>
           <tr>
-            <th class="th-center" style="width:28px">#</th>
+            <th class="th-center">#</th>
             <th>Mês</th>
             <th class="th-right">% Obra</th>
-            <th class="th-right">Saldo dev.</th>
             <th class="th-right">Valor</th>
             <th class="th-center">Pago?</th>
+            <th class="th-center td-toggle-th"></th>
           </tr>
         </thead>
         <tbody>${_buildTableRows()}</tbody>

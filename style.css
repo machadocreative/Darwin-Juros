@@ -936,16 +936,17 @@ tr.obra-done td input {
 /* Linhas duplas (main + sub) da tabela premium */
 tr.main-row td {
     padding-top: 10px;
-    padding-bottom: 3px;
+    padding-bottom: 6px;
     border-bottom: none;
 }
 
 tr.sub-row td {
-    padding-top: 0;
-    padding-bottom: 7px;
+    padding: 0 8px 7px;
     border-bottom: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--muted);
+}
+
+tr.sub-row.sub-row-hidden {
+    display: none;
 }
 
 tr.main-row.pago-row td,
@@ -957,6 +958,36 @@ tr.main-row.obra-done td,
 tr.sub-row.obra-done td {
     background: #F8F8F6;
     color: var(--muted);
+}
+
+.td-sub-content {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.01em;
+}
+
+.td-toggle {
+    width: 24px;
+    padding-left: 0;
+    padding-right: 6px;
+}
+
+.td-toggle-th {
+    width: 24px;
+}
+
+.sub-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
 }
 
 .val-col {
@@ -979,11 +1010,6 @@ tr.sub-row.obra-done td {
     font-weight: 500;
 }
 
-.td-taxa {
-    font-size: 11px;
-    color: var(--muted);
-    text-align: right;
-}
 
 .td-valor-principal {
     font-size: 15px;
@@ -1597,12 +1623,16 @@ dl.slider-result-row dd.slider-result-val {
     font-size: 14px;
     font-weight: 600;
     color: var(--text);
+    font-variant-numeric: tabular-nums;
+    min-width: 10ch;
 }
 
 dl.slider-result-row dd.slider-result-val.accent {
     font-size: 20px;
     color: var(--accent);
     text-align: right;
+    font-variant-numeric: tabular-nums;
+    min-width: 10ch;
 }
 
 dl.slider-result-row dd.slider-result-val.accent span {
