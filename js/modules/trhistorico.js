@@ -37,7 +37,7 @@ function renderTRHistorico() {
       </div>`).join('');
 
   setHtml(`
-    <button class="btn-screen-back" onclick="history.back()">← Voltar</button>
+    <button class="breadcrumb-back" onclick="history.back()">← Voltar</button>
     <div class="screen-title">Histórico da TR</div>
     <div class="screen-sub">Taxa Referencial mensal divulgada pelo Banco Central do Brasil. Utilizada nos cálculos de evolução de obra. Clique nos meses abaixo para simular o somatório da sua taxa de juros com a respectiva TR de cada mês.</div>
 

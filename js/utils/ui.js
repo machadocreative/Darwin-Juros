@@ -15,12 +15,6 @@ function setHtml(html) {
   document.getElementById('main').innerHTML = html;
 }
 
-function renderProgress() {
-  return `<div class="progress-wrap">${Array.from({ length: TOTAL_STEPS }, (_, i) =>
-    `<div class="progress-dot ${i < currentStep ? 'done' : i === currentStep ? 'active' : ''}"></div>`
-  ).join('')}</div>`;
-}
-
 // ── MODAL DE AJUDA ──
 function openHelpModal(questionKey) {
   const q = questions[questionKey];
@@ -89,24 +83,27 @@ function showSaveReminder(onDiscard) {
   const existing = document.getElementById('save-reminder');
   if (existing) existing.remove();
 
-  const banner = document.createElement('div');
-  banner.id = 'save-reminder';
-  banner.innerHTML = `
-    <div class="save-reminder-title">💾 Você tem alterações não salvas</div>
-    <div class="save-reminder-sub">Salve antes de sair para não perder as atualizações de % de obra e TR.</div>
-    <div class="save-reminder-actions">
-      <button class="save-reminder-save" id="reminder-save-btn">💾 Salvar agora</button>
-      <button class="save-reminder-discard" id="reminder-discard-btn">Sair sem salvar</button>
+  const overlay = document.createElement('div');
+  overlay.id = 'save-reminder';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-header">Você tem alterações não salvas</div>
+      <div class="save-reminder-sub">Deseja manter suas alterações ou continuar sem salvar?</div>
+      <div class="modal-actions">
+        <button class="btn btn-back" id="reminder-discard-btn">Continuar sem salvar</button>
+        <button class="btn btn-primary" id="reminder-save-btn">💾 Manter alterações</button>
+      </div>
     </div>
   `;
-  document.body.appendChild(banner);
+  document.body.appendChild(overlay);
 
   document.getElementById('reminder-save-btn').addEventListener('click', () => {
     saveProfile();
-    banner.remove();
+    overlay.remove();
   });
   document.getElementById('reminder-discard-btn').addEventListener('click', () => {
-    banner.remove();
+    overlay.remove();
     onDiscard();
   });
 }

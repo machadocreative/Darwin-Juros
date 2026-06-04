@@ -50,6 +50,7 @@ function _iniciarEdicao() {
 // ── TELA ÚNICA DE EDIÇÃO ──
 function renderEditScreen() {
   _navPush('editScreen');
+  hideBottomNav();
   const premium = isPremium();
   const _vtFmt  = (parseFloat(form.valorTotal) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const _finAmt = parseFloat(form.valorFinanciado || 0);
@@ -389,18 +390,6 @@ function atualizaEncargos() {
 }
 
 // ── MINI-TABELA DE HISTÓRICO (tela 5) ──
-
-// Inicializa máscaras de todos os inputs de histórico presentes no DOM
-function _initHistMasks() {
-  const hist = form.historicoPagamentos || [];
-  let i = 0;
-  while (document.getElementById(`hist-val-${i}`)) {
-    const savedVal = hist[i]?.valor || 0;
-    attachMask(`hist-val-${i}`, 'brl', savedVal > 0 ? savedVal : '');
-    i++;
-  }
-  _updateHistControls();
-}
 
 function _updateHistControls() {
   let count = 0;

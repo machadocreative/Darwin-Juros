@@ -1,6 +1,8 @@
 // ── TELA DE PERFIS ──
 function goProfiles() { renderProfiles(); }
 
+const PF_ICON_OPTIONS = ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏯','🏰','🗼','🛖','🏗️'];
+
 function renderProfiles() {
   screen = 'profiles';
   _navPush('perfis');
@@ -8,20 +10,33 @@ function renderProfiles() {
   setNavActive('perfis');
 
   const profiles = loadProfiles().sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+  const n = profiles.length;
 
-  const list = profiles.length
+  const list = n
     ? profiles.map(p => {
         const perc = ultimaPercPaga(p.meses);
-        return `<div class="profile-card" id="pc-${p.id}" onclick="loadProfile('${p.id}')">
-          <div class="pf-avatar">🏠</div>
+        const icon = p.icon || '🏠';
+        const iconBtn = p.premium
+          ? `<button class="pf-avatar pf-avatar-btn" onclick="event.stopPropagation();abrirIconePerfil('${p.id}')" title="Trocar ícone">${icon}</button>`
+          : `<div class="pf-avatar">${icon}</div>`;
+        const statsBlock = p.premium && perc !== null
+          ? `<div class="pf-stats">
+               <div class="pf-stats-num">${perc}%</div>
+               <div class="pf-stats-label">Obra</div>
+             </div>`
+          : '';
+        const premiumBadge = p.premium
+          ? `<div class="pc-premium-stripe">✦</div>`
+          : '';
+        return `
+        <div class="profile-card${p.premium ? ' profile-card-premium' : ''}" id="pc-${p.id}" onclick="loadProfile('${p.id}')">
+          ${iconBtn}
           <div class="pf-content">
-            <div class="pf-name">${escHtml(p.nome)}${p.premium ? ' <span class="pc-premium-badge">✦</span>' : ''}</div>
+            <div class="pf-name">${escHtml(p.nome)}</div>
             <div class="pf-info">${p.meses.length} parcelas · salvo ${fmtDateRelative(p.savedAt)}</div>
           </div>
-          <div class="pf-stats">
-            <div class="pf-stats-num">${perc !== null ? perc + '%' : '—'}</div>
-            <div class="pf-stats-label">Obra</div>
-          </div>
+          ${statsBlock}
+          ${premiumBadge}
         </div>
         <div class="pc-actions" onclick="event.stopPropagation()" style="margin-top:-6px;margin-bottom:10px;display:flex;gap:6px;padding:0 2px">
           <button class="pc-btn" onclick="abrirRenomearPerfil('${p.id}')">✏️ Renomear</button>
@@ -29,6 +44,8 @@ function renderProfiles() {
         </div>`;
       }).join('')
     : `<div class="empty-state"><div class="es-icon">🏢</div><p>Nenhum perfil salvo ainda.<br>Inicie uma <strong>Simulação Completa</strong> para salvar seu primeiro imóvel.</p></div>`;
+
+  const label = n === 1 ? '1 perfil salvo' : `${n} perfis salvos`;
 
   setHtml(`
     <div class="greeting">
@@ -38,10 +55,36 @@ function renderProfiles() {
       </div>
       <div class="greeting-sub">Gerencie e acompanhe seus financiamentos</div>
     </div>
-    ${profiles.length ? `<div class="section-label">${profiles.length} perfil${profiles.length > 1 ? 'is' : ''} salvo${profiles.length > 1 ? 's' : ''}</div>` : ''}
+    ${n ? `<div class="section-label">${label}</div>` : ''}
     <div class="profile-list">${list}</div>
     <button class="btn-add-profile" onclick="renderBifurcacao()">+ Nova simulação</button>
   `);
+}
+
+function abrirIconePerfil(profileId) {
+  const opts = PF_ICON_OPTIONS.map(ico =>
+    `<button class="pf-icon-opt" onclick="salvarIconePerfil('${profileId}','${ico}')">${ico}</button>`
+  ).join('');
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-icone-overlay';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-header">Escolha um ícone</div>
+      <div class="pf-icon-grid">${opts}</div>
+      <div class="modal-actions">
+        <button class="btn btn-back" onclick="document.getElementById('modal-icone-overlay').remove()">← Cancelar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function salvarIconePerfil(profileId, icon) {
+  const profiles = loadProfiles();
+  const idx = profiles.findIndex(p => p.id === profileId);
+  if (idx >= 0) { profiles[idx].icon = icon; saveProfiles(profiles); }
+  document.getElementById('modal-icone-overlay')?.remove();
+  renderProfiles();
 }
 
 // ── EXCLUIR PERFIL A PARTIR DA TELA DE RESULTADO ──
@@ -117,39 +160,9 @@ function updatePercMask(i) {
   // Atualiza sub-row em tempo real sem refreshTable completo
   const subSaldo = document.getElementById('sub-saldo-val-' + i);
   const subPrev  = document.getElementById('sub-prev-val-' + i);
-  const rs = document.getElementById('rs-' + i);
   if (subSaldo) subSaldo.textContent = fmtBRL(meses[i].saldo);
   if (subPrev)  subPrev.textContent  = fmtBRL(meses[i].previsto);
-  if (rs) rs.textContent = fmtBRL(meses[i].saldo);
   updateSummary();
-}
-
-function updatePerc(i, rawVal) {
-  const el = document.getElementById('pi-' + i);
-  if (meses[i].pago) {
-    if (el) el.value = fmtPerc(meses[i].perc, 2);
-    showToast('⚠️ Desmarque "Pago" antes de editar a % desta parcela.');
-    return;
-  }
-  const v = parseDecimal(rawVal);
-  if (rawVal === '' || isNaN(v) || v < 0 || v > 100) { if (el) el.classList.add('invalid'); return; }
-
-  let prevPerc = -1;
-  for (let j = i - 1; j >= 0; j--) {
-    if (!meses[j].bloqueado) { prevPerc = meses[j].perc; break; }
-  }
-  if (v < prevPerc) {
-    if (el) { el.classList.add('invalid'); el.title = 'O valor não pode ser menor que a linha anterior (' + prevPerc + '%).'; }
-    showToast('⚠️ % de obra não pode ser menor que a linha anterior: ' + prevPerc + '%');
-    return;
-  }
-
-  if (el) { el.classList.remove('invalid'); el.title = ''; }
-  meses[i].perc = v;
-  recalcRow(i);
-  aplicaBloqueio();
-  hasUnsavedChanges = true;
-  refreshTable();
 }
 
 function validatePercBlur(i) {
@@ -181,26 +194,6 @@ function redistribuirPerc() {
   showToast('✅ % de obra redistribuída.');
 }
 
-function updateTR(i, rawVal) {
-  const el = document.getElementById('ti-' + i);
-  const v = parseDecimal(rawVal);
-  if (rawVal === '' || isNaN(v) || v < 0) { if (el) el.classList.add('invalid'); return; }
-  if (el) { el.classList.remove('invalid'); el.title = ''; }
-  meses[i].tr = v / 100;
-  recalcRow(i);
-  hasUnsavedChanges = true;
-  const elP = document.getElementById('rp-' + i);
-  if (elP) elP.textContent = meses[i].bloqueado ? '—' : fmtBRL(meses[i].previsto);
-  updateSummary();
-}
-
-function validateTRBlur(i) {
-  const el = document.getElementById('ti-' + i); if (!el) return;
-  const v = parseDecimal(el.value);
-  if (el.value === '' || isNaN(v) || v < 0) { el.classList.add('invalid'); }
-  else { el.classList.remove('invalid'); }
-}
-
 // ── REFRESH DA TABELA (atualização sem re-render completo) ──
 function refreshTable() {
   const alt = i => i % 2 === 1 ? ' row-alt' : '';
@@ -228,12 +221,12 @@ function refreshTable() {
       } else {
         const pi = document.getElementById('pi-' + i);
         if (pi) {
-          // Atualiza valor sem destruir a máscara
-          attachMask('pi-' + i, 'perc2', r.perc);
+          // Reaplica máscara + valor preservando o handler de commit
+          attachMask('pi-' + i, 'perc2', r.perc, () => updatePercMask(i));
         } else {
           percCell.innerHTML = `<input id="pi-${i}" class="perc-input" type="text" inputmode="numeric" placeholder="0,00%"
-            oninput="maskOnInput(this);updatePercMask(${i})" onblur="validatePercBlur(${i})">`;
-          setTimeout(() => attachMask('pi-' + i, 'perc2', r.perc), 0);
+            onblur="validatePercBlur(${i})">`;
+          setTimeout(() => attachMask('pi-' + i, 'perc2', r.perc, () => updatePercMask(i)), 0);
         }
       }
     }
@@ -366,7 +359,7 @@ function _initRvMasks() {
 function _initPercMasks() {
   meses.forEach((r, i) => {
     if (r.bloqueado || r.pago) return;
-    attachMask('pi-' + i, 'perc2', r.perc);
+    attachMask('pi-' + i, 'perc2', r.perc, () => updatePercMask(i));
   });
 }
 
@@ -406,7 +399,6 @@ function _buildTableRows() {
       : r.pago
         ? `<span class="perc-static">${fmtPerc(r.perc, 2)}</span>`
         : `<input id="pi-${i}" class="perc-input" type="text" inputmode="numeric" placeholder="0,00%"
-             oninput="maskOnInput(this);updatePercMask(${i})"
              onblur="validatePercBlur(${i})">`;
 
     // O valor cobrado no mês i é calculado sobre a medição do mês i-1
@@ -570,7 +562,8 @@ function buildTabela(inline = false) {
   const totalFalta  = totalHibrid - totalReal;
 
   return `
-    ${!inline ? `<div class="screen-title">Tabela de Parcelas</div>` : ''}
+    ${!inline ? `<button class="breadcrumb-back" onclick="history.back()">← Voltar à tela de resultados</button>
+    <div class="screen-title">Tabela de Parcelas</div>` : ''}
 
     <div class="result-card accent result-card-full" style="margin-bottom:10px">
       <div class="qrc-label">Total estimado de Juros de Obra</div>
@@ -634,16 +627,7 @@ function buildTabela(inline = false) {
     </div>
 
     <button class="btn-redistribuir" onclick="redistribuirPerc()">↺ Atualizar tabela</button>
-
-    ${!inline ? `
-      <button class="btn-screen-back" onclick="history.back()" style="margin-top:12px">← Voltar à tela de resultados</button>
-    ` : ''}
   `;
-}
-
-function voltarParaResultado() {
-  screen = 'result';
-  renderResult();
 }
 
 // ── TELA DE RESULTADO ──
@@ -692,19 +676,6 @@ function renderResult() {
     <div class="result-card accent result-card-full">
       <div class="qrc-label">Valor Financiado</div>
       <div class="qrc-val">${fmtBRL(fin)}</div>
-    </div>
-    <div class="result-grid" style="margin-top:10px">
-      <div class="result-card">
-        <div class="qrc-label">Saldo devedor máximo</div>
-        <div class="qrc-val">${fmtBRL(saldoMax)}</div>
-        <div class="qrc-note">Financiamento − Terreno</div>
-      </div>
-      ${premium ? `
-      <div class="result-card" id="card-saldo-atual">
-        <div class="qrc-label">Saldo devedor atual</div>
-        <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
-        <div class="qrc-note">${pagas.length > 0 ? 'Na última parcela paga' : 'Nenhuma parcela paga'}</div>
-      </div>` : ''}
     </div>
     <div class="result-grid" style="margin-top:10px">
       <div class="result-card">
@@ -785,14 +756,46 @@ function renderSliderResult() {
   const premium    = isPremium();
   const temFin     = parseFloat(form.parcelaFinanciamento || 0) > 0;
   const percPaga   = premium ? _ultimaPercPagaAtual() : 50;
-  const saldoMax   = calcSaldoMaximo();
-  const saldoAtual = premium ? calcSaldoAtual() : null;
-  const temPagas   = premium && meses.filter(r => !r.bloqueado && r.pago).length > 0;
+  const ativas     = meses.filter(r => !r.bloqueado);
+  const pagas      = premium ? ativas.filter(r => r.pago) : [];
+  const temPagas   = pagas.length > 0;
+
+  // Cards "Parcela atual" e "TR" — derivados do último mês pago
+  let cardsPremium = '';
+  if (premium && temPagas) {
+    const ultimaPaga = pagas[pagas.length - 1];
+    const idxUltima  = meses.indexOf(ultimaPaga);
+    // A parcela cobrada no mês seguinte ao último pago usa o previsto do penúltimo pago
+    // (mesmo offset i-1 da tabela). Se só há 1 paga, usa o previsto dela própria.
+    const parcelaAtual = idxUltima > 0 ? meses[idxUltima - 1].previsto : ultimaPaga.previsto;
+    const trUltima     = ultimaPaga.tr;
+    const temTR        = trUltima > 0;
+    const trReais      = trUltima * ultimaPaga.saldo;
+    const ini          = parseMS(form.mesInicial);
+    const ymUltima     = addM(ini, idxUltima);
+    const ymVence      = addM(ini, idxUltima + 1);
+
+    cardsPremium = `
+      <div class="result-grid result-grid-inner" style="margin-bottom:12px">
+        <div class="result-card">
+          <div class="qrc-label">Parcela atual<br>Vence em ${mLabel(ymVence)}</div>
+          <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
+          <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem TR'}</div>
+        </div>
+        <div class="result-card">
+          <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trUltima * 100, 4) + ' · ' + mLabel(ymUltima) : ''}</div>
+          <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
+          <div class="qrc-note">${temTR ? 'Embutido na prestação' : '—'}</div>
+        </div>
+      </div>`;
+  }
 
   setHtml(`
+    <button class="breadcrumb-back" onclick="history.back()">← Voltar à tela de resultados</button>
     <div class="screen-title">Visualizador de Prestações</div>
     <div class="preview-slider-card" style="margin-top:12px">
       <div class="preview-slider-header">
+        ${cardsPremium}
         <div class="preview-slider-sub"><span>Arraste para simular diferentes estágios de obra</span></div>
       </div>
       <div class="slider-wrap">
@@ -816,19 +819,6 @@ function renderSliderResult() {
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
-      ${premium ? `
-      <div class="result-grid" style="margin-top:10px">
-        <div class="result-card">
-          <div class="qrc-label">Saldo devedor máximo</div>
-          <div class="qrc-val">${fmtBRL(saldoMax)}</div>
-          <div class="qrc-note">Financiamento − Terreno</div>
-        </div>
-        <div class="result-card">
-          <div class="qrc-label">Saldo devedor atual</div>
-          <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
-          <div class="qrc-note">${temPagas ? 'Na última parcela paga' : 'Nenhuma parcela paga'}</div>
-        </div>
-      </div>` : ''}
       ${temFin ? `
       <div class="result-grid-slider">
         <div class="result-card accent">
@@ -843,7 +833,6 @@ function renderSliderResult() {
         <span class="cta-price">R$ 4,99</span>
       </button>` : ''}
     </div>
-    <button class="btn-screen-back" onclick="history.back()" style="margin-top:20px">← Voltar à tela de resultados</button>
   `);
 
   setTimeout(() => { atualizaSlider(); if (premium) _syncSliderPremium(); }, 80);
@@ -869,9 +858,9 @@ function renderMiniTabela() {
 
   if (decorridos < 0) {
     setHtml(`
+      <button class="breadcrumb-back" onclick="history.back()">← Voltar à tela de resultados</button>
       <div class="screen-title">Histórico de Parcelas</div>
       <div class="info-box" style="margin-top:12px">A simulação ainda não iniciou. O histórico estará disponível a partir de ${mLabel(ymIni)}.</div>
-      <button class="btn-screen-back" onclick="history.back()" style="margin-top:20px">← Voltar à tela de resultados</button>
     `);
     return;
   }
@@ -894,6 +883,7 @@ function renderMiniTabela() {
     </tr>`).join('');
 
   setHtml(`
+    <button class="breadcrumb-back" onclick="history.back()">← Voltar à tela de resultados</button>
     <div class="screen-title">Histórico de Parcelas</div>
     ${totalSim < decorridos ? '<div class="info-box" style="margin-top:12px;margin-bottom:12px">⚠️ A data de entrega está no passado — ajuste-a em <strong>Editar</strong> se necessário.</div>' : ''}
     <div class="mini-somatorio-sticky" id="mini-somatorio">
@@ -915,7 +905,6 @@ function renderMiniTabela() {
       🔓 Libere mais funcionalidades
       <span class="cta-price">R$ 4,99</span>
     </button>
-    <button class="btn-screen-back" onclick="history.back()" style="margin-top:12px">← Voltar à tela de resultados</button>
   `);
 
   setTimeout(() => _initMiniTabelaMasks(countRows), 80);

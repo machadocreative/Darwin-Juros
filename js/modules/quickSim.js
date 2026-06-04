@@ -175,20 +175,6 @@ function _atualizaTRInfo() {
 
 // ── CÁLCULOS ──
 
-// Saldo no % informado na tela 4
-function _calcSaldoNoPerc() {
-  const total = parseFloat(formQuick.totalFinanciado || 0);
-  const perc  = parseFloat(formQuick.percObra || 0);
-  return total * (perc / 100);
-}
-
-// Parcela sem TR
-function _calcParcelaFutura(saldo) {
-  const tm  = (parseFloat(formQuick.taxaAnual) / 100) / 12;
-  const enc = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
-  return tm * saldo + enc;
-}
-
 // Parcela estimada no % atual (usa saldo REAL + TR obtida silenciosamente)
 function _calcTotalParcelaAtual() {
   const saldo = parseFloat(formQuick.saldoAtual || 0);

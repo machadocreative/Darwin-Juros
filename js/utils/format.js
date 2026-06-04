@@ -14,7 +14,6 @@ function mLabelFull(s) {
   const ym = parseMS(s);
   return ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][ym.m - 1] + ' de ' + ym.y;
 }
-function fmtDate(iso) { return new Date(iso).toLocaleDateString('pt-BR'); }
 function fmtDateRelative(iso) {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
   if (days === 0) return 'hoje';
@@ -127,12 +126,16 @@ function maskOnInput(el) {
   maskValue(el, el.dataset.maskTipo);
 }
 
-function attachMask(id, tipo, initialNumeric) {
+function attachMask(id, tipo, initialNumeric, onAfterInput) {
   const el = document.getElementById(id);
   if (!el) return;
   el.dataset.maskTipo = tipo;
   el.setAttribute('inputmode', 'numeric');
   el.type = 'text';
   maskInit(el, tipo, initialNumeric);
-  el.oninput = () => { maskValue(el, tipo); el.classList.remove('invalid'); };
+  el.oninput = () => {
+    maskValue(el, tipo);
+    el.classList.remove('invalid');
+    if (typeof onAfterInput === 'function') onAfterInput();
+  };
 }
