@@ -918,8 +918,16 @@ tr.sub-row:last-child td {
     border-bottom: none;
 }
 
+tr.row-alt td {
+    background: #FAFAFA;
+}
+
 tr.pago-row td {
     background: #F5FBF7;
+}
+
+tr.pago-row.row-alt td {
+    background: #EFF8F3;
 }
 
 tr.obra-done td {
@@ -971,23 +979,78 @@ tr.sub-row.obra-done td {
 }
 
 .td-toggle {
-    width: 24px;
+    width: 32px;
     padding-left: 0;
     padding-right: 6px;
 }
 
 .td-toggle-th {
-    width: 24px;
+    width: 32px;
 }
 
 .sub-toggle-btn {
     background: none;
     border: none;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 16px;
     cursor: pointer;
-    padding: 0 2px;
+    padding: 2px 4px;
     line-height: 1;
+    border-radius: 4px;
+    transition: background .12s;
+}
+
+.sub-toggle-btn:hover {
+    background: var(--border);
+}
+
+/* Sub-row: 3 células separadas */
+.td-sub-c {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font);
+    padding-top: 0;
+    padding-bottom: 7px;
+    white-space: nowrap;
+}
+
+.td-sub-saldo { text-align: left; }
+.td-sub-taxa  { text-align: center; }
+.td-sub-prev  { text-align: right; }
+
+.sub-label {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-size: 10px;
+    text-transform: uppercase;
+    margin-right: 3px;
+}
+
+.sub-tr-ind {
+    opacity: .75;
+    font-style: italic;
+}
+
+/* Botão redistribuir % */
+.btn-redistribuir {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .15s, color .15s;
+}
+
+.btn-redistribuir:hover {
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .val-col {
@@ -1020,8 +1083,8 @@ tr.sub-row.obra-done td {
 
 .perc-static {
     font-family: var(--font);
-    font-size: 12px;
-    color: var(--muted);
+    font-size: 15px;
+    color: var(--text);
     text-align: right;
     display: block;
 }
@@ -1059,7 +1122,7 @@ tr.sub-row.obra-done td {
 }
 
 .perc-input {
-    width: 74px;
+    width: 72px;
     padding: 4px 6px;
     border: 1px solid var(--border);
     border-radius: 5px;
@@ -1090,7 +1153,7 @@ tr.sub-row.obra-done td {
 
 
 .rv-input {
-    width: 88px;
+    width: 112px;
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 3px 6px;

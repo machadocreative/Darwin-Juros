@@ -92,10 +92,42 @@ function togglePago(i) {
   refreshTable();
 }
 
+// Chamado pelo oninput da máscara perc2 — lê via maskRead e comita
+function updatePercMask(i) {
+  const el = document.getElementById('pi-' + i);
+  if (!el || meses[i].pago) return;
+  const v = maskRead(el);
+  if (isNaN(v) || v < 0 || v > 100) { el.classList.add('invalid'); return; }
+
+  let prevPerc = -1;
+  for (let j = i - 1; j >= 0; j--) {
+    if (!meses[j].bloqueado) { prevPerc = meses[j].perc; break; }
+  }
+  if (v < prevPerc) {
+    el.classList.add('invalid');
+    el.title = 'O valor não pode ser menor que a linha anterior (' + prevPerc + '%).';
+    return;
+  }
+
+  el.classList.remove('invalid'); el.title = '';
+  meses[i].perc = v;
+  recalcRow(i);
+  aplicaBloqueio();
+  hasUnsavedChanges = true;
+  // Atualiza sub-row em tempo real sem refreshTable completo
+  const subSaldo = document.getElementById('sub-saldo-val-' + i);
+  const subPrev  = document.getElementById('sub-prev-val-' + i);
+  const rs = document.getElementById('rs-' + i);
+  if (subSaldo) subSaldo.textContent = fmtBRL(meses[i].saldo);
+  if (subPrev)  subPrev.textContent  = fmtBRL(meses[i].previsto);
+  if (rs) rs.textContent = fmtBRL(meses[i].saldo);
+  updateSummary();
+}
+
 function updatePerc(i, rawVal) {
   const el = document.getElementById('pi-' + i);
   if (meses[i].pago) {
-    if (el) el.value = meses[i].perc;
+    if (el) el.value = fmtPerc(meses[i].perc, 2);
     showToast('⚠️ Desmarque "Pago" antes de editar a % desta parcela.');
     return;
   }
@@ -122,9 +154,31 @@ function updatePerc(i, rawVal) {
 
 function validatePercBlur(i) {
   const el = document.getElementById('pi-' + i); if (!el) return;
-  const v = parseDecimal(el.value);
-  if (el.value === '' || isNaN(v) || v < 0 || v > 100) { el.classList.add('invalid'); }
+  const v = maskRead(el);
+  if (isNaN(v) || v < 0 || v > 100) { el.classList.add('invalid'); }
   else { el.classList.remove('invalid'); }
+}
+
+// Redistribui % de obra linearmente do último mês pago até 100% no último mês
+function redistribuirPerc() {
+  const ativas = meses.filter(r => !r.bloqueado);
+  const ultimaPagaIdx = ativas.reduce((acc, r, i) => r.pago ? i : acc, -1);
+  const inicioIdx = ultimaPagaIdx + 1; // primeiro não-pago
+  const total = ativas.length;
+  if (inicioIdx >= total) { showToast('Todas as parcelas já estão pagas.'); return; }
+
+  const percInicio = ultimaPagaIdx >= 0 ? ativas[ultimaPagaIdx].perc : 0;
+  const passos = total - 1 - ultimaPagaIdx; // quantos passos até 100%
+
+  for (let k = inicioIdx; k < total; k++) {
+    const frac = passos === 0 ? 1 : (k - ultimaPagaIdx) / passos;
+    ativas[k].perc = parseFloat((percInicio + (100 - percInicio) * frac).toFixed(2));
+    recalcRow(meses.indexOf(ativas[k]));
+  }
+  aplicaBloqueio();
+  hasUnsavedChanges = true;
+  refreshTable();
+  showToast('✅ % de obra redistribuída.');
 }
 
 function updateTR(i, rawVal) {
@@ -149,34 +203,37 @@ function validateTRBlur(i) {
 
 // ── REFRESH DA TABELA (atualização sem re-render completo) ──
 function refreshTable() {
-  const rowCls = r => 'main-row' + (r.bloqueado ? ' obra-done' : r.pago ? ' pago-row' : '');
-  const subCls = r => {
-    const subrow = document.getElementById('subrow-' + meses.indexOf(r));
+  const alt = i => i % 2 === 1 ? ' row-alt' : '';
+  const rowCls = (r, i) => 'main-row' + (r.bloqueado ? ' obra-done' : r.pago ? ' pago-row' : '') + alt(i);
+  const subCls = (r, i) => {
+    const subrow = document.getElementById('subrow-' + i);
     const hidden = subrow?.classList.contains('sub-row-hidden') ? ' sub-row-hidden' : '';
-    return 'sub-row' + (r.bloqueado ? ' obra-done' : r.pago ? ' pago-row' : '') + hidden;
+    return 'sub-row' + (r.bloqueado ? ' obra-done' : r.pago ? ' pago-row' : '') + hidden + alt(i);
   };
 
   meses.forEach((r, i) => {
     const row = document.getElementById('row-' + i); if (!row) return;
-    row.className = rowCls(r);
+    row.className = rowCls(r, i);
 
     const subrow = document.getElementById('subrow-' + i);
-    if (subrow) subrow.className = subCls(r);
+    if (subrow) subrow.className = subCls(r, i);
 
-    // % Obra: col index 2 (sem rowspan agora)
+    // % Obra
     const percCell = row.cells[2];
     if (percCell) {
       if (r.bloqueado) {
         percCell.innerHTML = `<span class="perc-static">—</span>`;
       } else if (r.pago) {
-        percCell.innerHTML = `<span class="perc-static">${r.perc}%</span>`;
+        percCell.innerHTML = `<span class="perc-static">${fmtPerc(r.perc, 2)}</span>`;
       } else {
         const pi = document.getElementById('pi-' + i);
         if (pi) {
-          pi.value = r.perc;
+          // Atualiza valor sem destruir a máscara
+          attachMask('pi-' + i, 'perc2', r.perc);
         } else {
-          percCell.innerHTML = `<input id="pi-${i}" class="perc-input" type="text" inputmode="decimal" value="${r.perc}"
-            onchange="updatePerc(${i},this.value)" onblur="validatePercBlur(${i})">`;
+          percCell.innerHTML = `<input id="pi-${i}" class="perc-input" type="text" inputmode="numeric" placeholder="0,00%"
+            oninput="maskOnInput(this);updatePercMask(${i})" onblur="validatePercBlur(${i})">`;
+          setTimeout(() => attachMask('pi-' + i, 'perc2', r.perc), 0);
         }
       }
     }
@@ -187,11 +244,13 @@ function refreshTable() {
       if (r.bloqueado) {
         rv.innerHTML = '—';
       } else if (r.pago) {
+        const prevAnt = i > 0 ? meses[i - 1].previsto : null;
         rv.innerHTML = r.valorReal
           ? `<span class="rv-val">${fmtBRL(r.valorReal)}</span>`
-          : `<span class="rv-val" style="color:var(--muted)">${fmtBRL(r.previsto)}</span>`;
+          : `<span class="rv-val" style="color:var(--muted)">${prevAnt != null ? fmtBRL(prevAnt) : '—'}</span>`;
       } else {
-        rv.innerHTML = `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="${fmtBRL(r.previsto)}">`;
+        const ph = i > 0 ? fmtBRL(meses[i - 1].previsto) : '—';
+        rv.innerHTML = `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="${ph}">`;
         setTimeout(() => _initSingleRvMask(i), 0);
       }
     }
@@ -201,12 +260,23 @@ function refreshTable() {
     if (bp) {
       if (r.bloqueado)  bp.outerHTML = `<span id="bp-${i}" class="badge-blocked">—</span>`;
       else if (r.pago)  bp.outerHTML = `<button id="bp-${i}" class="badge-pago" onclick="togglePago(${i})">✓ Pago</button>`;
-      else              bp.outerHTML = `<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`;
+      else              bp.outerHTML = `<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">Não pago</button>`;
     }
 
-    // Sub-row: conteúdo completo atualizado
-    const subContent = document.getElementById('sub-content-' + i);
-    if (subContent) subContent.innerHTML = _subRowContent(r);
+    // Sub-row: atualiza as 3 células separadas
+    r._idx = i;
+    const subSaldo = document.getElementById('sub-saldo-val-' + i);
+    const subTaxa  = document.getElementById('sub-taxa-val-' + i);
+    const subPrev  = document.getElementById('sub-prev-val-' + i);
+    if (subSaldo) subSaldo.textContent = fmtBRL(r.saldo);
+    if (subPrev)  subPrev.textContent  = fmtBRL(r.previsto);
+    if (subTaxa) {
+      const tm = parseFloat(form.taxaAnual) / 100 / 12;
+      const totalPct = ((tm + r.tr) * 100).toFixed(4);
+      subTaxa.innerHTML = r.tr > 0
+        ? `${totalPct}%`
+        : `${(tm * 100).toFixed(4)}% <span class="sub-tr-ind">(TR indisponível)</span>`;
+    }
   });
 
   const btnAdd = document.getElementById('btn-add'), btnRem = document.getElementById('btn-rem');
@@ -245,8 +315,10 @@ function updateSummary() {
   if (blocoComp) blocoComp.style.display = totalRealBruto > 0 ? '' : 'none';
 
   // Cards da tela da tabela
-  if (e('res-total-real')) e('res-total-real').textContent = fmtBRL(totalReal);
-  if (e('res-total-prev')) e('res-total-prev').textContent = fmtBRL(total);
+  if (e('res-total-hibrido')) e('res-total-hibrido').textContent = fmtBRL(totalHibrid);
+  if (e('res-total-real'))    e('res-total-real').textContent    = fmtBRL(totalReal);
+  if (e('res-total-falta'))   e('res-total-falta').textContent   = fmtBRL(totalHibrid - totalReal);
+  if (e('res-total-prev'))    e('res-total-prev').textContent    = fmtBRL(total);
 
   // Saldo devedor atual em todas as telas que o exibem
   const elSaldoAtual = document.getElementById('res-saldo-atual');
@@ -291,6 +363,13 @@ function _initRvMasks() {
   meses.forEach((_, i) => _initSingleRvMask(i));
 }
 
+function _initPercMasks() {
+  meses.forEach((r, i) => {
+    if (r.bloqueado || r.pago) return;
+    attachMask('pi-' + i, 'perc2', r.perc);
+  });
+}
+
 // ── HELPER: toggle expand/collapse da sub-row ──
 function toggleSubRow(i) {
   const sub = document.getElementById('subrow-' + i);
@@ -300,58 +379,65 @@ function toggleSubRow(i) {
   btn.textContent = hidden ? '▸' : '▾';
 }
 
-// ── HELPER: conteúdo da sub-row (atualizado em tempo real) ──
-function _subRowContent(r) {
-  if (r.bloqueado) return '—';
+// ── HELPER: conteúdo da sub-row em 3 células separadas ──
+function _subRowCells(r) {
+  if (r.bloqueado) return `<td colspan="6" class="td-sub-c">—</td>`;
   const tm = parseFloat(form.taxaAnual) / 100 / 12;
   const totalPct = ((tm + r.tr) * 100).toFixed(4);
   const taxaStr = r.tr > 0
-    ? `TOTAL JUROS: ${totalPct}%`
-    : `TOTAL JUROS: ${(tm * 100).toFixed(4)}% (TR indisponível)`;
-  return `SALDO DEVEDOR: ${fmtBRL(r.saldo)}&nbsp;&nbsp;&nbsp;${taxaStr}&nbsp;&nbsp;&nbsp;PREVISTO: ${fmtBRL(r.previsto)}`;
+    ? `${totalPct}%`
+    : `${(tm * 100).toFixed(4)}% <span class="sub-tr-ind">(TR indisponível)</span>`;
+  return `
+    <td class="td-sub-c td-sub-saldo" id="sub-saldo-${r._idx}"><span class="sub-label">Saldo dev.</span> <span id="sub-saldo-val-${r._idx}">${fmtBRL(r.saldo)}</span></td>
+    <td class="td-sub-c td-sub-taxa"><span class="sub-label">Total juros</span> <span id="sub-taxa-val-${r._idx}">${taxaStr}</span></td>
+    <td class="td-sub-c td-sub-prev" colspan="4"><span class="sub-label">Previsto mês seguinte</span> <span id="sub-prev-val-${r._idx}">${fmtBRL(r.previsto)}</span></td>`;
 }
 
-// ── HELPER: linhas da tabela (main-row + sub-row destacada) ──
+// ── HELPER: linhas da tabela (main-row + sub-row fechada por padrão) ──
 function _buildTableRows() {
   const rowClass = r => r.bloqueado ? 'obra-done' : r.pago ? 'pago-row' : '';
   return meses.map((r, i) => {
+    r._idx = i;
     const cls = rowClass(r);
+    const alt = i % 2 === 1 ? ' row-alt' : '';
 
     const percCell = r.bloqueado
       ? `<span class="perc-static">—</span>`
       : r.pago
-        ? `<span class="perc-static">${r.perc}%</span>`
-        : `<input id="pi-${i}" class="perc-input" type="text" inputmode="decimal" value="${r.perc}"
-             onchange="updatePerc(${i},this.value)"
+        ? `<span class="perc-static">${fmtPerc(r.perc, 2)}</span>`
+        : `<input id="pi-${i}" class="perc-input" type="text" inputmode="numeric" placeholder="0,00%"
+             oninput="maskOnInput(this);updatePercMask(${i})"
              onblur="validatePercBlur(${i})">`;
 
+    // O valor cobrado no mês i é calculado sobre a medição do mês i-1
+    const prevAnterior = i > 0 ? meses[i - 1].previsto : null;
     const valorCell = r.bloqueado
       ? '—'
       : r.pago
         ? (r.valorReal
             ? `<span class="rv-val">${fmtBRL(r.valorReal)}</span>`
-            : `<span class="rv-val" style="color:var(--muted)">${fmtBRL(r.previsto)}</span>`)
-        : `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="${fmtBRL(r.previsto)}">`;
+            : `<span class="rv-val" style="color:var(--muted)">${prevAnterior != null ? fmtBRL(prevAnterior) : '—'}</span>`)
+        : `<input id="rv-input-${i}" class="rv-input" type="text" inputmode="numeric" placeholder="${prevAnterior != null ? fmtBRL(prevAnterior) : '—'}">`;
 
     const badge = r.bloqueado
       ? `<span id="bp-${i}" class="badge-blocked">—</span>`
       : r.pago
         ? `<button id="bp-${i}" class="badge-pago" onclick="togglePago(${i})">✓ Pago</button>`
-        : `<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">—</button>`;
+        : `<button id="bp-${i}" class="badge-nao" onclick="togglePago(${i})">Não pago</button>`;
 
     return `
-    <tr id="row-${i}" class="main-row${cls ? ' ' + cls : ''}">
+    <tr id="row-${i}" class="main-row${cls ? ' ' + cls : ''}${alt}">
       <td class="num-col">${i + 1}</td>
       <td class="td-mes">${escHtml(r.mes)}</td>
       <td class="td-right">${percCell}</td>
       <td id="rv-${i}" class="td-valor-principal">${valorCell}</td>
       <td class="td-center">${badge}</td>
       <td class="td-center td-toggle">
-        ${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">▾</button>`}
+        ${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">▸</button>`}
       </td>
     </tr>
-    <tr id="subrow-${i}" class="sub-row${cls ? ' ' + cls : ''}">
-      <td colspan="6" class="td-sub-content" id="sub-content-${i}">${_subRowContent(r)}</td>
+    <tr id="subrow-${i}" class="sub-row sub-row-hidden${cls ? ' ' + cls : ''}${alt}">
+      ${_subRowCells(r)}
     </tr>`;
   }).join('');
 }
@@ -462,7 +548,10 @@ function _applySliderTrack(slider, percPaga, val) {
 }
 
 // ── GERAR A TABELA COMPLETA - Sugerido por GPT ──
-function renderTabela() { screen = 'tabela'; _navPush('tabela'); showBottomNav(); setHtml(buildTabela(false)); }
+function renderTabela() {
+  screen = 'tabela'; _navPush('tabela'); showBottomNav(); setHtml(buildTabela(false));
+  setTimeout(() => { _initRvMasks(); _initPercMasks(); }, 80);
+}
 
 // ── CONSTUIR A TABELA COMO PÁGINA INDEPENDENTE - Sugerido por GPT ──
 function buildTabela(inline = false) {
@@ -478,25 +567,33 @@ function buildTabela(inline = false) {
   const totalReal   = pagas.reduce((s, r) => s + (r.valorReal || 0), 0);
   const totalPrev   = ativas.reduce((s, r) => s + r.previsto, 0);
   const totalHibrid = ativas.reduce((s, r) => s + (r.valorReal || r.previsto), 0);
+  const totalFalta  = totalHibrid - totalReal;
 
   return `
     ${!inline ? `<div class="screen-title">Tabela de Parcelas</div>` : ''}
 
     <div class="result-card accent result-card-full" style="margin-bottom:10px">
-      <div class="qrc-label">Total pago (real)</div>
-      <div class="qrc-val" id="res-total-real">${fmtBRL(totalReal)}</div>
-      <div class="qrc-note">Soma dos valores inseridos por você</div>
+      <div class="qrc-label">Total estimado de Juros de Obra</div>
+      <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
+      <div class="qrc-note">Real onde disponível · previsão no restante</div>
+    </div>
+    <div class="result-grid" style="margin-bottom:12px">
+      <div class="result-card">
+        <div class="qrc-label">Total pago</div>
+        <div class="qrc-val" id="res-total-real">${fmtBRL(totalReal)}</div>
+        <div class="qrc-note">Valores inseridos por você</div>
+      </div>
+      <div class="result-card">
+        <div class="qrc-label">Falta pagar</div>
+        <div class="qrc-val" id="res-total-falta">${fmtBRL(totalFalta)}</div>
+        <div class="qrc-note">Estimativa − já pago</div>
+      </div>
     </div>
     <div class="result-grid" style="margin-bottom:12px">
       <div class="result-card">
         <div class="qrc-label">Saldo devedor atual</div>
         <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
         <div class="qrc-note">${temPagas ? 'Na última parcela paga' : 'Nenhuma parcela paga'}</div>
-      </div>
-      <div class="result-card">
-        <div class="qrc-label">Total previsto a pagar</div>
-        <div class="qrc-val" id="res-total-prev">${fmtBRL(totalPrev)}</div>
-        <div class="qrc-note">Estimativa do app</div>
       </div>
     </div>
 
@@ -536,8 +633,10 @@ function buildTabela(inline = false) {
       </div>
     </div>
 
+    <button class="btn-redistribuir" onclick="redistribuirPerc()">↺ Atualizar tabela</button>
+
     ${!inline ? `
-      <button class="btn-screen-back" onclick="history.back()" style="margin-top:20px">← Voltar à tela de resultados</button>
+      <button class="btn-screen-back" onclick="history.back()" style="margin-top:12px">← Voltar à tela de resultados</button>
     ` : ''}
   `;
 }
@@ -780,7 +879,7 @@ function renderMiniTabela() {
   const countRows = Math.min(decorridos + 1, totalSim + 1, ativas.length);
 
   const rows = ativas.slice(0, countRows).map((r, i) => `
-    <tr id="mini-row-${i}" class="${r.pago ? 'pago-row' : ''}">
+    <tr id="mini-row-${i}" class="${r.pago ? 'pago-row' : ''}${i % 2 === 1 ? ' row-alt' : ''}">
       <td class="num-col">${i + 1}</td>
       <td class="td-mes">${escHtml(r.mes)}</td>
       <td class="td-right">
@@ -790,7 +889,7 @@ function renderMiniTabela() {
         </div>
       </td>
       <td class="td-center">
-        <span id="mini-badge-${i}" class="${r.pago ? 'badge-pago' : 'badge-nao'}">${r.pago ? '✓' : '—'}</span>
+        <span id="mini-badge-${i}" class="${r.pago ? 'badge-pago' : 'badge-nao'}">${r.pago ? '✓ Pago' : 'Não pago'}</span>
       </td>
     </tr>`).join('');
 
