@@ -866,7 +866,7 @@ input.invalid {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow-x: hidden;
+    /* sem overflow aqui: deixa o <thead> sticky funcionar na rolagem da página */
     margin-bottom: 8px;
 }
 
@@ -881,8 +881,17 @@ thead tr {
     background: var(--bg);
 }
 
+/* Cabeçalho da tabela fixo logo abaixo do card sticky ao rolar a página.
+   --sticky-head-top é a altura do card, definida em _syncStickyOffsets(). */
+thead th {
+    position: sticky;
+    top: var(--sticky-head-top, 0px);
+    z-index: 5;
+    background: var(--bg);
+}
+
 th {
-    padding: 10px 8px;
+    padding: 10px 6px;
     text-align: left;
     font-size: 10px;
     font-weight: 500;
@@ -893,8 +902,17 @@ th {
     white-space: nowrap;
 }
 
+/* Larguras das colunas (table-layout: fixed) — evita sobreposição no mobile.
+   Ordem: # · Mês · % Obra · Valor · Pago? · toggle */
+thead th:nth-child(1) { width: 24px; }
+thead th:nth-child(2) { width: 58px; }
+thead th:nth-child(3) { width: 23%; }
+thead th:nth-child(4) { width: 27%; }
+thead th:nth-child(5) { width: 64px; }
+thead th:nth-child(6) { width: 30px; }
+
 td {
-    padding: 8px;
+    padding: 8px 6px;
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
 }
@@ -955,20 +973,20 @@ tr.sub-row.obra-done td {
 }
 
 .td-toggle {
-    width: 32px;
+    width: 30px;
     padding-left: 0;
-    padding-right: 6px;
+    padding-right: 4px;
 }
 
 .td-toggle-th {
-    width: 32px;
+    width: 30px;
 }
 
 .sub-toggle-btn {
     background: none;
     border: none;
     color: var(--muted);
-    font-size: 16px;
+    font-size: 22px;
     cursor: pointer;
     padding: 2px 4px;
     line-height: 1;
@@ -980,15 +998,22 @@ tr.sub-row.obra-done td {
     background: var(--border);
 }
 
-/* Sub-row: 3 células separadas */
+/* Sub-row: 3 células separadas — label e valor empilhados para não cortar no mobile */
 .td-sub-c {
-    font-size: 11px;
-    color: var(--muted);
+    font-size: 13px;
+    color: var(--text);
     font-family: var(--font);
-    padding: 0 8px 7px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 2px 8px 9px;
+    white-space: normal;
+    overflow: visible;
+    line-height: 1.35;
+}
+
+.td-sub-c span[id^="sub-"] {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
 }
 
 .td-sub-saldo { text-align: left; padding-left: 10px; }
@@ -996,11 +1021,14 @@ tr.sub-row.obra-done td {
 .td-sub-prev  { text-align: right; padding-right: 10px; }
 
 .sub-label {
+    display: block;
     font-weight: 600;
     letter-spacing: 0.04em;
-    font-size: 10px;
+    font-size: 11px;
     text-transform: uppercase;
-    margin-right: 3px;
+    color: var(--muted);
+    margin-right: 0;
+    margin-bottom: 1px;
 }
 
 .sub-tr-ind {
@@ -1035,7 +1063,9 @@ tr.sub-row.obra-done td {
     font-size: 11px;
     color: var(--muted);
     text-align: center;
-    width: 28px;
+    width: 24px;
+    padding-left: 2px;
+    padding-right: 2px;
 }
 
 .td-mes {
@@ -1077,18 +1107,20 @@ tr.sub-row.obra-done td {
 }
 
 .perc-input {
-    width: 72px;
-    padding: 4px 6px;
+    width: 100%;
+    max-width: 80px;
+    padding: 5px 6px;
     border: 1px solid var(--border);
     border-radius: 5px;
     font-family: var(--font);
-    font-size: 12px;
+    font-size: 13px;
     text-align: right;
     background: var(--bg);
     outline: none;
     transition: border .15s;
     -webkit-appearance: none;
     appearance: none;
+    box-sizing: border-box;
 }
 
 .perc-input:focus {
@@ -1101,16 +1133,18 @@ tr.sub-row.obra-done td {
 }
 
 .rv-input {
-    width: 112px;
+    width: 100%;
+    max-width: 120px;
     border: 1px solid var(--border);
     border-radius: 4px;
-    padding: 3px 6px;
-    font-size: 12px;
+    padding: 5px 6px;
+    font-size: 13px;
     font-family: var(--font);
     text-align: right;
     background: var(--bg);
     color: var(--text);
     transition: border-color .15s;
+    box-sizing: border-box;
 }
 
 .rv-input:focus {
@@ -2015,6 +2049,15 @@ dl.slider-result-row dd.slider-result-val.accent span {
 .result-card-full {
     margin-top: 14px;
     margin-bottom: 0;
+}
+
+/* Card principal da tabela premium fixo no topo ao rolar */
+.tabela-sticky-card {
+    position: sticky;
+    top: 0;
+    z-index: 8;
+    /* fundo sólido para cobrir as linhas que passam por trás */
+    background: var(--accent-light);
 }
 
 /* ── MINI TABELA STICKY + INPUTS ── */

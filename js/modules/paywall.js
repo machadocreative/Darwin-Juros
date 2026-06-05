@@ -59,7 +59,7 @@ function aplicarCupom() {
   const el  = document.getElementById('cupom-input');
   if (!el) return;
   const val = (el.value || '').trim().toUpperCase();
-  if (val === CUPOM_VALIDO) {
+  if (validarCupom(val)) {
     closePaywall();
     ativarPremiumPerfil();
     _showPremiumConfirmacao();

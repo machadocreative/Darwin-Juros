@@ -135,6 +135,14 @@ function togglePago(i) {
   refreshTable();
 }
 
+// % de obra da linha ativa imediatamente acima de i (pula bloqueadas). -1 se não houver.
+function _percAnterior(i) {
+  for (let j = i - 1; j >= 0; j--) {
+    if (!meses[j].bloqueado) return meses[j].perc;
+  }
+  return -1;
+}
+
 // Chamado pelo oninput da máscara perc2 — lê via maskRead e comita
 function updatePercMask(i) {
   const el = document.getElementById('pi-' + i);
@@ -142,13 +150,10 @@ function updatePercMask(i) {
   const v = maskRead(el);
   if (isNaN(v) || v < 0 || v > 100) { el.classList.add('invalid'); return; }
 
-  let prevPerc = -1;
-  for (let j = i - 1; j >= 0; j--) {
-    if (!meses[j].bloqueado) { prevPerc = meses[j].perc; break; }
-  }
+  const prevPerc = _percAnterior(i);
   if (v < prevPerc) {
     el.classList.add('invalid');
-    el.title = 'O valor não pode ser menor que a linha anterior (' + prevPerc + '%).';
+    el.title = 'O valor não pode ser menor que a linha anterior (' + fmtPerc(prevPerc, 2) + ').';
     return;
   }
 
@@ -168,8 +173,16 @@ function updatePercMask(i) {
 function validatePercBlur(i) {
   const el = document.getElementById('pi-' + i); if (!el) return;
   const v = maskRead(el);
-  if (isNaN(v) || v < 0 || v > 100) { el.classList.add('invalid'); }
-  else { el.classList.remove('invalid'); }
+  if (isNaN(v) || v < 0 || v > 100) { el.classList.add('invalid'); return; }
+
+  const prevPerc = _percAnterior(i);
+  if (v < prevPerc) {
+    el.classList.add('invalid');
+    el.title = 'O valor não pode ser menor que a linha anterior (' + fmtPerc(prevPerc, 2) + ').';
+    showToast('⚠️ A % de obra não pode ser menor que a da linha acima (' + fmtPerc(prevPerc, 2) + '). Corrija o valor ou use “↺ Atualizar tabela”.');
+    return;
+  }
+  el.classList.remove('invalid'); el.title = '';
 }
 
 // Redistribui % de obra linearmente do último mês pago até 100% no último mês
@@ -539,10 +552,24 @@ function _applySliderTrack(slider, percPaga, val) {
   ].join(' ');
 }
 
+// Alinha o cabeçalho sticky logo abaixo do card sticky (alturas variam por tela).
+function _syncStickyOffsets() {
+  const card = document.querySelector('.tabela-sticky-card');
+  if (!card) return;
+  const h = card.getBoundingClientRect().height;
+  // grava o offset numa CSS var usada pelo thead (ver style.css)
+  document.documentElement.style.setProperty('--sticky-head-top', Math.round(h) + 'px');
+}
+
+// Reposiciona ao girar/redimensionar a tela
+window.addEventListener('resize', () => {
+  if (screen === 'tabela') _syncStickyOffsets();
+});
+
 // ── GERAR A TABELA COMPLETA - Sugerido por GPT ──
 function renderTabela() {
   screen = 'tabela'; _navPush('tabela'); showBottomNav(); setHtml(buildTabela(false));
-  setTimeout(() => { _initRvMasks(); _initPercMasks(); }, 80);
+  setTimeout(() => { _initRvMasks(); _initPercMasks(); _syncStickyOffsets(); }, 80);
 }
 
 // ── CONSTUIR A TABELA COMO PÁGINA INDEPENDENTE - Sugerido por GPT ──
@@ -565,11 +592,6 @@ function buildTabela(inline = false) {
     ${!inline ? `<button class="breadcrumb-back" onclick="history.back()">← Voltar à tela de resultados</button>
     <div class="screen-title">Histórico de Prestações</div>` : ''}
 
-    <div class="result-card accent result-card-full" style="margin-bottom:10px">
-      <div class="qrc-label">Total estimado de Juros de Obra</div>
-      <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
-      <div class="qrc-note">Estimativas futuras podem variar · TR futura indisponível</div>
-    </div>
     <div class="result-grid" style="margin-bottom:12px;">
       <div class="result-card">
         <div class="qrc-label">Total pago</div>
@@ -582,7 +604,11 @@ function buildTabela(inline = false) {
         <div class="qrc-note">Estimativa (−) Valores já pago</div>
       </div>
     </div>
-    <div class="result-grid" style="margin-bottom:12px">
+
+    <div class="result-card accent result-card-full tabela-sticky-card" style="margin-top:0;margin-bottom:10px">
+      <div class="qrc-label">Total estimado de Juros de Obra</div>
+      <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
+      <div class="qrc-note">Estimativas futuras podem variar · TR futura indisponível</div>
     </div>
 
     <div class="table-wrap">
@@ -768,9 +794,10 @@ function renderSliderResult() {
   if (premium && temPagas) {
     const ultimaPaga = pagas[pagas.length - 1];
     const idxUltima  = meses.indexOf(ultimaPaga);
-    // A parcela cobrada no mês seguinte ao último pago usa o previsto do penúltimo pago
-    // (mesmo offset i-1 da tabela). Se só há 1 paga, usa o previsto dela própria.
-    const parcelaAtual = idxUltima > 0 ? meses[idxUltima - 1].previsto : ultimaPaga.previsto;
+    // "Parcela atual" = a próxima a vencer (mês seguinte à última paga).
+    // O valor cobrado no mês i+1 é calculado sobre a medição do mês i (a última paga),
+    // mesmo critério da tabela (ver _buildTableRows) e da quickSim ("Vence em mesMedido+1").
+    const parcelaAtual = ultimaPaga.previsto;
     const trUltima     = ultimaPaga.tr;
     const temTR        = trUltima > 0;
     const trReais      = trUltima * ultimaPaga.saldo;
