@@ -576,7 +576,7 @@ function buildTabela(inline = false) {
         <div class="qrc-val" id="res-total-real">${fmtBRL(totalReal)}</div>
         <div class="qrc-note">Soma dos valores inseridos na tabela abaixo</div>
       </div>
-      <div class="result-card style="background-color: #ffeccf;">
+      <div class="result-card" style="background-color: #ffeccf;">
         <div class="qrc-label">Falta pagar</div>
         <div class="qrc-val" id="res-total-falta">${fmtBRL(totalFalta)}</div>
         <div class="qrc-note">Estimativa (−) Valores já pago</div>
@@ -671,7 +671,7 @@ function renderResult() {
     <div class="result-card accent">
       <div class="qrc-label">Saldo devedor atual</div>
       <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
-      <div class="qrc-note">${temPagas ? 'Na última medição de obra' : 'Nenhuma parcela paga'}</div>
+      <div class="qrc-note">${temPago ? 'Na última medição de obra' : 'Nenhuma parcela paga'}</div>
     </div>
 
     <div class="result-card">
@@ -790,7 +790,7 @@ function renderSliderResult() {
         <div class="result-grid" style="margin-top:10px">
           <div class="result-card">
             <div class="qrc-label">Valor base</div>
-            <div class="qrc-val"> (CRIAR FUNÇÃO parcelaAtual - trReais)</div>
+            <div class="qrc-val">${fmtBRL(parcelaAtual - (trReais || 0))}</div>
             <div class="qrc-note">Juros sobre o Saldo Devedor</div>
           </div>
           <div class="result-card">

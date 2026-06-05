@@ -261,14 +261,12 @@ function renderResultQuick() {
 
       <h3>O valor da prestação acima é composto por:</h3>
 
-      <div class="result-grid" style="margin-top:10px">
+      <div class="result-grid result-grid-inner" style="margin-top:10px">
         <div class="result-card">
           <div class="qrc-label">Valor base</div>
-          <div class="qrc-val"> (CRIAR FUNÇÃO parcelaAtual - trReais)</div>
+          <div class="qrc-val">${fmtBRL(parcelaAtual - (trReais || 0))}</div>
           <div class="qrc-note">Juros sobre o Saldo Devedor</div>
         </div>
- 
-      <div class="result-grid result-grid-inner">
         <div class="result-card">
           <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) + ' · ' + mesLabel : ''}</div>
           <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
