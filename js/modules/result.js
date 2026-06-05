@@ -563,31 +563,26 @@ function buildTabela(inline = false) {
 
   return `
     ${!inline ? `<button class="breadcrumb-back" onclick="history.back()">← Voltar à tela de resultados</button>
-    <div class="screen-title">Tabela de Parcelas</div>` : ''}
+    <div class="screen-title">Histórico de Prestações</div>` : ''}
 
     <div class="result-card accent result-card-full" style="margin-bottom:10px">
       <div class="qrc-label">Total estimado de Juros de Obra</div>
       <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
-      <div class="qrc-note">Real onde disponível · previsão no restante</div>
+      <div class="qrc-note">Estimativas futuras podem variar · TR futura indisponível</div>
     </div>
-    <div class="result-grid" style="margin-bottom:12px">
+    <div class="result-grid" style="margin-bottom:12px;">
       <div class="result-card">
         <div class="qrc-label">Total pago</div>
         <div class="qrc-val" id="res-total-real">${fmtBRL(totalReal)}</div>
-        <div class="qrc-note">Valores inseridos por você</div>
+        <div class="qrc-note">Soma dos valores inseridos na tabela abaixo</div>
       </div>
-      <div class="result-card">
+      <div class="result-card style="background-color: #ffeccf;">
         <div class="qrc-label">Falta pagar</div>
         <div class="qrc-val" id="res-total-falta">${fmtBRL(totalFalta)}</div>
-        <div class="qrc-note">Estimativa − já pago</div>
+        <div class="qrc-note">Estimativa (−) Valores já pago</div>
       </div>
     </div>
     <div class="result-grid" style="margin-bottom:12px">
-      <div class="result-card">
-        <div class="qrc-label">Saldo devedor atual</div>
-        <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
-        <div class="qrc-note">${temPagas ? 'Na última parcela paga' : 'Nenhuma parcela paga'}</div>
-      </div>
     </div>
 
     <div class="table-wrap">
@@ -673,10 +668,18 @@ function renderResult() {
       </div>
     </div>
 
-    <div class="result-card accent result-card-full">
-      <div class="qrc-label">Valor Financiado</div>
+    <div class="result-card accent">
+      <div class="qrc-label">Saldo devedor atual</div>
+      <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
+      <div class="qrc-note">${temPagas ? 'Na última medição de obra' : 'Nenhuma parcela paga'}</div>
+    </div>
+
+    <div class="result-card">
+      <div class="qrc-label">Saldo Devedor Máximo</div>
       <div class="qrc-val">${fmtBRL(fin)}</div>
     </div>
+
+
     <div class="result-grid" style="margin-top:10px">
       <div class="result-card">
         <div class="qrc-label">Pago até o momento</div>
@@ -776,16 +779,25 @@ function renderSliderResult() {
     const ymVence      = addM(ini, idxUltima + 1);
 
     cardsPremium = `
-      <div class="result-grid result-grid-inner" style="margin-bottom:12px">
-        <div class="result-card">
+      <div class="result-header">
+        <div class="result-card accent result-card-full">
           <div class="qrc-label">Parcela atual<br>Vence em ${mLabel(ymVence)}</div>
           <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
           <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem TR'}</div>
         </div>
-        <div class="result-card">
-          <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trUltima * 100, 4) + ' · ' + mLabel(ymUltima) : ''}</div>
-          <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
-          <div class="qrc-note">${temTR ? 'Embutido na prestação' : '—'}</div>
+
+        <h3>O valor da prestação acima é composto por:</h3>
+        <div class="result-grid" style="margin-top:10px">
+          <div class="result-card">
+            <div class="qrc-label">Valor base</div>
+            <div class="qrc-val"> (CRIAR FUNÇÃO parcelaAtual - trReais)</div>
+            <div class="qrc-note">Juros sobre o Saldo Devedor</div>
+          </div>
+          <div class="result-card">
+            <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trUltima * 100, 4) + ' · ' + mLabel(ymUltima) : ''}</div>
+            <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
+            <div class="qrc-note">${temTR ? 'Correção Monetária' : '—'}</div>
+          </div>
         </div>
       </div>`;
   }
@@ -793,9 +805,11 @@ function renderSliderResult() {
   setHtml(`
     <button class="breadcrumb-back" onclick="history.back()">← Voltar à tela de resultados</button>
     <div class="screen-title">Visualizador de Prestações</div>
+
+    ${cardsPremium}
+
     <div class="preview-slider-card" style="margin-top:12px">
       <div class="preview-slider-header">
-        ${cardsPremium}
         <div class="preview-slider-sub"><span>Arraste para simular diferentes estágios de obra</span></div>
       </div>
       <div class="slider-wrap">
@@ -819,20 +833,20 @@ function renderSliderResult() {
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
-      ${temFin ? `
-      <div class="result-grid-slider">
-        <div class="result-card accent">
-          <div class="qrc-label">1ª Parcela do Financiamento</div>
-          <div class="qrc-val">${fmtBRL(form.parcelaFinanciamento)}</div>
-        </div>
-        <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
-      </div>` : ''}
-      ${!premium ? `
-      <button class="free-preview-cta" onclick="showPaywall()">
-        🔓 Libere mais funcionalidades
-        <span class="cta-price">R$ 4,99</span>
-      </button>` : ''}
     </div>
+    ${temFin ? `
+    <div class="result-grid-slider">
+      <div class="result-card accent">
+        <div class="qrc-label">1ª Parcela do Financiamento</div>
+        <div class="qrc-val">${fmtBRL(form.parcelaFinanciamento)}</div>
+      </div>
+      <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
+    </div>` : ''}
+    ${!premium ? `
+    <button class="free-preview-cta" onclick="showPaywall()">
+      🔓 Libere mais funcionalidades
+      <span class="cta-price">R$ 4,99</span>
+    </button>` : ''}
   `);
 
   setTimeout(() => { atualizaSlider(); if (premium) _syncSliderPremium(); }, 80);

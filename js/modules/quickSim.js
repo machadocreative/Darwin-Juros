@@ -230,7 +230,7 @@ function renderResultQuick() {
   const parcelaAtual = _calcTotalParcelaAtual();
 
   const card1Html = `
-    <div class="result-card">
+    <div class="result-card accent result-card-full">
       <div class="qrc-label">Parcela atual<br>Vence em ${proxMesLabel}</div>
       <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
       <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem TR'}</div>
@@ -254,22 +254,32 @@ function renderResultQuick() {
       </div>
     </div>
 
-    <div class="quick-disclaimer-top">
-      ⚠️ IMPORTANTE: Na simulação rápida, o saldo devedor será calculado de forma aproximada em relação à evolução de obra.
-    </div>
+    <div class="result-header">
+      <h2>Visualizador de Prestações</h2>
+ 
+      ${card1Html}
+
+      <h3>O valor da prestação acima é composto por:</h3>
+
+      <div class="result-grid" style="margin-top:10px">
+        <div class="result-card">
+          <div class="qrc-label">Valor base</div>
+          <div class="qrc-val"> (CRIAR FUNÇÃO parcelaAtual - trReais)</div>
+          <div class="qrc-note">Juros sobre o Saldo Devedor</div>
+        </div>
+ 
+      <div class="result-grid result-grid-inner">
+        <div class="result-card">
+          <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) + ' · ' + mesLabel : ''}</div>
+          <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
+          <div class="qrc-note">${temTR ? 'Correção Monetária' : '-'}</div>
+        </div>
+      </div>
+     </div>
+
 
     <div class="preview-slider-card" style="margin-top:12px">
       <div class="preview-slider-header">
-        <div class="preview-slider-title">Visualizador de Prestações</div>
-
-        <div class="result-grid result-grid-inner">
-          ${card1Html}
-          <div class="result-card">
-            <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) + ' · ' + mesLabel : ''}</div>
-            <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
-            <div class="qrc-note">${temTR ? 'Embutido na prestação' : '-'}</div>
-          </div>
-        </div>
 
         <div class="preview-slider-sub"><span>Arraste para simular suas próximas prestações</span></div>
       </div>
@@ -294,15 +304,20 @@ function renderResultQuick() {
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
       </div>
-      ${temFin ? `
-        <div class="result-grid-slider">
-          <div class="result-card accent">
-            <div class="qrc-label">1ª parcela do Financiamento</div>
-            <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
-          </div>
-          <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
-        </div>` : ''}
     </div>
+
+    <div class="quick-disclaimer-top">
+      ⚠️ IMPORTANTE: Na simulação rápida, o saldo devedor é calculado de forma aproximada em relação à evolução de obra.
+    </div>
+
+    ${temFin ? `
+      <div class="result-grid-slider">
+        <div class="result-card accent">
+          <div class="qrc-label">1ª parcela do Financiamento</div>
+          <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
+        </div>
+        <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
+      </div>` : ''}
 
     <div class="quick-cta-card">
       <div class="quick-cta-title">Quer uma projeção mês a mês?</div>
