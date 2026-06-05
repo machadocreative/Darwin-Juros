@@ -393,10 +393,25 @@ function _subRowCells(r) {
   const taxaStr = r.tr > 0
     ? `${totalPct}%`
     : `${(tm * 100).toFixed(4)}% <span class="sub-tr-ind">(TR indisponível)</span>`;
+  // Célula única (colspan 6) com layout flex interno — desacopla das larguras
+  // fixas das colunas da tabela principal, evitando sobreposição no mobile.
   return `
-    <td class="td-sub-c td-sub-saldo" id="sub-saldo-${r._idx}"><span class="sub-label">Saldo dev.</span> <span id="sub-saldo-val-${r._idx}">${fmtBRL(r.saldo)}</span></td>
-    <td class="td-sub-c td-sub-taxa"><span class="sub-label">Total juros</span> <span id="sub-taxa-val-${r._idx}">${taxaStr}</span></td>
-    <td class="td-sub-c td-sub-prev" colspan="4"><span class="sub-label">Previsto mês seguinte</span> <span id="sub-prev-val-${r._idx}">${fmtBRL(r.previsto)}</span></td>`;
+    <td class="td-sub-c" colspan="6">
+      <div class="sub-grid">
+        <div class="sub-item td-sub-saldo" id="sub-saldo-${r._idx}">
+          <span class="sub-label">Saldo dev.</span>
+          <span id="sub-saldo-val-${r._idx}">${fmtBRL(r.saldo)}</span>
+        </div>
+        <div class="sub-item td-sub-taxa">
+          <span class="sub-label">Total juros</span>
+          <span id="sub-taxa-val-${r._idx}">${taxaStr}</span>
+        </div>
+        <div class="sub-item td-sub-prev">
+          <span class="sub-label">Previsto mês seguinte</span>
+          <span id="sub-prev-val-${r._idx}">${fmtBRL(r.previsto)}</span>
+        </div>
+      </div>
+    </td>`;
 }
 
 // ── HELPER: linhas da tabela (main-row + sub-row fechada por padrão) ──

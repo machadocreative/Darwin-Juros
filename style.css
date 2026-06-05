@@ -998,27 +998,41 @@ tr.sub-row.obra-done td {
     background: var(--border);
 }
 
-/* Sub-row: 3 células separadas — label e valor empilhados para não cortar no mobile */
+/* Sub-row: célula única com grid flex interno (não depende das larguras fixas
+   das colunas da tabela principal — evita sobreposição no mobile). */
 .td-sub-c {
     font-size: 13px;
     color: var(--text);
     font-family: var(--font);
-    padding: 2px 8px 9px;
+    padding: 4px 10px 10px;
     white-space: normal;
     overflow: visible;
     line-height: 1.35;
 }
 
-.td-sub-c span[id^="sub-"] {
-    display: block;
+.sub-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+}
+
+.sub-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* permite que o flex encolha sem transbordar */
+    flex: 1 1 auto;
+}
+
+.sub-item span[id^="sub-"] {
     font-weight: 600;
     font-size: 14px;
     color: var(--text);
+    white-space: nowrap;
 }
 
-.td-sub-saldo { text-align: left; padding-left: 10px; }
-.td-sub-taxa  { text-align: center; }
-.td-sub-prev  { text-align: right; padding-right: 10px; }
+.td-sub-saldo { text-align: left;  align-items: flex-start; }
+.td-sub-taxa  { text-align: left;  align-items: flex-start; }
+.td-sub-prev  { text-align: right; align-items: flex-end; flex: 1 1 100%; }
 
 .sub-label {
     display: block;
@@ -1029,6 +1043,7 @@ tr.sub-row.obra-done td {
     color: var(--muted);
     margin-right: 0;
     margin-bottom: 1px;
+    white-space: nowrap;
 }
 
 .sub-tr-ind {
