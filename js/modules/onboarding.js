@@ -41,10 +41,22 @@ function _iniciarEdicao() {
   fluxo = 'complete';
   const mesesBackup     = JSON.parse(JSON.stringify(meses));
   const profileIdBackup = currentProfileId;
+  // ícone atual do perfil (para o seletor premium na edição)
+  const perfilAtual = profileIdBackup ? loadProfiles().find(p => p.id === profileIdBackup) : null;
+  const iconSel = perfilAtual?.icon || '🏠';
   screen = 'onboarding';
   currentStep = 0;
-  window._editMode = { mesesBackup, profileIdBackup };
+  window._editMode = { mesesBackup, profileIdBackup, iconSel };
   renderEditScreen();
+}
+
+// Seleciona o ícone no grid da edição (apenas estado visual + memória; grava no confirmar)
+function selecionarIconeEdicao(icon) {
+  if (!window._editMode) return;
+  window._editMode.iconSel = icon;
+  document.querySelectorAll('#edit-icon-grid .pf-icon-opt').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.icon === icon);
+  });
 }
 
 // ── TELA ÚNICA DE EDIÇÃO ──
@@ -130,6 +142,18 @@ function renderEditScreen() {
         <div class="edit-section-title">Nome da Simulação</div>
         ${questions.nomePerfil.render()}
       </div>
+
+      ${premium ? `
+      <div class="edit-section">
+        <div class="edit-section-title">Ícone do Imóvel</div>
+        <div class="step-hint">Escolha um ícone para identificar este imóvel na lista.</div>
+        <div class="pf-icon-grid" id="edit-icon-grid">
+          ${PF_ICON_OPTIONS.map(ico => `
+            <button type="button" class="pf-icon-opt${ico === (window._editMode?.iconSel || '🏠') ? ' selected' : ''}"
+              data-icon="${ico}" onclick="selecionarIconeEdicao('${ico}')">${ico}</button>
+          `).join('')}
+        </div>
+      </div>` : ''}
     </div>
 
     <div class="edit-sticky-footer">
@@ -173,6 +197,13 @@ function confirmarEdicao() {
     questions.mesInicial.save();
   }
   questions.nomePerfil.save();
+
+  // Persiste o ícone escolhido (premium) direto no perfil — saveProfile preserva via existente.icon
+  if (premium && window._editMode?.iconSel && window._editMode.profileIdBackup) {
+    const profiles = loadProfiles();
+    const idx = profiles.findIndex(p => p.id === window._editMode.profileIdBackup);
+    if (idx >= 0) { profiles[idx].icon = window._editMode.iconSel; saveProfiles(profiles); }
+  }
 
   _finalizarOnboarding();
 }
@@ -234,7 +265,12 @@ function confirmarRenomearPerfil() {
 
   if (targetId) {
     const idx = profiles.findIndex(p => p.id === targetId);
-    if (idx >= 0) { profiles[idx].nome = raw; saveProfiles(profiles); }
+    if (idx >= 0) {
+      profiles[idx].nome = raw;
+      // mantém o nome dentro do form salvo em sincronia (tela de edição lê daqui)
+      if (profiles[idx].form) profiles[idx].form.nomeSimulacao = raw;
+      saveProfiles(profiles);
+    }
   }
 
   if (targetId === currentProfileId) {

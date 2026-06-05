@@ -2856,6 +2856,13 @@ dl.slider-result-row dd.slider-result-val.accent span {
     background: var(--accent-light);
 }
 
+.pf-icon-opt.selected {
+    border-color: var(--accent);
+    border-width: 2px;
+    background: var(--accent-light);
+    padding: 7px;
+}
+
 .btn-add-profile {
     width: 100%;
     padding: 14px;

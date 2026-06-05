@@ -26,7 +26,9 @@ function saveProfile(premiumFlag, toastMsg = 'Alterações salvas com sucesso!')
     meses: JSON.parse(JSON.stringify(meses)),
     savedAt: new Date().toISOString(),
     // preserva flag premium existente; aplica novo se passado
-    premium: premiumFlag === true ? true : (existente?.premium || false)
+    premium: premiumFlag === true ? true : (existente?.premium || false),
+    // preserva o ícone escolhido pelo usuário (default tratado na renderização)
+    icon: existente?.icon || undefined
   };
   const idx = profiles.findIndex(p => p.id === data.id);
   if (idx >= 0) profiles[idx] = data; else profiles.push(data);
