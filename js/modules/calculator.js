@@ -119,7 +119,7 @@ function adicionarLinha() {
   hasUnsavedChanges = true;
   const lastYm = addM(parseMS(form.mesInicial), meses.length - 1);
   form.mesEntrega = `${lastYm.y}-${String(lastYm.m).padStart(2, '0')}`;
-  if (screen === 'tabela') renderTabela(); else renderResult();
+  if (screen === 'tabela') renderTabela(true); else renderResult();
 }
 
 function removerLinha() {
@@ -130,7 +130,7 @@ function removerLinha() {
   hasUnsavedChanges = true;
   const lastYm = addM(parseMS(form.mesInicial), meses.length - 1);
   form.mesEntrega = `${lastYm.y}-${String(lastYm.m).padStart(2, '0')}`;
-  if (screen === 'tabela') renderTabela(); else renderResult();
+  if (screen === 'tabela') renderTabela(true); else renderResult();
 }
 
 // ── SLIDER DE % DE EVOLUÇÃO ──
@@ -157,14 +157,13 @@ function atualizaSlider() {
   if (elVal)   elVal.innerHTML = `${fmtBRL(previsto)}`;
   if (elSaldo) elSaldo.textContent = fmtBRL(saldo);
 
+  const dl    = document.getElementById('slider-fin-dl');
   const bloco = document.getElementById('slider-fin-bloco');
-  if (bloco && parseFloat(form.parcelaFinanciamento || 0) > 0) {
+  if (dl && bloco && parseFloat(form.parcelaFinanciamento || 0) > 0) {
     const fin  = parseFloat(form.parcelaFinanciamento);
     const diff = fin - previsto;
-    bloco.className = 'slider-fin-bloco' + (diff < 0 ? ' slider-fin-danger' : '');
-    bloco.innerHTML = diff < 0
-      ? `🚨 Evolução de obra supera o financiamento em <span>+<strong>${fmtBRL(Math.abs(diff))}</strong></span>`
-      : `<span><strong>${fmtBRL(diff)}</strong></span> para igualar a parcela de financiamento`;
+    dl.className = 'slider-result-row slider-fin-dl' + (diff < 0 ? ' slider-fin-danger' : '');
+    bloco.textContent = fmtBRL(Math.abs(diff));
   }
 
   if (isPremium()) {

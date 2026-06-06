@@ -747,6 +747,19 @@ input.invalid {
     word-break: break-word;
 }
 
+.result-header h3 {
+    font-size: 16px;
+    margin: 15px auto 10px;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.result-header h4 {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 15px auto 5px 10px;
+}
+
 .result-header p {
     font-size: 13px;
     color: var(--muted);
@@ -1012,38 +1025,39 @@ tr.sub-row.obra-done td {
 
 .sub-grid {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px 14px;
+    flex-wrap: nowrap;
+    gap: 6px;
+    align-items: flex-start;
 }
 
 .sub-item {
     display: flex;
     flex-direction: column;
     min-width: 0; /* permite que o flex encolha sem transbordar */
-    flex: 1 1 auto;
 }
 
 .sub-item span[id^="sub-"] {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text);
     white-space: nowrap;
 }
 
-.td-sub-saldo { text-align: left;  align-items: flex-start; }
-.td-sub-taxa  { text-align: left;  align-items: flex-start; }
-.td-sub-prev  { text-align: right; align-items: flex-end; flex: 1 1 100%; }
+/* 3 colunas numa linha só: saldo (esq) · juros (centro) · próxima prestação (dir) */
+.td-sub-saldo { flex: 1 1 36%; text-align: left;   align-items: flex-start; }
+.td-sub-taxa  { flex: 0 1 auto; text-align: center; align-items: center; }
+.td-sub-prev  { flex: 1 1 36%; text-align: right;  align-items: flex-end; }
 
 .sub-label {
     display: block;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    font-size: 11px;
+    letter-spacing: 0.03em;
+    font-size: 10px;
     text-transform: uppercase;
     color: var(--muted);
     margin-right: 0;
     margin-bottom: 1px;
-    white-space: nowrap;
+    line-height: 1.2;
 }
 
 .sub-tr-ind {
@@ -1627,6 +1641,7 @@ dl.slider-result-row dd.slider-result-val {
     color: var(--text);
     font-variant-numeric: tabular-nums;
     min-width: 10ch;
+    text-align: right;
 }
 
 dl.slider-result-row dd.slider-result-val.accent {
@@ -1649,29 +1664,30 @@ dl.slider-result-row dd.slider-result-val.accent span {
     text-align: center;
 }
 
-.slider-fin-bloco {
-    font-size: 12px;
-    line-height: 1.5;
+/* Comparação com o financiamento: <dl> full-width dentro do .slider-result.
+   As margens negativas furam o padding lateral (20px) para o fundo encostar
+   nas bordas do card. */
+dl.slider-fin-dl {
+    margin-top: 12px;
+    /* estende até as bordas do card (compensa o padding 16px 20px do .slider-result) */
+    margin-left: -20px;
+    margin-right: -20px;
+    margin-bottom: -16px;
+    padding: 14px 20px;
     background: #ffeccf;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 14px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    transition: background .2s, border-color .2s, color .2s;
+    border-top: 1px solid var(--border);
+    transition: background .2s, color .2s;
 }
 
-.slider-fin-bloco.slider-fin-danger {
+dl.slider-fin-dl.slider-fin-danger {
     background: var(--danger-light);
-    border-color: #F5C6C6;
     color: var(--danger);
 }
 
-.slider-fin-bloco span,
-.slider-fin-bloco.slider-fin-danger span {
-    font-size: 22px !important;
+dl.slider-fin-dl dd.slider-result-val {
+    font-size: 22px;
     font-weight: 800;
+    color: inherit;
 }
 
 /* ── FREEMIUM — PAYWALL ── */
@@ -2038,7 +2054,7 @@ dl.slider-result-row dd.slider-result-val.accent span {
 }
 
 .result-grid-inner {
-    padding: 10px 0 20px 0;
+    padding: 10px 0;
     margin-bottom: 0;
 }
 
@@ -2203,14 +2219,11 @@ dl.slider-result-row dd.slider-result-val.accent span {
     color: var(--muted);
 }
 
-.quick-disclaimer-top {
+.quick-disclaimer-slider {
     background: #e5e5e5;
-    border: 1px solid #d3d3d3;
-    border-radius: 8px;
     padding: 10px 14px;
     font-size: 13px;
     color: #6b6b6b;
-    margin: 12px 0;
     line-height: 1.5;
 }
 

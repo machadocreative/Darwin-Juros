@@ -1,9 +1,15 @@
 // ── UI HELPERS ──
-function showToast(msg) {
+// duration: ms de exibição (default 2500). Aceita <br> na mensagem.
+let _toastTimer = null;
+function showToast(msg, duration = 2500) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  // escapa o conteúdo e reabilita apenas <br> (mensagens são internas)
+  t.innerHTML = String(msg)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/&lt;br\s*\/?&gt;/gi, '<br>');
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
 function markError(id) {

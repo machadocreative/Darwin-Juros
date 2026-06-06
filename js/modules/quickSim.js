@@ -231,9 +231,9 @@ function renderResultQuick() {
 
   const card1Html = `
     <div class="result-card accent result-card-full">
-      <div class="qrc-label">Parcela atual<br>Vence em ${proxMesLabel}</div>
+      <div class="qrc-label">Sua Parcela atual · Vence em ${proxMesLabel}</div>
       <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
-      <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem TR'}</div>
+      <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem Taxa Referencial'}</div>
     </div>`;
 
   setHtml(`
@@ -268,13 +268,12 @@ function renderResultQuick() {
           <div class="qrc-note">Juros sobre o Saldo Devedor</div>
         </div>
         <div class="result-card">
-          <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trPerc, 4) + ' · ' + mesLabel : ''}</div>
+          <div class="qrc-label">Correção Monetária<br></div>
           <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
-          <div class="qrc-note">${temTR ? 'Correção Monetária' : '-'}</div>
+          <div class="qrc-note">${temTR ? fmtPerc(trPerc, 4) + ' · TR de ' + mesLabel : ''}</div>
         </div>
       </div>
      </div>
-
 
     <div class="preview-slider-card" style="margin-top:12px">
       <div class="preview-slider-header">
@@ -290,6 +289,10 @@ function renderResultQuick() {
           min="0" max="100" step="5" value="${sliderMin}"
           oninput="atualizaSliderQuick()">
       </div>
+      <div class="quick-disclaimer-top">
+        Na simulação rápida, o saldo devedor é uma estimativa aproximada.
+      </div>
+
       <div class="slider-result">
         <dl class="slider-result-row">
           <dt class="slider-result-label">Evolução de Obra</dt>
@@ -301,26 +304,17 @@ function renderResultQuick() {
           <dt class="slider-result-label">Prestação simulada<br><strong>Taxa Referencial = 0,0000%</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
+        ${temFin ? `
+        <dl class="slider-result-row slider-fin-dl" id="slider-fin-dl">
+          <dt class="slider-result-label">Comparação com o Financiamento<br><strong>Sua 1ª parcela: ${fmtBRL(formQuick.parcelaFinanciamento)}</strong></dt>
+          <dd class="slider-result-val" id="slider-fin-bloco">—</dd>
+        </dl>` : ''}
       </div>
     </div>
 
-    <div class="quick-disclaimer-top">
-      ⚠️ IMPORTANTE: Na simulação rápida, o saldo devedor é calculado de forma aproximada em relação à evolução de obra.
-    </div>
-
-    ${temFin ? `
-      <div class="result-grid-slider">
-        <div class="result-card accent">
-          <div class="qrc-label">1ª parcela do Financiamento</div>
-          <div class="qrc-val">${fmtBRL(formQuick.parcelaFinanciamento)}</div>
-        </div>
-        <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
-      </div>` : ''}
-
     <div class="quick-cta-card">
       <div class="quick-cta-title">Quer uma projeção mês a mês?</div>
-      <div class="quick-cta-sub">Você pode aproveitar os dados inseridos da sua simulação rápida e partir para a versão detalhada.<br>
-      Com a simulação completa, você tem acesso à tabela com todas as parcelas, acompanha pagamentos e evolução mês a mês.</div>
+      <div class="quick-cta-sub">Você pode aproveitar alguns dados já inseridos e seguir para a versão detalhada. Com a simulação completa, você tem acesso à tabela de prestações, acompanha pagamentos e evolução mês a mês com maior precisão.</div>
       <button class="btn btn-primary" onclick="irParaSimulacaoCompleta()">
         Simulação Completa →
       </button>
@@ -368,15 +362,14 @@ function atualizaSliderQuick() {
   if (elVal)   elVal.innerHTML     = `${fmtBRL(previsto)}`;
   if (elSaldo) elSaldo.textContent = fmtBRL(sdProj);
 
-  // Card: Comparativo de evolução com a parcela de financiamento
+  // Comparativo de evolução com a parcela de financiamento
+  const dl    = document.getElementById('slider-fin-dl');
   const bloco = document.getElementById('slider-fin-bloco');
-  if (bloco && formQuick.parcelaFinanciamento > 0) {
+  if (dl && bloco && formQuick.parcelaFinanciamento > 0) {
     const fin  = parseFloat(formQuick.parcelaFinanciamento);
     const diff = fin - previsto;
-    bloco.className = 'slider-fin-bloco' + (diff < 0 ? ' slider-fin-danger' : '');
-    bloco.innerHTML = diff < 0
-      ? `🚨 Evolução supera o financiamento em <span>+<strong>${fmtBRL(Math.abs(diff))}</strong></span>`
-      : `<span><strong>${fmtBRL(diff)}</strong></span> para igualar a parcela de financiamento`;
+    dl.className = 'slider-result-row slider-fin-dl' + (diff < 0 ? ' slider-fin-danger' : '');
+    bloco.textContent = fmtBRL(Math.abs(diff));
   }
 }
 

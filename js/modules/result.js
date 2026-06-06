@@ -119,6 +119,21 @@ function togglePago(i) {
   const r = meses[i];
   if (r.bloqueado) return;
   if (!r.pago) {
+    // Bloqueia marcar como pago se o % digitado for inválido / menor que a linha acima.
+    const el = document.getElementById('pi-' + i);
+    if (el) {
+      const v = maskRead(el);
+      const prevPerc = _percAnterior(i);
+      if (isNaN(v) || v < 0 || v > 100 || v < prevPerc) {
+        el.classList.add('invalid');
+        showToast('⚠️ Corrija a % de obra antes de marcar como pago.<br>O valor não pode ser menor que a linha acima (' + fmtPerc(prevPerc, 2) + ').', 6000);
+        return;
+      }
+      // Commita o % válido digitado antes de marcar como pago.
+      meses[i].perc = v;
+      recalcRow(i);
+      aplicaBloqueio();
+    }
     for (let j = 0; j < i; j++) {
       if (!meses[j].bloqueado && !meses[j].pago) { showToast('⚠️ Marque primeiro a parcela de ' + meses[j].mes + '.'); return; }
     }
@@ -179,7 +194,7 @@ function validatePercBlur(i) {
   if (v < prevPerc) {
     el.classList.add('invalid');
     el.title = 'O valor não pode ser menor que a linha anterior (' + fmtPerc(prevPerc, 2) + ').';
-    showToast('⚠️ A % de obra não pode ser menor que a da linha acima (' + fmtPerc(prevPerc, 2) + '). Corrija o valor ou use “↺ Atualizar tabela”.');
+    showToast('⚠️ A % de obra não pode ser menor que a da linha acima (' + fmtPerc(prevPerc, 2) + ').<br>Corrija o valor ou use “↺ Atualizar tabela”.', 6000);
     return;
   }
   el.classList.remove('invalid'); el.title = '';
@@ -407,7 +422,7 @@ function _subRowCells(r) {
           <span id="sub-taxa-val-${r._idx}">${taxaStr}</span>
         </div>
         <div class="sub-item td-sub-prev">
-          <span class="sub-label">Previsto mês seguinte</span>
+          <span class="sub-label">Próxima Prestação</span>
           <span id="sub-prev-val-${r._idx}">${fmtBRL(r.previsto)}</span>
         </div>
       </div>
@@ -582,8 +597,12 @@ window.addEventListener('resize', () => {
 });
 
 // ── GERAR A TABELA COMPLETA - Sugerido por GPT ──
-function renderTabela() {
-  screen = 'tabela'; _navPush('tabela'); showBottomNav(); setHtml(buildTabela(false));
+// replace=true: re-render interno (add/remove linha) sem empilhar histórico,
+// para que "Voltar à tela de resultados" precise de um único toque.
+function renderTabela(replace = false) {
+  screen = 'tabela';
+  if (replace) _navReplace('tabela'); else _navPush('tabela');
+  showBottomNav(); setHtml(buildTabela(false));
   setTimeout(() => { _initRvMasks(); _initPercMasks(); _syncStickyOffsets(); }, 80);
 }
 
@@ -681,6 +700,11 @@ function renderResult() {
   const premium      = isPremium();
   const saldoAtual   = premium ? calcSaldoAtual() : null;
 
+  // Última medição de obra: % e mês da última parcela paga (espelha a quickSim)
+  const ultPaga = pagas.length ? pagas[pagas.length - 1] : null;
+  const percUltimaMedicao = ultPaga ? ultPaga.perc : 0;
+  const mesUltimaMedicao  = ultPaga ? ultPaga.mes : '—';
+
   // Para cada parcela paga: usa valorReal se disponível, senão previsto
   const totalPago = pagas.reduce((s, r) => s + (r.valorReal || r.previsto), 0);
   const temPago   = pagas.length > 0;
@@ -709,17 +733,18 @@ function renderResult() {
       </div>
     </div>
 
-    <div class="result-card accent">
-      <div class="qrc-label">Saldo devedor atual</div>
-      <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
-      <div class="qrc-note">${temPago ? 'Na última medição de obra' : 'Nenhuma parcela paga'}</div>
+    <div class="result-grid">
+      <div class="result-card accent">
+        <div class="qrc-label">Saldo devedor atual</div>
+        <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
+        <div class="qrc-note">${temPago ? 'Na última medição de obra' : 'Nenhuma parcela paga'}</div>
+      </div>
+      <div class="result-card">
+        <div class="qrc-label">Evolução de Obra</div>
+        <div class="qrc-val">${fmtPerc(percUltimaMedicao, 2)}</div>
+        <div class="qrc-note">${temPago ? 'Medição: ' + mesUltimaMedicao : 'Nenhuma parcela paga'}</div>
+      </div>
     </div>
-
-    <div class="result-card">
-      <div class="qrc-label">Saldo Devedor Máximo</div>
-      <div class="qrc-val">${fmtBRL(fin)}</div>
-    </div>
-
 
     <div class="result-grid" style="margin-top:10px">
       <div class="result-card">
@@ -750,6 +775,7 @@ function renderResult() {
       <button class="feat-btn" onclick="renderSliderResult()">
         <span class="feat-icon">📊</span>
         <span class="feat-label">Visualizador de Prestações</span>
+        ${premium ? '<span class="feat-badge feat-badge-premium">✦ Premium</span>' : ''}
       </button>
       <button class="feat-btn" onclick="${premium ? 'renderTabela()' : 'renderMiniTabela()'}">
         <span class="feat-icon">📋</span>
@@ -825,10 +851,11 @@ function renderSliderResult() {
         <div class="result-card accent result-card-full">
           <div class="qrc-label">Parcela atual<br>Vence em ${mLabel(ymVence)}</div>
           <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
-          <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem TR'}</div>
+          <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem Taxa Referencial'}</div>
         </div>
 
         <h3>O valor da prestação acima é composto por:</h3>
+
         <div class="result-grid" style="margin-top:10px">
           <div class="result-card">
             <div class="qrc-label">Valor base</div>
@@ -836,9 +863,9 @@ function renderSliderResult() {
             <div class="qrc-note">Juros sobre o Saldo Devedor</div>
           </div>
           <div class="result-card">
-            <div class="qrc-label">Taxa Referencial<br>${temTR ? fmtPerc(trUltima * 100, 4) + ' · ' + mLabel(ymUltima) : ''}</div>
+            <div class="qrc-label">Correção Monetária<br></div>
             <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
-            <div class="qrc-note">${temTR ? 'Correção Monetária' : '—'}</div>
+            <div class="qrc-note">${temTR ? fmtPerc(trUltima * 100, 4) + ' · TR de ' + mLabel(ymUltima) : ''}</div>
           </div>
         </div>
       </div>`;
@@ -874,16 +901,13 @@ function renderSliderResult() {
           <dt class="slider-result-label">Prestação simulada<br><strong>Taxa Referencial = 0,0000%</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
+        ${temFin ? `
+        <dl class="slider-result-row slider-fin-dl" id="slider-fin-dl">
+          <dt class="slider-result-label">Comparação com o Financiamento<br><strong>Sua 1ª parcela: ${fmtBRL(form.parcelaFinanciamento)}</strong></dt>
+          <dd class="slider-result-val" id="slider-fin-bloco">—</dd>
+        </dl>` : ''}
       </div>
     </div>
-    ${temFin ? `
-    <div class="result-grid-slider">
-      <div class="result-card accent">
-        <div class="qrc-label">1ª Parcela do Financiamento</div>
-        <div class="qrc-val">${fmtBRL(form.parcelaFinanciamento)}</div>
-      </div>
-      <div id="slider-fin-bloco" class="slider-fin-bloco"></div>
-    </div>` : ''}
     ${!premium ? `
     <button class="free-preview-cta" onclick="showPaywall()">
       🔓 Libere mais funcionalidades
@@ -895,9 +919,9 @@ function renderSliderResult() {
 }
 
 // ── MINI TABELA (tela de pagamentos — versão gratuita) ──
-function renderMiniTabela() {
+function renderMiniTabela(replace = false) {
   screen = 'tabela';
-  _navPush('tabela');
+  if (replace) _navReplace('tabela'); else _navPush('tabela');
   showBottomNav();
   aplicaBloqueio();
 
