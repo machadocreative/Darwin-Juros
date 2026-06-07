@@ -3519,3 +3519,5 @@ body.has-header #root {
 }
 
 .auth-menu-logout:active { background: var(--bg); }
+
+#app-header { display: flex !important; }
