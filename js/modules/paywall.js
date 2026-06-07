@@ -1,3 +1,42 @@
+// ── PRÉ-PAYWALL: tela de confirmação antes do pagamento ──
+function showPrePaywall() {
+  screen = 'prePaywall';
+  _navPush('prePaywall');
+  showBottomNav();
+
+  const mesLabel = form.mesInicial ? mLabelFull(form.mesInicial) : '(não informado)';
+  const vtLabel  = form.valorTotal  ? fmtBRL(parseFloat(form.valorTotal)) : '(não informado)';
+
+  setHtml(`
+    <div class="result-header" style="margin-bottom:20px">
+      <h2>🔓 Liberar Premium</h2>
+      <p>Após o desbloqueio, os campos abaixo serão bloqueados para edição. Confirme antes de prosseguir.</p>
+    </div>
+
+    <div class="result-card large" style="margin-bottom:8px">
+      <div class="card-large-left">
+        <div class="qrc-label">Data de início</div>
+        <div class="qrc-note">Bloqueado após desbloqueio</div>
+      </div>
+      <div class="qrc-val" style="font-size:18px">🔒 ${mesLabel}</div>
+    </div>
+
+    <div class="result-card large" style="margin-bottom:16px">
+      <div class="card-large-left">
+        <div class="qrc-label">Valor total do imóvel</div>
+        <div class="qrc-note">Bloqueado após desbloqueio</div>
+      </div>
+      <div class="qrc-val" style="font-size:18px">🔒 ${vtLabel}</div>
+    </div>
+
+    <div class="info-box" style="margin-bottom:20px">⚠️ Estes dados não poderão ser editados depois. Para usar outros valores, crie uma nova simulação.</div>
+
+    <button class="btn btn-primary" onclick="showPaywall()" style="margin-top:0">Prosseguir para pagamento →</button>
+    <button class="btn btn-back" onclick="editarSimulacao()" style="margin-top:10px;color:var(--text);font-weight:600">✏️ Editar dados antes de prosseguir</button>
+    <button class="btn btn-back" onclick="history.back()" style="margin-top:8px">← Voltar</button>
+  `);
+}
+
 // ── PAYWALL ──
 function showPaywall() {
   const existing = document.getElementById('paywall-overlay');

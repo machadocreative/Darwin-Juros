@@ -63,6 +63,8 @@ window.addEventListener('popstate', (e) => {
     renderBifurcacao();
   } else if (s === 'editScreen') {
     renderEditScreen();
+  } else if (s === 'prePaywall') {
+    showPrePaywall();
   } else if (s === 'result') {
     renderResult();
   } else if (s === 'resultQuick') {

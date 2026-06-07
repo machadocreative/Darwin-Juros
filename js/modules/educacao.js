@@ -16,21 +16,17 @@ function renderEducacao() {
   setNavActive('educacao');
 
   const glossario = [
-    { t: 'TR — Taxa Referencial',         d: 'Índice mensal divulgado pelo Banco Central que corrige o saldo devedor do financiamento. Mesmo que seja pequena, incide sobre o valor total financiado e sobe sua parcela todo mês.' },
-    { t: 'Encargo mensal',                d: 'Tudo que você paga por mês: juros, atualização pela TR, seguro MIP, seguro DFI e taxa de administração. Na fase de obra não inclui amortização.' },
-    { t: 'Amortização',                   d: 'Pagamento parcial do valor principal da dívida. Só começa após a entrega das chaves — durante a obra você paga apenas juros e encargos.' },
-    { t: 'Saldo devedor',                 d: 'Quanto você ainda deve ao banco. Durante a obra, cresce à medida que o banco libera parcelas para a construtora. Depois da obra, diminui a cada amortização paga.' },
     { t: 'MIP — Seguro Morte e Invalidez',d: 'Seguro obrigatório que quita o saldo devedor em caso de falecimento ou invalidez permanente do titular do financiamento.' },
     { t: 'DFI — Danos Físicos no Imóvel', d: 'Seguro que cobre danos estruturais no imóvel, como incêndio e desabamento. Não cobre mau uso ou vícios de construção.' },
-    { t: 'Alienação fiduciária',          d: 'Garantia do banco: o imóvel fica em nome da CAIXA até você quitar a dívida. Você tem a posse, mas a propriedade só passa para você após a quitação total.' },
-    { t: 'CET — Custo Efetivo Total',     d: 'Planilha teórica entregue antes da assinatura do contrato com o custo total da operação. A TR não entra no cálculo, por isso os valores reais podem diferir.' },
-    { t: 'Mútuo',                         d: 'Nome técnico do empréstimo habitacional. A CAIXA (credor) empresta o dinheiro e você (devedor) se compromete a devolver com juros e encargos.' },
-    { t: 'Empreitada',                    d: 'Contrato firmado entre você e a construtora. É de sua responsabilidade acompanhar a evolução da obra e cobrar os prazos.' },
-    { t: 'Mora',                          d: 'Atraso no pagamento das parcelas. Gera atualização monetária, juros, multa e pode resultar em registro em cadastros de crédito a partir do dia seguinte ao vencimento.' },
-    { t: 'Adimplência',                   d: 'Estar em dia com os pagamentos. Condição essencial para o banco continuar liberando parcelas à construtora e para você não sofrer penalidades contratuais.' },
-    { t: 'Liquidação',                    d: 'Pagamento total da dívida, também chamado de quitação. Após a liquidação, a propriedade do imóvel passa definitivamente para o seu nome.' },
     { t: 'FGTS',                          d: 'Fundo de Garantia do Tempo de Serviço. Pode ser usado como parte do pagamento ou para abater o saldo devedor, dependendo das condições do seu contrato.' },
-    { t: 'FGHab',                         d: 'Fundo Garantidor da Habitação, presente em contratos do Minha Casa Minha Vida. Cobre temporariamente as parcelas em casos de desemprego ou perda súbita de renda.' },
+    { t: 'CET — Custo Efetivo Total',     d: 'Planilha teórica entregue antes da assinatura do contrato com o custo total da operação. A TR não entra no cálculo, por isso os valores reais podem diferir.' },
+    { t: 'TR — Taxa Referencial',         d: 'Índice mensal divulgado pelo Banco Central que corrige o saldo devedor do financiamento. Mesmo que seja pequena, incide sobre o valor total financiado e sobe sua parcela todo mês.' },
+    { t: 'Empreitada',                    d: 'Contrato firmado entre você e a construtora. É de sua responsabilidade acompanhar a evolução da obra e cobrar os prazos.' },
+    { t: 'Adimplência',                   d: 'Estar em dia com os pagamentos. Condição essencial para o banco continuar liberando parcelas à construtora e para você não sofrer penalidades contratuais.' },
+    { t: 'Alienação fiduciária',          d: 'Garantia do banco: o imóvel fica em nome da CAIXA até você quitar a dívida. Você tem a posse, mas a propriedade só passa para você após a quitação total.' },
+    { t: 'Saldo devedor',                 d: 'Quanto você ainda deve ao banco. Durante a obra, cresce à medida que o banco libera parcelas para a construtora. Depois da obra, diminui a cada amortização paga.' },
+    { t: 'Amortização',                   d: 'Pagamento do valor principal da dívida. Só começa após a entrega das chaves — durante a obra você paga apenas juros e encargos.' },
+    { t: 'Liquidação',                    d: 'Pagamento total da dívida, também chamado de quitação. Após a liquidação, a propriedade do imóvel passa definitivamente para o seu nome.' },
   ];
 
   const glossHtml = glossario.map((item, i) => {
@@ -53,7 +49,7 @@ function renderEducacao() {
         <div class="greeting-logo">🎓</div>
         <div class="greeting-title">Aprenda com Darwin</div>
       </div>
-      <div class="greeting-sub">Entenda os termos sem precisar ser do mercado</div>
+      <div class="greeting-sub">Entenda a lógica por trás da evolução de obra</div>
     </div>
 
     <div class="section-label">Ferramentas</div>
@@ -75,7 +71,6 @@ function renderEducacao() {
       </div>
 
       <div class="edu-fase-block">
-        <div class="edu-fase-label edu-fase-obra">Durante a obra</div>
         <div class="edu-fase-items">
           <div class="edu-fase-item">
             <span class="edu-fase-dot dot-juros"></span>
@@ -108,7 +103,14 @@ function renderEducacao() {
         </div>
       </div>
 
-      <div class="edu-fase-divider">+ após a entrega das chaves</div>
+      <div class="edu-formula-box">
+        <div class="edu-formula-label">Fórmula (fase de obra)</div>
+        <div class="edu-formula">Parcela = (taxa_m + TR) × saldo + encargos</div>
+        <div class="edu-formula-hint">taxa_m = taxa anual ÷ 1200 &nbsp;·&nbsp; encargos = seguro + taxa adm</div>
+      </div>
+    </div>
+
+      <!--<div class="edu-fase-divider">+ após a entrega das chaves</div>
 
       <div class="edu-fase-block">
         <div class="edu-fase-label edu-fase-amort">Fase de amortização</div>
@@ -125,14 +127,7 @@ function renderEducacao() {
             <div class="edu-fase-hint">+ todos os itens da fase de obra acima</div>
           </div>
         </div>
-      </div>
-
-      <div class="edu-formula-box">
-        <div class="edu-formula-label">Fórmula (fase de obra)</div>
-        <div class="edu-formula">Parcela = (taxa_m + TR) × saldo + encargos</div>
-        <div class="edu-formula-hint">taxa_m = taxa anual ÷ 1200 &nbsp;·&nbsp; encargos = seguro + taxa adm</div>
-      </div>
-    </div>
+      </div>-->
 
     <div class="section-label">Glossário</div>
 

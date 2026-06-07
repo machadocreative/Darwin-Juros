@@ -51,7 +51,7 @@ function renderHome() {
   setHtml(`
     <div class="greeting">
       <div class="greeting-row">
-        <div class="greeting-logo">🏗️</div>
+        <div class="greeting-logo"><img src="assets/favicons/android-chrome-192x192.png" alt="Darwin" class="greeting-logo-img"></div>
         <div class="greeting-title">Darwin Juros</div>
       </div>
       <div class="greeting-sub">Calcule sua evolução antes do boleto chegar</div>

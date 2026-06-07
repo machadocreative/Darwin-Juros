@@ -420,7 +420,8 @@ function atualizaTaxa() {
 
 function atualizaEncargos() {
   const s = maskRead(document.getElementById('inp-seguro')) || 0;
-  const a = maskRead(document.getElementById('inp-taxaAdm')) || 25;
+  const aRaw = maskRead(document.getElementById('inp-taxaAdm'));  // NaN se vazio, 0 se zerado
+  const a = isNaN(aRaw) ? 25 : aRaw;                              // default 25 só quando vazio
   const box = document.getElementById('box-enc'), val = document.getElementById('val-enc');
   if (box && val) { box.style.display = s > 0 ? 'flex' : 'none'; val.textContent = fmtBRL(s + a); }
 }

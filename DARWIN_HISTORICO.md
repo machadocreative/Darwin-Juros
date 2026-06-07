@@ -149,6 +149,56 @@ Reestruturação completa da tela de resultado:
 
 ---
 
+## Fase 12 — Polimento para MVP Play Store (junho/2026)
+
+Ciclo intensivo de correções e melhorias antes da publicação. Trabalho feito em parceria com o Claude Code.
+
+### Correções de bugs críticos
+- `temPagas` → `temPago` (ReferenceError que derrubava a tela de resultado ao carregar perfis)
+- Atributo HTML malformado `class="result-card style="..."` corrigido
+- Slider premium: índice errado do mês/valor da "Parcela atual" alinhado com lógica da quickSim
+- Bug do histórico de navegação: `adicionarLinha`/`removerLinha` empilhavam entradas no histórico → "Voltar" exigia múltiplos toques. Corrigido com parâmetro `replace=true` em `renderTabela`/`renderMiniTabela`
+- % de obra pré-preenchendo com `0,01` indevidamente (flutuação de ponto flutuante) — input só pré-preenche com valor salvo real
+- Taxa administrativa zerada continuava somando R$ 25 (`0 || 25 = 25`). Corrigido com helper `taxaAdmValor(raw)` que distingue "vazio" de "zero explícito"
+
+### Novas funcionalidades
+
+**Cupons únicos auto-validáveis** (`js/core/cupom.js`):
+- Gerador offline (FNV-1a hash + segredo embutido) — sem servidor necessário
+- Formato `DRW-XXXX-XXXX-XX`, sem ambiguidades (sem O/0/I/1)
+- Ferramenta de geração em `tools/gerador-cupons.html` (gitignored)
+- Suporte ao cupom legado `DARWIN10` mantido via `validarCupom()`
+
+**Tabela Premium** (resultado/histórico):
+- Subrow reformulada: `<td colspan=6>` com flexbox interno, independente das colunas fixas (elimina sobreposição no mobile)
+- Sticky do cabeçalho da tabela sincronizado via `_syncStickyOffsets()` (CSS var `--sticky-head-top`)
+- Validação de % de obra: bloqueia marcar como pago se valor inválido ou menor que linha anterior; toast com `<br>` e 6 segundos
+- Botão "↺ Recalcular porcentagens e atualizar tabela" com novo visual
+
+**Inputs e formulários:**
+- Sufixo `%` visível dentro do campo (correção: `width:100%; box-sizing:border-box` nos inputs)
+- Botão "Inserir Mês atual" adicionado em quickSim e na simulação completa (mês inicial); estado `.active` verde sólido
+- Input de mês com largura responsiva correta
+
+**Visual e UX:**
+- Logo/favicon do Darwin substituindo emoji na home
+- Badges "✦ Premium" nos cards "Saldo devedor atual" e "Evolução de Obra"
+- Texto "Falta R$ x" / "Supera em R$ x" na comparação com parcela de financiamento
+- Preço corrigido para R$ 10,99 em todos os lugares
+- Card "Valor Base" com nota "Juros + Encargos"
+- "Saldo Devedor Máximo" removido; substituído por "% última medição" + "Mês da medição"
+
+### Polimento final (7 itens)
+- **Cards `large` em 2 colunas**: label+nota à esquerda, valor maior (26px bold) à direita — aplicado em "Total estimado de juros", "Parcela atual" (slider e quickSim)
+- **Tela de Pré-Paywall** (`showPrePaywall`): nova tela antes do paywall mostrando os dados que serão bloqueados, com botões "Prosseguir", "Editar antes" e "Voltar". Popstate registrado em `main.js`
+- **Sticky tabela free**: `_syncStickyOffsets` agora detecta `.mini-somatorio-sticky` e inclui `marginBottom` no cálculo; chamado em `renderMiniTabela`
+- **Subrow default aberta**: última parcela paga sempre começa com subrow expandida (`▾`)
+- **Cores alternadas linhas pagas**: `#EBF7F0` (par) / `#D8EEE3` (ímpar) — dois tons de verde distintos, aplicados em `main-row` e `sub-row`
+- **"Próxima Prestação: —"**: quando `perc >= 100`, exibe `—` (obra finalizada)
+- **Long-press nos perfis**: pressionar 500ms abre modal central com ações: Editar simulação, Renomear, Desbloquear Premium (só não-premium), Excluir (dupla confirmação). Botões inline removidos
+
+---
+
 ## Estado Atual dos Arquivos (junho/2026)
 
 | Arquivo | Responsabilidade |
@@ -163,7 +213,7 @@ Reestruturação completa da tela de resultado:
 | `questions.js` | Inputs reutilizáveis centralizados |
 | `result.js` | Tela de resultado, slider, tabela, marcação de pagas |
 | `home.js` | Tela inicial com listagem de perfis |
-| `paywall.js` | Tela de upgrade Premium, validação de cupom |
+| `paywall.js` | Tela de pré-paywall, upgrade Premium, validação de cupom |
 | `educacao.js` | Tela de educação (vídeos + artigos) |
 | `trhistorico.js` | Tela de histórico da TR |
 | `format.js` | Máscaras de input, formatação de moeda/percentual |
@@ -192,4 +242,4 @@ Reestruturação completa da tela de resultado:
 
 ---
 
-*Documento gerado em junho de 2026. Atualizar a cada fase relevante de desenvolvimento.*
+*Última atualização: junho de 2026 (Fase 12). Atualizar a cada fase relevante de desenvolvimento.*

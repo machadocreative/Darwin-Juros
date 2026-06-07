@@ -39,7 +39,7 @@ function ativarPremiumPerfil() {
 function calcTable() {
   const fin = calcFin();
   const ter = parseFloat(form.valorTerreno);
-  const enc = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
+  const enc = parseFloat(form.seguro || 0) + taxaAdmValor(form.taxaAdm);
   const tm  = parseFloat(form.taxaAnual) / 100 / 12;
   const sMax = fin - ter;
   const ini  = parseMS(form.mesInicial), ent = parseMS(form.mesEntrega);
@@ -68,7 +68,7 @@ function recalcRow(i) {
   const r   = meses[i];
   const fin = calcFin();
   const ter = parseFloat(form.valorTerreno);
-  const enc = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
+  const enc = parseFloat(form.seguro || 0) + taxaAdmValor(form.taxaAdm);
   const tm  = parseFloat(form.taxaAnual) / 100 / 12;
   r.saldo   = ter + (fin - ter) * (r.perc / 100);
   // Mantém a TR que já está na linha (editada pelo usuário ou vinda do JSON)
@@ -99,7 +99,7 @@ function adicionarLinha() {
   if (meses.length >= MAX_MESES) return;
   const fin   = calcFin();
   const ter   = parseFloat(form.valorTerreno);
-  const enc   = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
+  const enc   = parseFloat(form.seguro || 0) + taxaAdmValor(form.taxaAdm);
   const tm    = parseFloat(form.taxaAnual) / 100 / 12;
   const perc  = Math.min(meses[meses.length - 1]?.perc || 0, 100);
   const saldo = ter + (fin - ter) * (perc / 100);
@@ -138,7 +138,7 @@ function removerLinha() {
 function calcPreviewSlider(perc) {
   const fin   = calcFin();
   const ter   = parseFloat(form.valorTerreno);
-  const enc   = parseFloat(form.seguro || 0) + parseFloat(form.taxaAdm || 25);
+  const enc   = parseFloat(form.seguro || 0) + taxaAdmValor(form.taxaAdm);
   const tm    = parseFloat(form.taxaAnual) / 100 / 12;
   const saldo = ter + (fin - ter) * (perc / 100);
   const previsto = tm * saldo + enc; // TR = 0
@@ -163,7 +163,7 @@ function atualizaSlider() {
     const fin  = parseFloat(form.parcelaFinanciamento);
     const diff = fin - previsto;
     dl.className = 'slider-result-row slider-fin-dl' + (diff < 0 ? ' slider-fin-danger' : '');
-    bloco.textContent = fmtBRL(Math.abs(diff));
+    bloco.textContent = (diff < 0 ? 'Supera em ' : 'Falta ') + fmtBRL(Math.abs(diff));
   }
 
   if (isPremium()) {

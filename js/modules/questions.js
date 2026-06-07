@@ -106,7 +106,10 @@ const questions = {
     },
     render: () => {
       const seg = parseFloat(form.seguro) || parseFloat(formQuick.seguro) || 0;
-      const adm = parseFloat(form.taxaAdm) || parseFloat(formQuick.taxaAdm) || 25;
+      // default 25 só quando nunca preenchido (preserva 0 explícito)
+      const adm = (form.taxaAdm !== '' && form.taxaAdm != null) ? taxaAdmValor(form.taxaAdm)
+                : (formQuick.taxaAdm !== '' && formQuick.taxaAdm != null) ? taxaAdmValor(formQuick.taxaAdm)
+                : 25;
       return `
         <div class="step-title">Quais os Encargos Mensais?</div>
         <div class="step-hint">São valores cobrados mensalmente pela Caixa, independente do andamento da obra.</div>
@@ -147,7 +150,9 @@ const questions = {
       const elSeg = document.getElementById(QUESTION_IDS.seguro);
       const elAdm = document.getElementById(QUESTION_IDS.taxaAdm);
       const seg = maskRead(elSeg);
-      const adm = maskRead(elAdm) || 25;
+      const admRaw = maskRead(elAdm);          // NaN se vazio, 0 se zerado
+      // Vazio → '' (cálculos aplicam default 25 via taxaAdmValor). Zero → 0 explícito.
+      const adm = isNaN(admRaw) ? '' : admRaw;
       form.seguro = String(seg);
       form.taxaAdm = String(adm);
       formQuick.seguro = seg;
@@ -155,9 +160,13 @@ const questions = {
     },
     init: () => {
       const initialSeg = form.seguro || formQuick.seguro;
-      const initialAdm = form.taxaAdm || formQuick.taxaAdm || 25;
+      // taxaAdm: usa o valor salvo (inclusive 0); se nunca preenchido, deixa vazio
+      // para o placeholder "25,00" aparecer (o default 25 é aplicado nos cálculos).
+      const savedAdm = (form.taxaAdm !== '' && form.taxaAdm != null) ? form.taxaAdm
+                     : (formQuick.taxaAdm !== '' && formQuick.taxaAdm != null) ? formQuick.taxaAdm
+                     : '';
       attachMask(QUESTION_IDS.seguro, 'brl', initialSeg || '');
-      attachMask(QUESTION_IDS.taxaAdm, 'brl', initialAdm || 25);
+      attachMask(QUESTION_IDS.taxaAdm, 'brl', savedAdm === '' ? '' : savedAdm);
       const elSeg = document.getElementById(QUESTION_IDS.seguro);
       const elAdm = document.getElementById(QUESTION_IDS.taxaAdm);
       if (elSeg) elSeg.oninput = () => { maskValue(elSeg, 'brl'); elSeg.classList.remove('invalid'); const e = document.getElementById('err-seguro'); if (e) e.style.display = 'none'; atualizaEncargos(); atualizaEncargosQuick(); };
@@ -205,8 +214,8 @@ const questions = {
           <label class="field-label">Data da Medição</label>
           <div class="label-hint">A qual mês essa % de obra se refere?</div>
           <div class="month-input-row">
-            <input type="month" id="${QUESTION_IDS.mesMedido}" value="" oninput="this.classList.remove('invalid');document.getElementById('err-mes-medido').style.display='none';_atualizaTRInfo()">
-            <button type="button" class="btn-current-month" onclick="preencherMesAtual()">Inserir Mês atual</button>
+            <input type="month" id="${QUESTION_IDS.mesMedido}" value="" oninput="this.classList.remove('invalid');document.getElementById('err-mes-medido').style.display='none';_atualizaTRInfo();_syncBotaoMesAtual(this,document.getElementById('btn-mes-atual-quick'))">
+            <button type="button" id="btn-mes-atual-quick" class="btn-current-month" onclick="preencherMesAtual()">Inserir Mês atual</button>
           </div>
           <div class="error-msg" id="err-mes-medido" style="display:none">Informe o mês da medição.</div>
         </div>
@@ -242,9 +251,10 @@ const questions = {
       formQuick.mesMedido = elMes?.value || '';
     },
     init: () => {
-      const percCalc = _calcPercAutomatico();
-      const valorInicial = formQuick.percObra || percCalc;
-      attachMask(QUESTION_IDS.percentualObra, 'perc2', valorInicial);
+      // Não pré-preenche com o % calculado (fica apenas como placeholder) —
+      // evita o campo vir com 0,01 e o info-box de discrepância aparecer antes
+      // de o usuário digitar. Só preenche se houver um % realmente salvo.
+      attachMask(QUESTION_IDS.percentualObra, 'perc2', formQuick.percObra || '');
       const elMes = document.getElementById(QUESTION_IDS.mesMedido);
       if (elMes && formQuick.mesMedido) elMes.value = formQuick.mesMedido;
       _atualizaTRInfo();
@@ -401,8 +411,8 @@ const questions = {
           <div class="label-hint">A qual mês essa % de obra se refere?</div>
           <div class="month-input-row">
             <input type="month" id="${QUESTION_IDS.mesMedido}" value=""
-              oninput="this.classList.remove('invalid');document.getElementById('err-mes-medido').style.display='none';_atualizaTRInfo()">
-            <button type="button" class="btn-current-month" onclick="preencherMesAtual()">Inserir Mês atual</button>
+              oninput="this.classList.remove('invalid');document.getElementById('err-mes-medido').style.display='none';_atualizaTRInfo();_syncBotaoMesAtual(this,document.getElementById('btn-mes-atual-quick'))">
+            <button type="button" id="btn-mes-atual-quick" class="btn-current-month" onclick="preencherMesAtual()">Inserir Mês atual</button>
           </div>
           <div class="error-msg" id="err-mes-medido" style="display:none">Informe o mês da medição.</div>
         </div>
@@ -476,8 +486,8 @@ const questions = {
     },
     init: () => {
       attachMask(QUESTION_IDS.saldoDevedor,   'brl',   formQuick.saldoAtual || '');
-      const percCalc = _calcPercAutomatico();
-      attachMask(QUESTION_IDS.percentualObra, 'perc2', formQuick.percObra || percCalc || '');
+      // Não pré-preenche com o % calculado (só placeholder) — evita 0,01 espúrio.
+      attachMask(QUESTION_IDS.percentualObra, 'perc2', formQuick.percObra || '');
       const elSaldo = document.getElementById(QUESTION_IDS.saldoDevedor);
       const elPerc  = document.getElementById(QUESTION_IDS.percentualObra);
       const elMes   = document.getElementById(QUESTION_IDS.mesMedido);
@@ -635,7 +645,10 @@ const questions = {
       <div class="field-group">
         <label class="field-label">1. Início dos pagamentos</label>
         <div class="label-hint">Mês da sua primeira prestação, quando inicia a obra.</div>
-        <input type="month" id="${QUESTION_IDS.mesInicial}" value="${form.mesInicial}" oninput="atualizaMesesStep0();this.classList.remove('invalid')">
+        <div class="month-input-row">
+          <input type="month" id="${QUESTION_IDS.mesInicial}" value="${form.mesInicial}" oninput="atualizaMesesStep0();this.classList.remove('invalid');_syncBotaoMesAtual(this,document.getElementById('btn-mes-atual-inicial'))">
+          <button type="button" id="btn-mes-atual-inicial" class="btn-current-month" onclick="preencherMesAtual('${QUESTION_IDS.mesInicial}','btn-mes-atual-inicial')">Inserir Mês atual</button>
+        </div>
       </div>
       <br>
       <div class="field-group">

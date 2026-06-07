@@ -30,6 +30,15 @@ function fmtDateRelative(iso) {
 // Normaliza vírgula → ponto para parseFloat funcionar em ambos os locales
 function parseDecimal(val) { return parseFloat(String(val).replace(',', '.')); }
 
+// Taxa Administrativa: default R$ 25 SOMENTE quando o campo nunca foi preenchido
+// (vazio / null / undefined / NaN). Se o usuário digitou 0 explicitamente, vale 0.
+// Distingue "não informado" de "zero" — evita o bug de `valor || 25` somar 25 no zero.
+function taxaAdmValor(raw) {
+  if (raw === '' || raw === null || raw === undefined) return 25;
+  const n = parseFloat(raw);
+  return isNaN(n) ? 25 : n;
+}
+
 // ── MASKED INPUT ENGINE ──
 // Cada campo tem um "tipo de máscara":
 //   'brl'   → R$ 999.999,99   (centavos obrigatórios, 2 decimais)

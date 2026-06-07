@@ -90,7 +90,8 @@ function atualizaEncargosQuick() {
   const elSeg = document.getElementById(QUESTION_IDS.seguro);
   const elAdm = document.getElementById(QUESTION_IDS.taxaAdm);
   const s = maskRead(elSeg) || 0;
-  const a = maskRead(elAdm) || 25;
+  const aRaw = maskRead(elAdm);            // NaN se vazio, 0 se zerado
+  const a = isNaN(aRaw) ? 25 : aRaw;       // default 25 só quando vazio
   const box = document.getElementById('box-enc');
   const val = document.getElementById('val-enc');
   if (box && val) {
@@ -122,20 +123,36 @@ function _mesAtual() {
   };
 }
 
-function preencherMesAtual() {
-  const atual = _mesAtual();
+// Valor "YYYY-MM" do mês atual
+function _mesAtualValor() {
+  const a = _mesAtual();
+  return a.y + '-' + String(a.m).padStart(2, '0');
+}
 
-  const valor =
-    atual.y + '-' + String(atual.m).padStart(2, '0');
+// Marca/desmarca o botão "Inserir Mês atual" conforme o input bate com o mês atual
+function _syncBotaoMesAtual(inputEl, btnEl) {
+  if (!btnEl) return;
+  btnEl.classList.toggle('active', !!inputEl && inputEl.value === _mesAtualValor());
+}
 
-  const el = document.getElementById(QUESTION_IDS.mesMedido);
-
+// Preenche o input de mês com o mês atual. inputId/btnId opcionais (default: quicksim).
+function preencherMesAtual(inputId, btnId) {
+  const el  = document.getElementById(inputId || QUESTION_IDS.mesMedido);
   if (!el) return;
-
-  el.value = valor;
-  formQuick.mesMedido = valor;
+  el.value = _mesAtualValor();
   el.classList.remove('invalid');
-  _atualizaTRInfo();
+
+  // Atualiza o estado conforme o campo (mesMedido na quick, mesInicial na completa)
+  if ((inputId || QUESTION_IDS.mesMedido) === QUESTION_IDS.mesMedido) {
+    formQuick.mesMedido = el.value;
+    _atualizaTRInfo();
+  } else if ((inputId) === QUESTION_IDS.mesInicial) {
+    form.mesInicial = el.value;
+    if (typeof atualizaMesesStep0 === 'function') atualizaMesesStep0();
+  }
+
+  const btn = document.getElementById(btnId || 'btn-mes-atual-quick');
+  _syncBotaoMesAtual(el, btn);
 }
 
 // ── ASSOCIAR VALOR DE TR COM O JSON PELO MÊS INFORMADO ──
@@ -179,7 +196,7 @@ function _atualizaTRInfo() {
 function _calcTotalParcelaAtual() {
   const saldo = parseFloat(formQuick.saldoAtual || 0);
   const tm = (parseFloat(formQuick.taxaAnual) / 100) / 12;
-  const enc = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
+  const enc = parseFloat(formQuick.seguro || 0) + taxaAdmValor(formQuick.taxaAdm);
   const ym = formQuick.mesMedido ? parseMS(formQuick.mesMedido) : null;
   const tr = ym ? getTRParaMes(ym) : 0; // obtém TR silenciosamente
   return (tm + tr) * saldo + enc;
@@ -230,10 +247,12 @@ function renderResultQuick() {
   const parcelaAtual = _calcTotalParcelaAtual();
 
   const card1Html = `
-    <div class="result-card accent result-card-full">
-      <div class="qrc-label">Sua Parcela atual · Vence em ${proxMesLabel}</div>
+    <div class="result-card accent result-card-full large">
+      <div class="card-large-left">
+        <div class="qrc-label">Sua Parcela atual · Vence em ${proxMesLabel}</div>
+        <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem Taxa Referencial'}</div>
+      </div>
       <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
-      <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem Taxa Referencial'}</div>
     </div>`;
 
   setHtml(`
@@ -255,17 +274,17 @@ function renderResultQuick() {
     </div>
 
     <div class="result-header">
-      <h2>Visualizador de Prestações</h2>
+      <h3>Visualizador de Prestações</h3>
  
       ${card1Html}
 
-      <h3>O valor da prestação acima é composto por:</h3>
+      <h4>O valor da prestação acima é composto por:</h4>
 
       <div class="result-grid result-grid-inner" style="margin-top:10px">
         <div class="result-card">
           <div class="qrc-label">Valor base</div>
           <div class="qrc-val">${fmtBRL(parcelaAtual - (trReais || 0))}</div>
-          <div class="qrc-note">Juros sobre o Saldo Devedor</div>
+          <div class="qrc-note">Juros + Encargos</div>
         </div>
         <div class="result-card">
           <div class="qrc-label">Correção Monetária<br></div>
@@ -289,7 +308,7 @@ function renderResultQuick() {
           min="0" max="100" step="5" value="${sliderMin}"
           oninput="atualizaSliderQuick()">
       </div>
-      <div class="quick-disclaimer-top">
+      <div class="quick-disclaimer-slider">
         Na simulação rápida, o saldo devedor é uma estimativa aproximada.
       </div>
 
@@ -344,7 +363,7 @@ function atualizaSliderQuick() {
   const percSlider = parseInt(slider.value);
   const total = parseFloat(formQuick.totalFinanciado || 0);
   const tm = (parseFloat(formQuick.taxaAnual) / 100) / 12;
-  const enc = parseFloat(formQuick.seguro || 0) + parseFloat(formQuick.taxaAdm || 25);
+  const enc = parseFloat(formQuick.seguro || 0) + taxaAdmValor(formQuick.taxaAdm);
 
   // 2. DEPOIS aplicar coloração
   slider.style.background = `linear-gradient(to right,
@@ -369,7 +388,7 @@ function atualizaSliderQuick() {
     const fin  = parseFloat(formQuick.parcelaFinanciamento);
     const diff = fin - previsto;
     dl.className = 'slider-result-row slider-fin-dl' + (diff < 0 ? ' slider-fin-danger' : '');
-    bloco.textContent = fmtBRL(Math.abs(diff));
+    bloco.textContent = (diff < 0 ? 'Supera em ' : 'Falta ') + fmtBRL(Math.abs(diff));
   }
 }
 
@@ -397,7 +416,8 @@ function reiniciarSimulacaoRapida() {
 // ── CTA: migrar para simulação detalhada ──
 function irParaSimulacaoCompleta() {
   form.seguro    = String(formQuick.seguro   || '');
-  form.taxaAdm   = String(formQuick.taxaAdm  || 25);
+  // preserva 0 explícito; vazio fica '' (cálculos aplicam default 25 via taxaAdmValor)
+  form.taxaAdm   = (formQuick.taxaAdm === '' || formQuick.taxaAdm == null) ? '' : String(formQuick.taxaAdm);
   form.taxaAnual = String(formQuick.taxaAnual || '');
   form.parcelaFinanciamento = formQuick.parcelaFinanciamento || null;
 

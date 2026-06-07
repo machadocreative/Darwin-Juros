@@ -29,7 +29,9 @@ function renderProfiles() {
           ? `<div class="pc-premium-stripe">✦</div>`
           : '';
         return `
-        <div class="profile-card${p.premium ? ' profile-card-premium' : ''}" id="pc-${p.id}" onclick="loadProfile('${p.id}')">
+        <div class="profile-card${p.premium ? ' profile-card-premium' : ''}" id="pc-${p.id}"
+          onclick="loadProfile('${p.id}')"
+          oncontextmenu="event.preventDefault();abrirMenuPerfil('${p.id}')">
           ${iconBtn}
           <div class="pf-content">
             <div class="pf-name">${escHtml(p.nome)}</div>
@@ -37,10 +39,6 @@ function renderProfiles() {
           </div>
           ${statsBlock}
           ${premiumBadge}
-        </div>
-        <div class="pc-actions" onclick="event.stopPropagation()" style="margin-top:-6px;margin-bottom:10px;display:flex;gap:6px;padding:0 2px">
-          <button class="pc-btn" onclick="abrirRenomearPerfil('${p.id}')">✏️ Renomear</button>
-          <button class="pc-btn del" id="del-${p.id}" onclick="deleteProfile('${p.id}')">🗑️ Excluir</button>
         </div>`;
       }).join('')
     : `<div class="empty-state"><div class="es-icon">🏢</div><p>Nenhum perfil salvo ainda.<br>Inicie uma <strong>Simulação Completa</strong> para salvar seu primeiro imóvel.</p></div>`;
@@ -59,6 +57,65 @@ function renderProfiles() {
     <div class="profile-list">${list}</div>
     <button class="btn-add-profile" onclick="renderBifurcacao()">+ Nova simulação</button>
   `);
+  profiles.forEach(p => _initLongPress('pc-' + p.id, p.id));
+}
+
+// ── LONG-PRESS NOS PERFIS ──
+function _initLongPress(elId, profileId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  let timer;
+  const start = () => { timer = setTimeout(() => abrirMenuPerfil(profileId), 500); };
+  const cancel = () => clearTimeout(timer);
+  el.addEventListener('touchstart', start, { passive: true });
+  el.addEventListener('touchend',   cancel);
+  el.addEventListener('touchcancel',cancel);
+  el.addEventListener('touchmove',  cancel);
+  el.addEventListener('mousedown',  (e) => { if (e.button === 0) start(); });
+  el.addEventListener('mouseup',    cancel);
+  el.addEventListener('mouseleave', cancel);
+}
+
+function abrirMenuPerfil(profileId) {
+  const profiles = loadProfiles();
+  const p = profiles.find(pr => pr.id === profileId);
+  if (!p) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-menu-perfil';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:340px">
+      <div class="modal-header">${escHtml(p.nome)}</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+        <button class="menu-perfil-btn" onclick="document.getElementById('modal-menu-perfil').remove();loadProfile('${p.id}');editarSimulacao()">✏️ Editar simulação</button>
+        <button class="menu-perfil-btn" onclick="document.getElementById('modal-menu-perfil').remove();abrirRenomearPerfil('${p.id}')">🏷️ Renomear</button>
+        ${!p.premium ? `<button class="menu-perfil-btn" onclick="document.getElementById('modal-menu-perfil').remove();loadProfile('${p.id}');showPrePaywall()">🔓 Desbloquear Premium</button>` : ''}
+        <button class="menu-perfil-btn menu-perfil-btn-danger" onclick="_confirmarExcluirPerfilModal('${p.id}')">🗑️ Excluir perfil</button>
+      </div>
+      <button class="btn btn-back" style="margin:0" onclick="document.getElementById('modal-menu-perfil').remove()">← Fechar</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+function _confirmarExcluirPerfilModal(profileId) {
+  const overlay = document.getElementById('modal-menu-perfil');
+  if (!overlay) return;
+  overlay.querySelector('.modal-box').innerHTML = `
+    <div class="modal-header">⚠️ Excluir perfil?</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Esta ação não pode ser desfeita. O perfil e todos os dados serão apagados permanentemente.</p>
+    <div class="modal-actions">
+      <button class="btn btn-back" style="margin:0" onclick="document.getElementById('modal-menu-perfil').remove()">← Cancelar</button>
+      <button class="btn btn-primary" style="margin:0;background:var(--danger)" onclick="_executarExcluirPerfilModal('${profileId}')">Excluir</button>
+    </div>`;
+}
+
+function _executarExcluirPerfilModal(profileId) {
+  saveProfiles(loadProfiles().filter(p => p.id !== profileId));
+  document.getElementById('modal-menu-perfil')?.remove();
+  if (currentProfileId === profileId) currentProfileId = null;
+  showToast('Perfil excluído.');
+  renderProfiles();
 }
 
 function abrirIconePerfil(profileId) {
@@ -194,7 +251,7 @@ function validatePercBlur(i) {
   if (v < prevPerc) {
     el.classList.add('invalid');
     el.title = 'O valor não pode ser menor que a linha anterior (' + fmtPerc(prevPerc, 2) + ').';
-    showToast('⚠️ A % de obra não pode ser menor que a da linha acima (' + fmtPerc(prevPerc, 2) + ').<br>Corrija o valor ou use “↺ Atualizar tabela”.', 6000);
+    showToast('⚠️ A % de obra não pode ser menor que a da linha acima (' + fmtPerc(prevPerc, 2) + ').<br>Corrija o valor ou use “↺ Recalcular porcentagens”.', 6000);
     return;
   }
   el.classList.remove('invalid'); el.title = '';
@@ -290,7 +347,7 @@ function refreshTable() {
     const subTaxa  = document.getElementById('sub-taxa-val-' + i);
     const subPrev  = document.getElementById('sub-prev-val-' + i);
     if (subSaldo) subSaldo.textContent = fmtBRL(r.saldo);
-    if (subPrev)  subPrev.textContent  = fmtBRL(r.previsto);
+    if (subPrev)  subPrev.textContent  = r.perc >= 100 ? '—' : fmtBRL(r.previsto);
     if (subTaxa) {
       const tm = parseFloat(form.taxaAnual) / 100 / 12;
       const totalPct = ((tm + r.tr) * 100).toFixed(4);
@@ -423,7 +480,7 @@ function _subRowCells(r) {
         </div>
         <div class="sub-item td-sub-prev">
           <span class="sub-label">Próxima Prestação</span>
-          <span id="sub-prev-val-${r._idx}">${fmtBRL(r.previsto)}</span>
+          <span id="sub-prev-val-${r._idx}">${r.perc >= 100 ? '—' : fmtBRL(r.previsto)}</span>
         </div>
       </div>
     </td>`;
@@ -432,10 +489,12 @@ function _subRowCells(r) {
 // ── HELPER: linhas da tabela (main-row + sub-row fechada por padrão) ──
 function _buildTableRows() {
   const rowClass = r => r.bloqueado ? 'obra-done' : r.pago ? 'pago-row' : '';
+  const lastPagoIdx = meses.reduce((acc, r, i) => (!r.bloqueado && r.pago) ? i : acc, -1);
   return meses.map((r, i) => {
     r._idx = i;
     const cls = rowClass(r);
     const alt = i % 2 === 1 ? ' row-alt' : '';
+    const isLastPago = i === lastPagoIdx;
 
     const percCell = r.bloqueado
       ? `<span class="perc-static">—</span>`
@@ -468,10 +527,10 @@ function _buildTableRows() {
       <td id="rv-${i}" class="td-valor-principal">${valorCell}</td>
       <td class="td-center">${badge}</td>
       <td class="td-center td-toggle">
-        ${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">▸</button>`}
+        ${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">${isLastPago ? '▾' : '▸'}</button>`}
       </td>
     </tr>
-    <tr id="subrow-${i}" class="sub-row sub-row-hidden${cls ? ' ' + cls : ''}${alt}">
+    <tr id="subrow-${i}" class="sub-row${isLastPago ? '' : ' sub-row-hidden'}${cls ? ' ' + cls : ''}${alt}">
       ${_subRowCells(r)}
     </tr>`;
   }).join('');
@@ -582,13 +641,15 @@ function _applySliderTrack(slider, percPaga, val) {
   ].join(' ');
 }
 
-// Alinha o cabeçalho sticky logo abaixo do card sticky (alturas variam por tela).
+// Alinha o cabeçalho sticky logo abaixo do card/somatorio sticky.
+// Funciona tanto na tabela premium (.tabela-sticky-card) quanto na free (.mini-somatorio-sticky).
 function _syncStickyOffsets() {
-  const card = document.querySelector('.tabela-sticky-card');
+  const card = document.querySelector('.tabela-sticky-card') || document.querySelector('.mini-somatorio-sticky');
   if (!card) return;
-  const h = card.getBoundingClientRect().height;
-  // grava o offset numa CSS var usada pelo thead (ver style.css)
-  document.documentElement.style.setProperty('--sticky-head-top', Math.round(h) + 'px');
+  const rect = card.getBoundingClientRect();
+  const marginBottom = parseInt(getComputedStyle(card).marginBottom) || 0;
+  const h = Math.round(rect.height) + marginBottom;
+  document.documentElement.style.setProperty('--sticky-head-top', h + 'px');
 }
 
 // Reposiciona ao girar/redimensionar a tela
@@ -681,7 +742,7 @@ function buildTabela(inline = false) {
       </div>
     </div>
 
-    <button class="btn-redistribuir" onclick="redistribuirPerc()">↺ Atualizar tabela</button>
+    <button class="btn-redistribuir" onclick="redistribuirPerc()">↺ Recalcular porcentagens e atualizar tabela</button>
   `;
 }
 
@@ -735,11 +796,13 @@ function renderResult() {
 
     <div class="result-grid">
       <div class="result-card accent">
+        ${premium ? '<span class="qrc-premium-tag">✦ Premium</span>' : ''}
         <div class="qrc-label">Saldo devedor atual</div>
         <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
         <div class="qrc-note">${temPago ? 'Na última medição de obra' : 'Nenhuma parcela paga'}</div>
       </div>
       <div class="result-card">
+        ${premium ? '<span class="qrc-premium-tag">✦ Premium</span>' : ''}
         <div class="qrc-label">Evolução de Obra</div>
         <div class="qrc-val">${fmtPerc(percUltimaMedicao, 2)}</div>
         <div class="qrc-note">${temPago ? 'Medição: ' + mesUltimaMedicao : 'Nenhuma parcela paga'}</div>
@@ -758,17 +821,19 @@ function renderResult() {
       </div>
     </div>
 
-    <div class="result-card result-card-full" style="margin-top:10px">
-      <div class="qrc-label">Total estimado de juros de obra
-        ${premium && proporcaoReal > 0 ? `<span class="qrc-badge-refinado">✦ ${Math.round(proporcaoReal * 100)}% refinado</span>` : ''}
+    <div class="result-card result-card-full large" style="margin-top:10px">
+      <div class="card-large-left">
+        <div class="qrc-label">Total estimado de juros de obra
+          ${premium && proporcaoReal > 0 ? `<span class="qrc-badge-refinado">✦ ${Math.round(proporcaoReal * 100)}% refinado</span>` : ''}
+        </div>
+        <div class="qrc-note">${premium && proporcaoReal === 0
+          ? 'Estimativa — refine inserindo os valores reais no Histórico de Parcelas'
+          : premium
+            ? 'Combinando valores reais com estimativas futuras'
+            : 'Estimativa — TR futura, % de obra e prazo podem variar'
+        }</div>
       </div>
       <div class="qrc-val">${fmtBRL(totalObra)}</div>
-      <div class="qrc-note">${premium && proporcaoReal === 0
-        ? 'Estimativa — refine inserindo os valores reais no Histórico de Parcelas'
-        : premium
-          ? 'Combinando valores reais com estimativas futuras'
-          : 'Estimativa — TR futura, % de obra e prazo podem variar'
-      }</div>
     </div>
 
     <div class="feature-grid">
@@ -805,9 +870,9 @@ function renderResult() {
     </div>
 
     ${!premium ? `
-    <button class="free-preview-cta" onclick="showPaywall()" style="margin-top:20px">
+    <button class="free-preview-cta" onclick="showPrePaywall()" style="margin-top:20px">
       🔓 Libere mais funcionalidades
-      <span class="cta-price">R$ 4,99</span>
+      <span class="cta-price">R$ 10,99</span>
     </button>` : ''}
 
     <div class="quick-disclaimer-end">
@@ -848,19 +913,21 @@ function renderSliderResult() {
 
     cardsPremium = `
       <div class="result-header">
-        <div class="result-card accent result-card-full">
-          <div class="qrc-label">Parcela atual<br>Vence em ${mLabel(ymVence)}</div>
+        <div class="result-card accent result-card-full large">
+          <div class="card-large-left">
+            <div class="qrc-label">Parcela atual<br>Vence em ${mLabel(ymVence)}</div>
+            <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem Taxa Referencial'}</div>
+          </div>
           <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
-          <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem Taxa Referencial'}</div>
         </div>
 
-        <h3>O valor da prestação acima é composto por:</h3>
+        <h4>O valor da prestação acima é composto por:</h4>
 
         <div class="result-grid" style="margin-top:10px">
           <div class="result-card">
             <div class="qrc-label">Valor base</div>
             <div class="qrc-val">${fmtBRL(parcelaAtual - (trReais || 0))}</div>
-            <div class="qrc-note">Juros sobre o Saldo Devedor</div>
+            <div class="qrc-note">Juros + Encargos</div>
           </div>
           <div class="result-card">
             <div class="qrc-label">Correção Monetária<br></div>
@@ -909,9 +976,9 @@ function renderSliderResult() {
       </div>
     </div>
     ${!premium ? `
-    <button class="free-preview-cta" onclick="showPaywall()">
+    <button class="free-preview-cta" onclick="showPrePaywall()">
       🔓 Libere mais funcionalidades
-      <span class="cta-price">R$ 4,99</span>
+      <span class="cta-price">R$ 10,99</span>
     </button>` : ''}
   `);
 
@@ -981,13 +1048,13 @@ function renderMiniTabela(replace = false) {
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <button class="free-preview-cta" onclick="showPaywall()" style="margin-top:16px">
+    <button class="free-preview-cta" onclick="showPrePaywall()" style="margin-top:16px">
       🔓 Libere mais funcionalidades
-      <span class="cta-price">R$ 4,99</span>
+      <span class="cta-price">R$ 10,99</span>
     </button>
   `);
 
-  setTimeout(() => _initMiniTabelaMasks(countRows), 80);
+  setTimeout(() => { _initMiniTabelaMasks(countRows); _syncStickyOffsets(); }, 80);
 }
 
 function _initMiniTabelaMasks(countRows) {
