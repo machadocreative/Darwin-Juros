@@ -471,15 +471,15 @@ function _subRowCells(r) {
     <td class="td-sub-c" colspan="6">
       <div class="sub-grid">
         <div class="sub-item td-sub-saldo" id="sub-saldo-${r._idx}">
-          <span class="sub-label">Saldo dev.</span>
+          <span class="sub-label">Saldo devedor</span>
           <span id="sub-saldo-val-${r._idx}">${fmtBRL(r.saldo)}</span>
         </div>
         <div class="sub-item td-sub-taxa">
-          <span class="sub-label">Total juros</span>
+          <span class="sub-label">Juros</span>
           <span id="sub-taxa-val-${r._idx}">${taxaStr}</span>
         </div>
         <div class="sub-item td-sub-prev">
-          <span class="sub-label">Próxima Prestação</span>
+          <span class="sub-label">Próxima</span>
           <span id="sub-prev-val-${r._idx}">${r.perc >= 100 ? '—' : fmtBRL(r.previsto)}</span>
         </div>
       </div>
@@ -664,10 +664,52 @@ function renderTabela(replace = false) {
   screen = 'tabela';
   if (replace) _navReplace('tabela'); else _navPush('tabela');
   showBottomNav(); setHtml(buildTabela(false));
-  setTimeout(() => { _initRvMasks(); _initPercMasks(); _syncStickyOffsets(); }, 80);
+  setTimeout(() => {
+    _initRvMasks(); _initPercMasks(); _syncStickyOffsets();
+    _checkAvisoObraIncompleta();
+  }, 80);
 }
 
-// ── CONSTUIR A TABELA COMO PÁGINA INDEPENDENTE - Sugerido por GPT ──
+function _checkAvisoObraIncompleta() {
+  if (!currentProfileId) return;
+  const profiles = loadProfiles();
+  const p = profiles.find(pr => pr.id === currentProfileId);
+  if (!p || p.skipAvisoObra) return;
+
+  const ativas = meses.filter(r => !r.bloqueado);
+  const temNaoPago = ativas.some(r => !r.pago);
+  const percMax = ativas.reduce((max, r) => Math.max(max, r.perc || 0), 0);
+  if (temNaoPago || percMax >= 100) return;
+
+  // Sem linhas não pagas e obra abaixo de 100% — exibe aviso
+  const overlay = document.createElement('div');
+  overlay.id = 'aviso-obra-overlay';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:340px">
+      <div class="modal-header">⚠️ Obra incompleta</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">
+        Sua tabela de histórico de prestações não atingiu 100% de evolução de obra.
+        Adicione mais meses usando o botão <strong>+</strong> e clique em <strong>"Recalcular porcentagens"</strong>.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-back" style="margin:0" onclick="document.getElementById('aviso-obra-overlay').remove()">Entendi</button>
+        <button class="btn btn-primary" style="margin:0" onclick="_skipAvisoObra()">Não lembrar novamente</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+function _skipAvisoObra() {
+  if (!currentProfileId) return;
+  const profiles = loadProfiles();
+  const idx = profiles.findIndex(p => p.id === currentProfileId);
+  if (idx >= 0) { profiles[idx].skipAvisoObra = true; saveProfiles(profiles); }
+  document.getElementById('aviso-obra-overlay')?.remove();
+}
+
+// ── CONSTUIR A TABELA COMO PÁGINA INDEPENDENTE ──
 function buildTabela(inline = false) {
   aplicaBloqueio();
 
@@ -691,19 +733,21 @@ function buildTabela(inline = false) {
       <div class="result-card">
         <div class="qrc-label">Total pago</div>
         <div class="qrc-val" id="res-total-real">${fmtBRL(totalReal)}</div>
-        <div class="qrc-note">Soma dos valores inseridos na tabela abaixo</div>
+        <div class="qrc-note">Somatório dos valores abaixo</div>
       </div>
       <div class="result-card" style="background-color: #ffeccf;">
         <div class="qrc-label">Falta pagar</div>
         <div class="qrc-val" id="res-total-falta">${fmtBRL(totalFalta)}</div>
-        <div class="qrc-note">Estimativa (−) Valores já pago</div>
+        <div class="qrc-note">Estimativa Total (−) Pago</div>
       </div>
     </div>
 
-    <div class="result-card accent result-card-full tabela-sticky-card" style="margin-top:0;margin-bottom:10px">
-      <div class="qrc-label">Total estimado de Juros de Obra</div>
+    <div class="result-card accent result-card-full large tabela-sticky-card" style="margin-top: 0; padding-bottom: 10px">>
+      <div class="card-large-left">
+        <div class="qrc-label">Valor total estimado<br></div>
+        <div class="qrc-note">Contabiliza com previsões futuras sem Taxa Referencial</div>
+      </div>
       <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
-      <div class="qrc-note">Estimativas futuras podem variar · TR futura indisponível</div>
     </div>
 
     <div class="table-wrap">
@@ -771,12 +815,7 @@ function renderResult() {
   const temPago   = pagas.length > 0;
   const temReal   = pagas.some(r => r.valorReal);
 
-  // Nota do card "pago": indica precisão do valor
-  const notaPago = !temPago
-    ? 'Nenhum registro'
-    : temReal
-      ? (premium ? '✦ Combinando real + estimado' : 'Combinando real + estimado')
-      : (premium ? '✦ Valor estimado' : 'Valor estimado');
+  const notaPago = !temPago ? 'Nenhum registro' : '';
 
   // Estimativa total da obra: usa real onde disponível, previsto para o restante
   const totalObra = ativas.reduce((s, r) => s + (r.valorReal || r.previsto), 0);
@@ -794,20 +833,21 @@ function renderResult() {
       </div>
     </div>
 
+    ${premium ? `
     <div class="result-grid">
       <div class="result-card accent">
-        ${premium ? '<span class="qrc-premium-tag">✦ Premium</span>' : ''}
+        <span class="qrc-premium-tag">✦</span>
         <div class="qrc-label">Saldo devedor atual</div>
         <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
-        <div class="qrc-note">${temPago ? 'Na última medição de obra' : 'Nenhuma parcela paga'}</div>
+        <div class="qrc-note">${temPago ? 'de ' + fmtBRL(parseFloat(form.valorFinanciado)) : 'Nenhuma parcela paga'}</div>
       </div>
       <div class="result-card">
-        ${premium ? '<span class="qrc-premium-tag">✦ Premium</span>' : ''}
+        <span class="qrc-premium-tag">✦</span>
         <div class="qrc-label">Evolução de Obra</div>
         <div class="qrc-val">${fmtPerc(percUltimaMedicao, 2)}</div>
         <div class="qrc-note">${temPago ? 'Medição: ' + mesUltimaMedicao : 'Nenhuma parcela paga'}</div>
       </div>
-    </div>
+    </div>` : ''}
 
     <div class="result-grid" style="margin-top:10px">
       <div class="result-card">
@@ -827,7 +867,7 @@ function renderResult() {
           ${premium && proporcaoReal > 0 ? `<span class="qrc-badge-refinado">✦ ${Math.round(proporcaoReal * 100)}% refinado</span>` : ''}
         </div>
         <div class="qrc-note">${premium && proporcaoReal === 0
-          ? 'Estimativa — refine inserindo os valores reais no Histórico de Parcelas'
+          ? 'Estimativa — refine inserindo os valores reais no Histórico de Prestações'
           : premium
             ? 'Combinando valores reais com estimativas futuras'
             : 'Estimativa — TR futura, % de obra e prazo podem variar'
@@ -844,7 +884,7 @@ function renderResult() {
       </button>
       <button class="feat-btn" onclick="${premium ? 'renderTabela()' : 'renderMiniTabela()'}">
         <span class="feat-icon">📋</span>
-        <span class="feat-label">Histórico de Parcelas</span>
+        <span class="feat-label">Histórico de Prestações</span>
         ${premium ? '<span class="feat-badge feat-badge-premium">✦ Premium</span>' : ''}
       </button>
       <button class="feat-btn feat-soon" disabled>
@@ -876,7 +916,7 @@ function renderResult() {
     </button>` : ''}
 
     <div class="quick-disclaimer-end">
-      <p>Darwin não é uma ferramenta preditiva. Utilizamos a fórmula oficial de cálculo divulgada pela Caixa Econômica. Não nos responsabilizamos se previsões futuras não corresponderem à realidade, uma vez que valores cobrados serão sempre de encargo da instituição financeira.</p>
+      <p>Darwin não é uma ferramenta preditiva. Utilizamos a fórmula oficial de cálculo divulgada pela Caixa Econômica. Não nos responsabilizamos se previsões futuras não corresponderem à realidade, uma vez que a instituição financeira é a encarregada de realizar as cobranças..</p>
     </div>
   `);
 }
@@ -915,8 +955,8 @@ function renderSliderResult() {
       <div class="result-header">
         <div class="result-card accent result-card-full large">
           <div class="card-large-left">
-            <div class="qrc-label">Parcela atual<br>Vence em ${mLabel(ymVence)}</div>
-            <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem Taxa Referencial'}</div>
+            <div class="qrc-label">Sua Parcela atual<br>Vence em ${mLabel(ymVence)}</div>
+            <div class="qrc-note">${temTR ? 'Valor total' : 'Valor sem Correção Monetária'}</div>
           </div>
           <div class="qrc-val">${fmtBRL(parcelaAtual)}</div>
         </div>
@@ -930,9 +970,9 @@ function renderSliderResult() {
             <div class="qrc-note">Juros + Encargos</div>
           </div>
           <div class="result-card">
-            <div class="qrc-label">Correção Monetária<br></div>
+            <div class="qrc-label">Correção</div>
             <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
-            <div class="qrc-note">${temTR ? fmtPerc(trUltima * 100, 4) + ' · TR de ' + mLabel(ymUltima) : ''}</div>
+            <div class="qrc-note">${temTR ? 'TR ' + fmtPerc(trUltima * 100, 4) + ' · ' + mLabel(ymUltima) : ''}</div>
           </div>
         </div>
       </div>`;
@@ -959,18 +999,18 @@ function renderSliderResult() {
       </div>
       <div class="slider-result">
         <dl class="slider-result-row">
-          <dt class="slider-result-label">Evolução de Obra</dt>
+          <dt class="slider-result-label">Evolução<br>de Obra</dt>
           <dd class="slider-result-perc" id="slider-perc">—</dd>
-          <dt class="slider-result-label">Saldo devedor estimado</dt>
+          <dt class="slider-result-label">Saldo devedor</dt>
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Prestação simulada<br><strong>Taxa Referencial = 0,0000%</strong></dt>
+          <dt class="slider-result-label">Valor Base<br><strong>Taxa Referencial = 0,0000%</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
         ${temFin ? `
         <dl class="slider-result-row slider-fin-dl" id="slider-fin-dl">
-          <dt class="slider-result-label">Comparação com o Financiamento<br><strong>Sua 1ª parcela: ${fmtBRL(form.parcelaFinanciamento)}</strong></dt>
+          <dt class="slider-result-label">Comparativo Evolução x Financiamento<br><strong>Sua 1ª parcela: ${fmtBRL(form.parcelaFinanciamento)}</strong></dt>
           <dd class="slider-result-val" id="slider-fin-bloco">—</dd>
         </dl>` : ''}
       </div>

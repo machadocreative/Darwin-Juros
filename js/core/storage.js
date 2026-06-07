@@ -28,7 +28,9 @@ function saveProfile(premiumFlag, toastMsg = 'Alterações salvas com sucesso!')
     // preserva flag premium existente; aplica novo se passado
     premium: premiumFlag === true ? true : (existente?.premium || false),
     // preserva o ícone escolhido pelo usuário (default tratado na renderização)
-    icon: existente?.icon || undefined
+    icon: existente?.icon || undefined,
+    // preserva preferência de suprimir aviso de obra incompleta
+    skipAvisoObra: existente?.skipAvisoObra || undefined
   };
   const idx = profiles.findIndex(p => p.id === data.id);
   if (idx >= 0) profiles[idx] = data; else profiles.push(data);
@@ -63,7 +65,22 @@ function loadProfile(id) {
   if (!p) return;
   currentProfileId = p.id;
   Object.assign(form, p.form);
-  meses = JSON.parse(JSON.stringify(p.meses));
+  if (p.premium) {
+    // Premium: restaura tabela salva e reaplica TR do JSON nas parcelas não pagas.
+    meses = JSON.parse(JSON.stringify(p.meses));
+    const ini = parseMS(form.mesInicial);
+    meses.forEach((r, i) => {
+      if (r.pago) return;
+      const ym = addM(ini, i);
+      const trNova = getTRParaMes(ym);
+      if (r.tr !== trNova) { r.tr = trNova; recalcRow(i); }
+    });
+  } else {
+    // Free: recalcula a tabela completa — sem dados de usuário a preservar,
+    // garante que novos meses apareçam e TR fique atualizada.
+    meses = calcTable();
+  }
+
   screen = 'result';
   hasUnsavedChanges = false;
   renderResult();

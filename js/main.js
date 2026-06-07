@@ -20,6 +20,19 @@ function _navReplace(screenName, extra) {
   history.replaceState({ screen: screenName, ...(extra || {}) }, '', '');
 }
 
+// Volta 1 entrada no histórico e executa o callback — usado para descartar
+// telas intermediárias (ex: prePaywall) antes de navegar para o destino.
+function _navGoBack(callback) {
+  const onPop = () => {
+    window.removeEventListener('popstate', onPop);
+    _isPopState = false;
+    if (callback) callback();
+  };
+  _isPopState = true;
+  window.addEventListener('popstate', onPop);
+  history.go(-1);
+}
+
 // Limpa as entradas do fluxo atual da pilha de histórico, substitui pelo
 // newScreenName e executa o callback — usado ao reiniciar um fluxo.
 function _navResetFlow(newScreenName, callback) {
@@ -64,7 +77,7 @@ window.addEventListener('popstate', (e) => {
   } else if (s === 'editScreen') {
     renderEditScreen();
   } else if (s === 'prePaywall') {
-    showPrePaywall();
+    if (isPremium()) { renderResult(); } else { showPrePaywall(); }
   } else if (s === 'result') {
     renderResult();
   } else if (s === 'resultQuick') {

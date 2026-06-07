@@ -5,12 +5,20 @@ function showBottomNav() {
   const nav = document.getElementById('bottom-nav');
   if (nav) nav.style.display = '';
   document.body.classList.add('has-nav');
+
+  const header = document.getElementById('app-header');
+  if (header) header.style.display = '';
+  document.body.classList.add('has-header');
 }
 
 function hideBottomNav() {
   const nav = document.getElementById('bottom-nav');
   if (nav) nav.style.display = 'none';
   document.body.classList.remove('has-nav');
+
+  const header = document.getElementById('app-header');
+  if (header) header.style.display = 'none';
+  document.body.classList.remove('has-header');
 }
 
 function setNavActive(tab) {

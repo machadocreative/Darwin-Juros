@@ -129,7 +129,7 @@ function _showPremiumConfirmacao() {
         <div class="c-label">🔒 Valor total do imóvel bloqueado</div>
       </div>
       <div class="info-box" style="text-align: left; margin-bottom: 15px;">Esses campos não poderão mais ser editados. Para simular com outros valores, crie uma nova simulação.</div>
-      <button class="paywall-btn-pay" style="opacity:1;pointer-events:all" onclick="document.getElementById('premium-confirmacao-overlay').remove();renderResult()">Ver resultado →</button>
+      <button class="paywall-btn-pay" style="opacity:1;pointer-events:all" onclick="document.getElementById('premium-confirmacao-overlay').remove();_navGoBack(renderResult)">Ver resultado →</button>
     </div>
   `;
   document.body.appendChild(overlay);

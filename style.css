@@ -774,6 +774,7 @@ input.invalid {
     font-size: 13px;
     color: var(--muted);
     margin: 15px auto 5px 10px;
+    font-weight: 300;
 }
 
 .result-header p {
@@ -1157,7 +1158,7 @@ tr.sub-row.obra-done td {
     text-align: center;
 }
 
-.perc-input {
+input.perc-input {
     width: 100%;
     max-width: 80px;
     padding: 5px 6px;
@@ -1174,16 +1175,16 @@ tr.sub-row.obra-done td {
     box-sizing: border-box;
 }
 
-.perc-input:focus {
+input.perc-input:focus {
     border-color: var(--accent);
 }
 
-.perc-input.invalid {
+input.perc-input.invalid {
     border-color: var(--danger) !important;
     background: var(--danger-light);
 }
 
-.rv-input {
+input.rv-input {
     width: 100%;
     max-width: 120px;
     border: 1px solid var(--border);
@@ -1198,12 +1199,12 @@ tr.sub-row.obra-done td {
     box-sizing: border-box;
 }
 
-.rv-input:focus {
+input.rv-input:focus {
     outline: none;
     border-color: var(--accent);
 }
 
-.rv-input.invalid {
+input.rv-input.invalid {
     border-color: var(--danger);
 }
 
@@ -2116,6 +2117,7 @@ dl.slider-fin-dl dd.slider-result-val {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    padding-right: 30px;
     gap: 16px;
     margin-bottom: 10px;
 }
@@ -2160,11 +2162,10 @@ dl.slider-fin-dl dd.slider-result-val {
     background: var(--accent-light);
     border: 1px solid #B2D8C4;
     border-radius: var(--radius);
-    padding: 10px 14px;
+    padding: 10px 14px 22px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
 }
 
 .mini-soma-label {
@@ -3388,3 +3389,133 @@ dl.slider-fin-dl dd.slider-result-val {
 .tr-val.tr-zero {
     color: var(--muted);
 }
+
+/* ── HEADER COM AUTH ── */
+
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: 52px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.app-header-logo {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -.01em;
+}
+
+/* Quando o header estiver visível, empurra o conteúdo para baixo */
+body.has-header #root {
+  padding-top: 52px;
+}
+
+.auth-btn-wrap {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: opacity .15s;
+}
+
+.auth-btn-wrap:active { opacity: .7; }
+
+/* Avatar com foto do Google */
+.auth-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  display: block;
+}
+
+/* Avatar placeholder (inicial do nome) quando não há foto */
+.auth-avatar-placeholder {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Botão "Entrar" quando deslogado */
+.auth-login-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 6px 12px;
+  border: 1.5px solid var(--accent);
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* ── MINI-MENU DE LOGOUT ── */
+
+.auth-menu {
+  position: fixed;
+  top: 58px;
+  right: 12px;
+  z-index: 200;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  min-width: 220px;
+  overflow: hidden;
+  animation: fadeInDown .15s ease;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.auth-menu-user {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.auth-menu-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.auth-menu-email {
+  font-size: 12px;
+  color: var(--muted-dark);
+}
+
+.auth-menu-logout {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 13px 16px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.auth-menu-logout:active { background: var(--bg); }
