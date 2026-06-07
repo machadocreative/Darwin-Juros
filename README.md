@@ -56,8 +56,8 @@ darwin/
     │
     ├── modules/
     │   ├── calculator.js   ← Fórmula dos juros de obra, recálculo, premium
-    │   ├── onboarding.js   ← Simulação completa: 7 passos de coleta de dados
-    │   ├── quickSim.js     ← Simulação rápida: 7
+    │   ├── onboarding.js   ← Simulação completa: 6 passos de coleta de dados, 1 opcional0
+    │   ├── quickSim.js     ← Simulação rápida: 4 perguntas obrigatórias, 1 opcional
     │   ├── result.js       ← Telas de resultado, tabela e perfis
     │   └── paywall.js      ← Paywall + validação de cupom
     │
