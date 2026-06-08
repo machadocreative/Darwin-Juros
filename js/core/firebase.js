@@ -46,14 +46,15 @@ async function logoutGoogle() {
 // ── Observador de estado de autenticação ──
 function initAuth(onReady) {
   // Processa o retorno do redirect do Google se houver
-  getRedirectResult(_auth)
-    .then((result) => {
-      if (result?.user) {
-        window.currentUser = result.user;
-        requestAnimationFrame(() => _updateAuthUI());
-      }
-    })
-    .catch(() => {}); // silencioso — sem redirect anterior é normal retornar erro
+getRedirectResult(_auth)
+  .then((result) => {
+    console.log('Redirect result:', result);
+    if (result?.user) {
+      window.currentUser = result.user;
+      requestAnimationFrame(() => _updateAuthUI());
+    }
+  })
+  .catch((e) => { console.error('Redirect error:', e); });
 
   onAuthStateChanged(_auth, (user) => {
     window.currentUser = user || null;
@@ -114,8 +115,11 @@ function _showLogoutMenu() {
 }
 
 // Expõe para os outros módulos
-window.loginComGoogle  = loginComGoogle;
-window.logoutGoogle    = logoutGoogle;
-window.initAuth        = initAuth;
-window._updateAuthUI   = _updateAuthUI;
-window._db             = _db;
+window.loginComGoogle     = loginComGoogle;
+window.logoutGoogle       = logoutGoogle;
+window.initAuth           = initAuth;
+window._updateAuthUI      = _updateAuthUI;
+window._db                =  _db;
+window.getRedirectResult  = getRedirectResult;
+window._auth              = _auth;
+
