@@ -1,4 +1,7 @@
 // ── STORAGE ──
+// Leitura/escrita local (localStorage) com sincronização em nuvem (Firestore)
+// em segundo plano quando há usuário logado.
+
 function loadProfiles() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
   catch (e) { return []; }
@@ -26,17 +29,19 @@ function saveProfile(premiumFlag, toastMsg = 'Alterações salvas com sucesso!')
     meses: JSON.parse(JSON.stringify(meses)),
     savedAt: new Date().toISOString(),
     // preserva flag premium existente; aplica novo se passado
-    premium: premiumFlag === true ? true : (existente?.premium || false),
-    // preserva o ícone escolhido pelo usuário (default tratado na renderização)
-    icon: existente?.icon || undefined,
-    // preserva preferência de suprimir aviso de obra incompleta
-    skipAvisoObra: existente?.skipAvisoObra || undefined
+    premium: premiumFlag === true ? true : (existente?.premium || false)
   };
   const idx = profiles.findIndex(p => p.id === data.id);
   if (idx >= 0) profiles[idx] = data; else profiles.push(data);
   currentProfileId = data.id;
   saveProfiles(profiles);
   hasUnsavedChanges = false;
+
+  // Sincroniza com a nuvem em segundo plano (se logado)
+  if (window.currentUser && typeof window._cloudSaveProfile === 'function') {
+    window._cloudSaveProfile(data);
+  }
+
   showToast(toastMsg);
 }
 
@@ -45,6 +50,10 @@ function deleteProfile(id) {
   if (!card) return;
   if (card.dataset.confirming === '1') {
     saveProfiles(loadProfiles().filter(p => p.id !== id));
+    // Remove da nuvem também (se logado)
+    if (window.currentUser && typeof window._cloudDeleteProfile === 'function') {
+      window._cloudDeleteProfile(id);
+    }
     showToast('Perfil excluído.');
     renderProfiles();
     return;
@@ -65,22 +74,7 @@ function loadProfile(id) {
   if (!p) return;
   currentProfileId = p.id;
   Object.assign(form, p.form);
-  if (p.premium) {
-    // Premium: restaura tabela salva e reaplica TR do JSON nas parcelas não pagas.
-    meses = JSON.parse(JSON.stringify(p.meses));
-    const ini = parseMS(form.mesInicial);
-    meses.forEach((r, i) => {
-      if (r.pago) return;
-      const ym = addM(ini, i);
-      const trNova = getTRParaMes(ym);
-      if (r.tr !== trNova) { r.tr = trNova; recalcRow(i); }
-    });
-  } else {
-    // Free: recalcula a tabela completa — sem dados de usuário a preservar,
-    // garante que novos meses apareçam e TR fique atualizada.
-    meses = calcTable();
-  }
-
+  meses = JSON.parse(JSON.stringify(p.meses));
   screen = 'result';
   hasUnsavedChanges = false;
   renderResult();

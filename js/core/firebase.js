@@ -1,10 +1,11 @@
 // ── FIREBASE ──
-// Inicialização e funções de autenticação + Firestore
+// Inicialização, autenticação (Google) e sincronização de perfis (Firestore)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc }
+  from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAJInJODvitfOwyBlaj1P39wHCa0jzOvk8",
@@ -22,9 +23,10 @@ const _db    = getFirestore(_fbApp);
 // Usuário atual — acessível globalmente
 window.currentUser = null;
 
+// Evita sincronizações simultâneas
+let _syncing = false;
+
 // ── Login com Google (popup) ──
-// Captura o usuário DIRETAMENTE do retorno da promise — não depende
-// do onAuthStateChanged, que pode ser bloqueado por COOP no GitHub Pages.
 async function loginComGoogle() {
   try {
     const provider = new GoogleAuthProvider();
@@ -33,9 +35,9 @@ async function loginComGoogle() {
       window.currentUser = result.user;
       _updateAuthUI();
       showToast('Login realizado com sucesso!');
+      _syncProfiles(); // sincroniza perfis logo após login
     }
   } catch (e) {
-    // Usuário fechar o popup não é erro real — ignora silenciosamente
     if (e.code === 'auth/popup-closed-by-user' ||
         e.code === 'auth/cancelled-popup-request') {
       return;
@@ -54,6 +56,91 @@ async function logoutGoogle() {
     showToast('Você saiu da sua conta.');
   } catch (e) {
     showToast('Erro ao sair. Tente novamente.');
+  }
+}
+
+// ── FIRESTORE: caminho da subcoleção de perfis do usuário ──
+function _profilesCol() {
+  return collection(_db, 'users', window.currentUser.uid, 'profiles');
+}
+
+// ── FIRESTORE: salvar/atualizar um perfil na nuvem ──
+// Chamado em background pelo storage.js. Silencioso em caso de erro.
+async function _cloudSaveProfile(profile) {
+  if (!window.currentUser || !profile?.id) return;
+  try {
+    const ref = doc(_db, 'users', window.currentUser.uid, 'profiles', profile.id);
+    await setDoc(ref, profile);
+  } catch (e) {
+    console.error('Erro ao salvar perfil na nuvem:', e);
+  }
+}
+
+// ── FIRESTORE: excluir um perfil na nuvem ──
+async function _cloudDeleteProfile(id) {
+  if (!window.currentUser || !id) return;
+  try {
+    const ref = doc(_db, 'users', window.currentUser.uid, 'profiles', id);
+    await deleteDoc(ref);
+  } catch (e) {
+    console.error('Erro ao excluir perfil na nuvem:', e);
+  }
+}
+
+// ── FIRESTORE: carregar todos os perfis da nuvem ──
+async function _cloudLoadProfiles() {
+  if (!window.currentUser) return [];
+  try {
+    const snap = await getDocs(_profilesCol());
+    return snap.docs.map(d => d.data());
+  } catch (e) {
+    console.error('Erro ao carregar perfis da nuvem:', e);
+    return [];
+  }
+}
+
+// ── Merge: combina local + nuvem por id, mantendo a versão mais recente ──
+function _mergeProfiles(local, cloud) {
+  const map = new Map();
+  cloud.forEach(p => { if (p?.id) map.set(p.id, p); });
+  local.forEach(p => {
+    if (!p?.id) return;
+    const existente = map.get(p.id);
+    // Mantém o mais recente por savedAt; sem savedAt, o local prevalece
+    if (!existente ||
+        new Date(p.savedAt || 0) >= new Date(existente.savedAt || 0)) {
+      map.set(p.id, p);
+    }
+  });
+  return Array.from(map.values());
+}
+
+// ── Sincronização: sobe locais, baixa nuvem, faz merge, atualiza local ──
+async function _syncProfiles() {
+  if (!window.currentUser || _syncing) return;
+  if (typeof loadProfiles !== 'function' || typeof saveProfiles !== 'function') return;
+
+  _syncing = true;
+  try {
+    const local  = loadProfiles();
+    const cloud  = await _cloudLoadProfiles();
+    const merged = _mergeProfiles(local, cloud);
+
+    // Grava o conjunto consolidado na nuvem
+    for (const p of merged) { await _cloudSaveProfile(p); }
+
+    // Atualiza o espelho local
+    saveProfiles(merged);
+
+    // Re-renderiza se o usuário estiver vendo a tela de perfis
+    if (typeof screen !== 'undefined' && screen === 'perfis' &&
+        typeof renderProfiles === 'function') {
+      renderProfiles();
+    }
+  } catch (e) {
+    console.error('Erro na sincronização:', e);
+  } finally {
+    _syncing = false;
   }
 }
 
@@ -97,7 +184,6 @@ function _showLogoutMenu() {
     logoutGoogle();
   });
 
-  // Fecha ao clicar fora
   setTimeout(() => {
     document.addEventListener('click', function _close(e) {
       if (!menu.contains(e.target)) {
@@ -109,15 +195,22 @@ function _showLogoutMenu() {
 }
 
 // ── AUTO-INICIALIZAÇÃO ──
-// Observa o estado de autenticação assim que o módulo carrega.
-// Mantém o usuário logado entre sessões (persistência local do Firebase).
+// Observa o estado de autenticação. Dispara ao abrir o app já logado
+// (persistência) — sincroniza os perfis da nuvem para este dispositivo.
 onAuthStateChanged(_auth, (user) => {
+  const erajLogado = !!window.currentUser;
   window.currentUser = user || null;
   requestAnimationFrame(() => _updateAuthUI());
+  // Sincroniza ao detectar login na abertura do app (não logo após o popup,
+  // que já chama _syncProfiles diretamente)
+  if (user && !erajLogado) _syncProfiles();
 });
 
-// Expõe para os outros módulos
-window.loginComGoogle = loginComGoogle;
-window.logoutGoogle   = logoutGoogle;
-window._updateAuthUI  = _updateAuthUI;
-window._db            = _db;
+// Expõe para os outros módulos (storage.js é script clássico)
+window.loginComGoogle    = loginComGoogle;
+window.logoutGoogle      = logoutGoogle;
+window._updateAuthUI     = _updateAuthUI;
+window._cloudSaveProfile = _cloudSaveProfile;
+window._cloudDeleteProfile = _cloudDeleteProfile;
+window._syncProfiles     = _syncProfiles;
+window._db               = _db;
