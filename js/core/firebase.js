@@ -100,18 +100,37 @@ async function _cloudLoadProfiles() {
 }
 
 // ── Merge: combina local + nuvem por id, mantendo a versão mais recente ──
+// Regras de desempate:
+//   1. Vence a versão com savedAt mais recente.
+//   2. Em empate de savedAt, a NUVEM prevalece (fonte da verdade quando logado).
+//   3. Premium é direito adquirido: se qualquer versão for premium, o
+//      resultado mantém premium=true (um sync nunca "rebaixa" um perfil pago).
 function _mergeProfiles(local, cloud) {
   const map = new Map();
   cloud.forEach(p => { if (p?.id) map.set(p.id, p); });
+
   local.forEach(p => {
     if (!p?.id) return;
     const existente = map.get(p.id);
-    // Mantém o mais recente por savedAt; sem savedAt, o local prevalece
+    // Estritamente MAIOR: em empate, mantém a nuvem (já está no map)
     if (!existente ||
-        new Date(p.savedAt || 0) >= new Date(existente.savedAt || 0)) {
+        new Date(p.savedAt || 0) > new Date(existente.savedAt || 0)) {
       map.set(p.id, p);
     }
   });
+
+  // Blindagem do premium: percorre as duas fontes e garante que,
+  // se o perfil já foi premium em algum lugar, continua premium.
+  const garantePremium = (p) => {
+    if (!p?.id) return;
+    const atual = map.get(p.id);
+    if (atual && p.premium === true && atual.premium !== true) {
+      map.set(p.id, { ...atual, premium: true });
+    }
+  };
+  cloud.forEach(garantePremium);
+  local.forEach(garantePremium);
+
   return Array.from(map.values());
 }
 
@@ -132,10 +151,13 @@ async function _syncProfiles() {
     // Atualiza o espelho local
     saveProfiles(merged);
 
-    // Re-renderiza se o usuário estiver vendo a tela de perfis
-    if (typeof screen !== 'undefined' && screen === 'perfis' &&
-        typeof renderProfiles === 'function') {
-      renderProfiles();
+    // Re-renderiza a tela atual para refletir os perfis recém-sincronizados
+    if (typeof screen !== 'undefined') {
+      if (screen === 'perfis' && typeof renderProfiles === 'function') {
+        renderProfiles();
+      } else if ((screen === 'home' || screen === 'nova') && typeof renderHome === 'function') {
+        renderHome();
+      }
     }
   } catch (e) {
     console.error('Erro na sincronização:', e);

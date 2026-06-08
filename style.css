@@ -895,9 +895,8 @@ input.invalid {
 .table-wrap {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    /* sem overflow aqui: deixa o <thead> sticky funcionar na rolagem da página */
     margin-bottom: 8px;
+    /* sem overflow aqui: deixa o <thead> sticky funcionar na rolagem da página */
 }
 
 table {
@@ -1007,15 +1006,6 @@ tr.sub-row.obra-done td {
     color: var(--muted);
 }
 
-.td-toggle {
-    width: 30px;
-    padding-left: 0;
-    padding-right: 4px;
-}
-
-.td-toggle-th {
-    width: 30px;
-}
 
 .sub-toggle-btn {
     background: none;
@@ -1124,6 +1114,9 @@ tr.sub-row.obra-done td {
     white-space: nowrap;
     font-size: 13px;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 2px;
 }
 
 
@@ -2162,10 +2155,11 @@ dl.slider-fin-dl dd.slider-result-val {
     background: var(--accent-light);
     border: 1px solid #B2D8C4;
     border-radius: var(--radius);
-    padding: 10px 14px 22px;
+    padding: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 15px;
 }
 
 .mini-soma-label {
@@ -2177,7 +2171,7 @@ dl.slider-fin-dl dd.slider-result-val {
 }
 
 .mini-soma-val {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--accent);
 }

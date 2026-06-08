@@ -459,7 +459,7 @@ function toggleSubRow(i) {
 
 // ── HELPER: conteúdo da sub-row em 3 células separadas ──
 function _subRowCells(r) {
-  if (r.bloqueado) return `<td colspan="6" class="td-sub-c">—</td>`;
+  if (r.bloqueado) return `<td colspan="5" class="td-sub-c">—</td>`;
   const tm = parseFloat(form.taxaAnual) / 100 / 12;
   const totalPct = ((tm + r.tr) * 100).toFixed(4);
   const taxaStr = r.tr > 0
@@ -468,7 +468,7 @@ function _subRowCells(r) {
   // Célula única (colspan 6) com layout flex interno — desacopla das larguras
   // fixas das colunas da tabela principal, evitando sobreposição no mobile.
   return `
-    <td class="td-sub-c" colspan="6">
+    <td class="td-sub-c" colspan="5">
       <div class="sub-grid">
         <div class="sub-item td-sub-saldo" id="sub-saldo-${r._idx}">
           <span class="sub-label">Saldo devedor</span>
@@ -522,13 +522,12 @@ function _buildTableRows() {
     return `
     <tr id="row-${i}" class="main-row${cls ? ' ' + cls : ''}${alt}">
       <td class="num-col">${i + 1}</td>
-      <td class="td-mes">${escHtml(r.mes)}</td>
+      <td class="td-mes">
+        ${escHtml(r.mes)}${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">${isLastPago ? '▾' : '▸'}</button>`}
+      </td>
       <td class="td-right">${percCell}</td>
       <td id="rv-${i}" class="td-valor-principal">${valorCell}</td>
       <td class="td-center">${badge}</td>
-      <td class="td-center td-toggle">
-        ${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">${isLastPago ? '▾' : '▸'}</button>`}
-      </td>
     </tr>
     <tr id="subrow-${i}" class="sub-row${isLastPago ? '' : ' sub-row-hidden'}${cls ? ' ' + cls : ''}${alt}">
       ${_subRowCells(r)}
@@ -759,7 +758,6 @@ function buildTabela(inline = false) {
             <th class="th-right">% Obra</th>
             <th class="th-right">Valor</th>
             <th class="th-center">Pago?</th>
-            <th class="th-center td-toggle-th"></th>
           </tr>
         </thead>
         <tbody>${_buildTableRows()}</tbody>
