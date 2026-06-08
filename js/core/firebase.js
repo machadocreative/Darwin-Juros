@@ -22,11 +22,6 @@ const _db     = getFirestore(_fbApp);
 // Usuário atual — acessível globalmente
 window.currentUser = null;
 
-// ── Login com Google ──
-import { getAuth, GoogleAuthProvider, signInWithRedirect, 
-         getRedirectResult, signOut, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js"
-
 async function loginComGoogle() {
   try {
     const provider = new GoogleAuthProvider();
