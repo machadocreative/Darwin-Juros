@@ -50,8 +50,9 @@ async function logoutGoogle() {
 function initAuth(onReady) {
   onAuthStateChanged(_auth, (user) => {
     window.currentUser = user || null;
-    _updateAuthUI();
-    if (onReady) { onReady(); onReady = null; } // dispara só uma vez
+    if (onReady) { onReady(); onReady = null; }
+    // Aguarda o próximo frame para garantir que o DOM já foi renderizado
+    requestAnimationFrame(() => _updateAuthUI());
   });
 }
 
