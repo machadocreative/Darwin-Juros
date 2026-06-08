@@ -2,8 +2,7 @@
 // Inicialização e funções de autenticação + Firestore
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect,
-         getRedirectResult, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
@@ -23,13 +22,26 @@ const _db    = getFirestore(_fbApp);
 // Usuário atual — acessível globalmente
 window.currentUser = null;
 
-// ── Login com Google (redirect) ──
+// ── Login com Google (popup) ──
+// Captura o usuário DIRETAMENTE do retorno da promise — não depende
+// do onAuthStateChanged, que pode ser bloqueado por COOP no GitHub Pages.
 async function loginComGoogle() {
   try {
     const provider = new GoogleAuthProvider();
-    await signInWithRedirect(_auth, provider);
+    const result = await signInWithPopup(_auth, provider);
+    if (result?.user) {
+      window.currentUser = result.user;
+      _updateAuthUI();
+      showToast('Login realizado com sucesso!');
+    }
   } catch (e) {
-    console.error('Erro no redirect:', e);
+    // Usuário fechar o popup não é erro real — ignora silenciosamente
+    if (e.code === 'auth/popup-closed-by-user' ||
+        e.code === 'auth/cancelled-popup-request') {
+      return;
+    }
+    console.error('Erro no login:', e);
+    showToast('Não foi possível fazer login. Tente novamente.');
   }
 }
 
@@ -37,6 +49,8 @@ async function loginComGoogle() {
 async function logoutGoogle() {
   try {
     await signOut(_auth);
+    window.currentUser = null;
+    _updateAuthUI();
     showToast('Você saiu da sua conta.');
   } catch (e) {
     showToast('Erro ao sair. Tente novamente.');
@@ -95,18 +109,8 @@ function _showLogoutMenu() {
 }
 
 // ── AUTO-INICIALIZAÇÃO ──
-// Processa o retorno do redirect e observa o estado de autenticação
-// assim que o módulo carrega — sem depender do main.js.
-getRedirectResult(_auth)
-  .then((result) => {
-    console.log('Redirect result:', result);
-    if (result?.user) {
-      window.currentUser = result.user;
-      requestAnimationFrame(() => _updateAuthUI());
-    }
-  })
-  .catch((e) => { console.error('Redirect error:', e); });
-
+// Observa o estado de autenticação assim que o módulo carrega.
+// Mantém o usuário logado entre sessões (persistência local do Firebase).
 onAuthStateChanged(_auth, (user) => {
   window.currentUser = user || null;
   requestAnimationFrame(() => _updateAuthUI());
