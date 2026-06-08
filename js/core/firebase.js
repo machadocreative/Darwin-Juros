@@ -2,7 +2,8 @@
 // Inicialização e funções de autenticação + Firestore
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithRedirect,
+         getRedirectResult, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
@@ -15,13 +16,14 @@ const firebaseConfig = {
   appId: "1:961650011640:web:89b7e49724dadf598c7a0d"
 };
 
-const _fbApp  = initializeApp(firebaseConfig);
-const _auth   = getAuth(_fbApp);
-const _db     = getFirestore(_fbApp);
+const _fbApp = initializeApp(firebaseConfig);
+const _auth  = getAuth(_fbApp);
+const _db    = getFirestore(_fbApp);
 
 // Usuário atual — acessível globalmente
 window.currentUser = null;
 
+// ── Login com Google (redirect) ──
 async function loginComGoogle() {
   try {
     const provider = new GoogleAuthProvider();
@@ -42,19 +44,16 @@ async function logoutGoogle() {
 }
 
 // ── Observador de estado de autenticação ──
-// Chamado uma vez na inicialização (main.js).
-// Atualiza window.currentUser e o avatar no header sempre que o estado muda
-es
 function initAuth(onReady) {
   // Processa o retorno do redirect do Google se houver
-  etRedirectResult(_auth)
-  .then((result) => {
-    if (result?.user) {
-      window.currentUser = result.user;
-      requestAnimationFrame(() => _updateAuthUI());
-    }
-  })
-  .catch(() => {}); // silencioso — sem redirect anterior é normal retornar erro
+  getRedirectResult(_auth)
+    .then((result) => {
+      if (result?.user) {
+        window.currentUser = result.user;
+        requestAnimationFrame(() => _updateAuthUI());
+      }
+    })
+    .catch(() => {}); // silencioso — sem redirect anterior é normal retornar erro
 
   onAuthStateChanged(_auth, (user) => {
     window.currentUser = user || null;
@@ -63,7 +62,7 @@ function initAuth(onReady) {
   });
 }
 
-// ── Atualiza o avatar/botão no header ──
+// ── Atualiza o avatar/botão no greeting ──
 function _updateAuthUI() {
   const btn = document.getElementById('auth-btn');
   if (!btn) return;
@@ -83,7 +82,6 @@ function _updateAuthUI() {
 
 // ── Mini-menu de logout ──
 function _showLogoutMenu() {
-  // Remove menu anterior se existir
   document.getElementById('auth-menu')?.remove();
 
   const user = window.currentUser;
@@ -115,7 +113,7 @@ function _showLogoutMenu() {
   }, 0);
 }
 
-// Expõe para o HTML inline e para outros módulos
+// Expõe para os outros módulos
 window.loginComGoogle  = loginComGoogle;
 window.logoutGoogle    = logoutGoogle;
 window.initAuth        = initAuth;
