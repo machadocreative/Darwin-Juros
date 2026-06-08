@@ -738,14 +738,14 @@ function buildTabela(inline = false) {
       <div class="result-card" style="background-color: #ffeccf;">
         <div class="qrc-label">Falta pagar</div>
         <div class="qrc-val" id="res-total-falta">${fmtBRL(totalFalta)}</div>
-        <div class="qrc-note">Estimativa Total (−) Pago</div>
+        <div class="qrc-note">Estimativa (−) Pago</div>
       </div>
     </div>
 
-    <div class="result-card accent result-card-full large tabela-sticky-card" style="margin-top: 0; padding-bottom: 10px">>
+    <div class="result-card accent result-card-full large tabela-sticky-card" style="margin-top: 0; padding-bottom: 10px">
       <div class="card-large-left">
         <div class="qrc-label">Valor total estimado<br></div>
-        <div class="qrc-note">Contabiliza com previsões futuras sem Taxa Referencial</div>
+        <div class="qrc-note">Contabiliza valores futuros sem correção</div>
       </div>
       <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
     </div>

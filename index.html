@@ -47,6 +47,12 @@
   <div class="splash-sub">Calcule sua evolução antes do boleto chegar</div>
 </div>
 
+<!-- ── HEADER COM AVATAR ── -->
+<header class="app-header" id="app-header" style="display:none">
+  <div class="app-header-logo">🏗️ Darwin</div>
+  <button class="auth-btn-wrap" id="auth-btn" aria-label="Login ou perfil do usuário"></button>
+</header>
+
 <div id="root">
   <main id="main"></main>
 
@@ -87,8 +93,10 @@
   </div>
 </div>
 
-<!-- ── SCRIPTS: ordem importa (dependências primeiro) ── -->
+<!-- ── FIREBASE SDK (module) — deve vir antes dos scripts do app ── -->
+<script type="module" src="js/core/firebase.js"></script>
 
+<!-- ── SCRIPTS: ordem importa (dependências primeiro) ── -->
 
 <!-- 1. Estado e storage -->
 <script src="js/core/state.js"></script>
