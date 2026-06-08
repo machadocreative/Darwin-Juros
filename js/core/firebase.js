@@ -43,26 +43,6 @@ async function logoutGoogle() {
   }
 }
 
-// ── Observador de estado de autenticação ──
-function initAuth(onReady) {
-  // Processa o retorno do redirect do Google se houver
-// ── AUTO-INICIALIZAÇÃO ──
-// Processa redirect e observa autenticação assim que o módulo carrega
-getRedirectResult(_auth)
-  .then((result) => {
-    console.log('Redirect result:', result);
-    if (result?.user) {
-      window.currentUser = result.user;
-      requestAnimationFrame(() => _updateAuthUI());
-    }
-  })
-  .catch((e) => { console.error('Redirect error:', e); });
-
-onAuthStateChanged(_auth, (user) => {
-  window.currentUser = user || null;
-  requestAnimationFrame(() => _updateAuthUI());
-});
-
 // ── Atualiza o avatar/botão no greeting ──
 function _updateAuthUI() {
   const btn = document.getElementById('auth-btn');
@@ -113,6 +93,24 @@ function _showLogoutMenu() {
     });
   }, 0);
 }
+
+// ── AUTO-INICIALIZAÇÃO ──
+// Processa o retorno do redirect e observa o estado de autenticação
+// assim que o módulo carrega — sem depender do main.js.
+getRedirectResult(_auth)
+  .then((result) => {
+    console.log('Redirect result:', result);
+    if (result?.user) {
+      window.currentUser = result.user;
+      requestAnimationFrame(() => _updateAuthUI());
+    }
+  })
+  .catch((e) => { console.error('Redirect error:', e); });
+
+onAuthStateChanged(_auth, (user) => {
+  window.currentUser = user || null;
+  requestAnimationFrame(() => _updateAuthUI());
+});
 
 // Expõe para os outros módulos
 window.loginComGoogle = loginComGoogle;
