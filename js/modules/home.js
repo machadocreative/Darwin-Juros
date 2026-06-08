@@ -50,20 +50,11 @@ function renderHome() {
 
   setHtml(`
 
-  <div class="greeting">
-    <div class="greeting-row">
-      <div class="greeting-logo"><img src="assets/favicons/favicon-32x32.png" class="imgC"></div>
-      <div class="greeting-title">Darwin Juros</div>
-        <button class="auth-btn-wrap" id="auth-btn" aria-label="Login ou perfil do usuário"></button>
-    </div>
-    <div class="greeting-sub">Calcule sua evolução antes do boleto chegar</div>
-  </div>
-
-
     <div class="greeting">
       <div class="greeting-row">
-        <div class="greeting-logo"><img src="assets/favicons/android-chrome-192x192.png" alt="Darwin" class="greeting-logo-img"></div>
+        <div class="greeting-logo"><img src="assets/favicons/favicon-32x32.png" class="imgC"></div>
         <div class="greeting-title">Darwin Juros</div>
+          <button class="auth-btn-wrap" id="auth-btn" aria-label="Login ou perfil do usuário"></button>
       </div>
       <div class="greeting-sub">Calcule sua evolução antes do boleto chegar</div>
     </div>
