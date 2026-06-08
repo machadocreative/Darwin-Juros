@@ -23,14 +23,16 @@ const _db     = getFirestore(_fbApp);
 window.currentUser = null;
 
 // ── Login com Google ──
+import { getAuth, GoogleAuthProvider, signInWithRedirect, 
+         getRedirectResult, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js"
+
 async function loginComGoogle() {
   try {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(_auth, provider);
+    await signInWithRedirect(_auth, provider);
   } catch (e) {
-    if (e.code !== 'auth/popup-closed-by-user') {
-      showToast('Não foi possível fazer login. Tente novamente.');
-    }
+    showToast('Não foi possível fazer login. Tente novamente.');
   }
 }
 
@@ -48,10 +50,12 @@ async function logoutGoogle() {
 // Chamado uma vez na inicialização (main.js).
 // Atualiza window.currentUser e o avatar no header sempre que o estado muda.
 function initAuth(onReady) {
+  // Processa o retorno do redirect do Google se houver
+  getRedirectResult(_auth).catch(() => {});
+
   onAuthStateChanged(_auth, (user) => {
     window.currentUser = user || null;
     if (onReady) { onReady(); onReady = null; }
-    // Aguarda o próximo frame para garantir que o DOM já foi renderizado
     requestAnimationFrame(() => _updateAuthUI());
   });
 }
