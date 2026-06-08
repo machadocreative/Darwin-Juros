@@ -27,7 +27,7 @@ async function loginComGoogle() {
     const provider = new GoogleAuthProvider();
     await signInWithRedirect(_auth, provider);
   } catch (e) {
-    showToast('Não foi possível fazer login. Tente novamente.');
+    console.error('Erro no redirect:', e);
   }
 }
 
@@ -43,10 +43,18 @@ async function logoutGoogle() {
 
 // ── Observador de estado de autenticação ──
 // Chamado uma vez na inicialização (main.js).
-// Atualiza window.currentUser e o avatar no header sempre que o estado muda.
+// Atualiza window.currentUser e o avatar no header sempre que o estado muda
+es
 function initAuth(onReady) {
   // Processa o retorno do redirect do Google se houver
-  getRedirectResult(_auth).catch(() => {});
+  etRedirectResult(_auth)
+  .then((result) => {
+    if (result?.user) {
+      window.currentUser = result.user;
+      requestAnimationFrame(() => _updateAuthUI());
+    }
+  })
+  .catch(() => {}); // silencioso — sem redirect anterior é normal retornar erro
 
   onAuthStateChanged(_auth, (user) => {
     window.currentUser = user || null;
