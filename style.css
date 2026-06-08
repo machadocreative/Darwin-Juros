@@ -3390,34 +3390,7 @@ dl.slider-fin-dl dd.slider-result-val {
     color: var(--muted);
 }
 
-/* ── HEADER COM AUTH ── */
-
-.app-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  height: 52px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-}
-
-.app-header-logo {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: -.01em;
-}
-
-/* Quando o header estiver visível, empurra o conteúdo para baixo */
-body.has-header #root {
-  padding-top: 52px;
-}
+/* ── BOTÃO AUTH LOGIN NO GREETING ── */
 
 .auth-btn-wrap {
   background: none;
@@ -3463,7 +3436,7 @@ body.has-header #root {
 .auth-login-btn {
   font-size: 13px;
   font-weight: 600;
-  color: var(--accent);
+  color: #1A6B4A;
   border-radius: 20px;
   white-space: nowrap;
 }
@@ -3520,4 +3493,3 @@ body.has-header #root {
 
 .auth-menu-logout:active { background: var(--bg); }
 
-#app-header { display: flex !important; }

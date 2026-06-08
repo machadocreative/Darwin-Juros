@@ -5,20 +5,12 @@ function showBottomNav() {
   const nav = document.getElementById('bottom-nav');
   if (nav) nav.style.display = '';
   document.body.classList.add('has-nav');
-
-  const header = document.getElementById('app-header');
-  if (header) header.style.display = '';
-  document.body.classList.add('has-header');
 }
 
 function hideBottomNav() {
   const nav = document.getElementById('bottom-nav');
   if (nav) nav.style.display = 'none';
   document.body.classList.remove('has-nav');
-
-  const header = document.getElementById('app-header');
-  if (header) header.style.display = 'none';
-  document.body.classList.remove('has-header');
 }
 
 function setNavActive(tab) {
@@ -57,6 +49,17 @@ function renderHome() {
     </div>` : '';
 
   setHtml(`
+
+  <div class="greeting">
+    <div class="greeting-row">
+      <div class="greeting-logo"><img src="assets/favicons/favicon-32x32.png" class="imgC"></div>
+      <div class="greeting-title">Darwin Juros</div>
+        <button class="auth-btn-wrap" id="auth-btn" aria-label="Login ou perfil do usuário"></button>
+    </div>
+    <div class="greeting-sub">Calcule sua evolução antes do boleto chegar</div>
+  </div>
+
+
     <div class="greeting">
       <div class="greeting-row">
         <div class="greeting-logo"><img src="assets/favicons/android-chrome-192x192.png" alt="Darwin" class="greeting-logo-img"></div>
@@ -125,6 +128,8 @@ function renderHome() {
       </div>
     </div>
   `);
+
+  if (typeof _updateAuthUI === 'function') _updateAuthUI();
 }
 
 // ── TELA SOBRE ──
