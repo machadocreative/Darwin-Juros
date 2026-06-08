@@ -2623,6 +2623,7 @@ dl.slider-fin-dl dd.slider-result-val {
     align-items: center;
     gap: 10px;
     margin-bottom: 4px;
+    justify-content: space-between;
 }
 
 .greeting-logo {
