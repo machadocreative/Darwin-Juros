@@ -3421,14 +3421,16 @@ body.has-header #root {
 
 .auth-btn-wrap {
   background: none;
-  border: none;
-  padding: 4px;
+  border: 1.5px solid var(--accent);
+  padding: 6px 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 20px;
   transition: opacity .15s;
+  min-width: 60px;
+  min-height: 32px;
 }
 
 .auth-btn-wrap:active { opacity: .7; }
@@ -3462,8 +3464,6 @@ body.has-header #root {
   font-size: 13px;
   font-weight: 600;
   color: var(--accent);
-  padding: 6px 12px;
-  border: 1.5px solid var(--accent);
   border-radius: 20px;
   white-space: nowrap;
 }
