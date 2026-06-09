@@ -178,9 +178,11 @@ function _updateAuthUI() {
       ? `<img src="${photo}" alt="${name}" class="auth-avatar" title="${name}">`
       : `<div class="auth-avatar auth-avatar-placeholder" title="${name}">${name.charAt(0).toUpperCase()}</div>`;
     btn.onclick = () => _showLogoutMenu();
+    btn.classList.add('auth-btn-logado');
   } else {
     btn.innerHTML = `<span class="auth-login-btn">Entrar</span>`;
     btn.onclick = () => loginComGoogle();
+    btn.classList.remove('auth-btn-logado');
   }
 }
 

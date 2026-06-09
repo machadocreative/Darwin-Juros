@@ -112,6 +112,10 @@ function _confirmarExcluirPerfilModal(profileId) {
 
 function _executarExcluirPerfilModal(profileId) {
   saveProfiles(loadProfiles().filter(p => p.id !== profileId));
+  // Remove da nuvem também (se logado)
+  if (window.currentUser && typeof window._cloudDeleteProfile === 'function') {
+    window._cloudDeleteProfile(profileId);
+  }
   document.getElementById('modal-menu-perfil')?.remove();
   if (currentProfileId === profileId) currentProfileId = null;
   showToast('Perfil excluído.');
@@ -150,7 +154,12 @@ function deleteProfileFromResult() {
   if (!btn) return;
   if (btn.dataset.confirming === '1') {
     if (currentProfileId) {
-      saveProfiles(loadProfiles().filter(p => p.id !== currentProfileId));
+      const _idExcluir = currentProfileId;
+      saveProfiles(loadProfiles().filter(p => p.id !== _idExcluir));
+      // Remove da nuvem também (se logado)
+      if (window.currentUser && typeof window._cloudDeleteProfile === 'function') {
+        window._cloudDeleteProfile(_idExcluir);
+      }
       currentProfileId = null;
       showToast('Perfil excluído.');
     }
@@ -646,9 +655,7 @@ function _syncStickyOffsets() {
   const card = document.querySelector('.tabela-sticky-card') || document.querySelector('.mini-somatorio-sticky');
   if (!card) return;
   const rect = card.getBoundingClientRect();
-  const marginBottom = parseInt(getComputedStyle(card).marginBottom) || 0;
-  const h = Math.round(rect.height) + marginBottom;
-  document.documentElement.style.setProperty('--sticky-head-top', h + 'px');
+  document.documentElement.style.setProperty('--sticky-head-top', Math.round(rect.height) + 'px');
 }
 
 // Reposiciona ao girar/redimensionar a tela
@@ -732,7 +739,7 @@ function buildTabela(inline = false) {
       <div class="result-card">
         <div class="qrc-label">Total pago</div>
         <div class="qrc-val" id="res-total-real">${fmtBRL(totalReal)}</div>
-        <div class="qrc-note">Somatório dos valores abaixo</div>
+        <div class="qrc-note">Somatório da tabela</div>
       </div>
       <div class="result-card" style="background-color: #ffeccf;">
         <div class="qrc-label">Falta pagar</div>
@@ -744,7 +751,7 @@ function buildTabela(inline = false) {
     <div class="result-card accent result-card-full large tabela-sticky-card" style="margin-top: 0; padding-bottom: 10px">
       <div class="card-large-left">
         <div class="qrc-label">Valor total estimado<br></div>
-        <div class="qrc-note">Contabiliza valores futuros sem correção</div>
+        <div class="qrc-note">Contabilizando valores futuros sem a correção</div>
       </div>
       <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
     </div>
@@ -967,7 +974,7 @@ function renderSliderResult() {
             <div class="qrc-val">${fmtBRL(parcelaAtual - (trReais || 0))}</div>
             <div class="qrc-note">Juros + Encargos</div>
           </div>
-          <div class="result-card">
+          <div class="result-card${temTR ? '' : ' result-card-tr-indisponivel'}">
             <div class="qrc-label">Correção</div>
             <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
             <div class="qrc-note">${temTR ? 'TR ' + fmtPerc(trUltima * 100, 4) + ' · ' + mLabel(ymUltima) : ''}</div>
@@ -1003,12 +1010,12 @@ function renderSliderResult() {
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Valor Base<br><strong>Taxa Referencial = 0,0000%</strong></dt>
+          <dt class="slider-result-label">Valor Base previsto<br><strong>Taxa Referencial = 0,0000%</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
         ${temFin ? `
         <dl class="slider-result-row slider-fin-dl" id="slider-fin-dl">
-          <dt class="slider-result-label">Comparativo Evolução x Financiamento<br><strong>Sua 1ª parcela: ${fmtBRL(form.parcelaFinanciamento)}</strong></dt>
+          <dt class="slider-result-label">Evolução x Financiamento<br><strong>Sua 1ª parcela: ${fmtBRL(form.parcelaFinanciamento)}</strong></dt>
           <dd class="slider-result-val" id="slider-fin-bloco">—</dd>
         </dl>` : ''}
       </div>
@@ -1119,7 +1126,7 @@ function _initMiniTabelaMasks(countRows) {
       const badge = document.getElementById('mini-badge-' + i);
       if (badge) { badge.className = r.pago ? 'badge-pago' : 'badge-nao'; badge.textContent = r.pago ? '✓ Pago' : '—'; }
       const row = document.getElementById('mini-row-' + i);
-      if (row) row.className = r.pago ? 'pago-row' : '';
+      if (row) row.className = (r.pago ? 'pago-row' : '') + (i % 2 === 1 ? ' row-alt' : '');
       _updateMiniSomatorio(countRows);
     };
   }

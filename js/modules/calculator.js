@@ -163,7 +163,7 @@ function atualizaSlider() {
     const fin  = parseFloat(form.parcelaFinanciamento);
     const diff = fin - previsto;
     dl.className = 'slider-result-row slider-fin-dl' + (diff < 0 ? ' slider-fin-danger' : '');
-    bloco.innerHTML = (diff < 0 ? 'Supera em<br>' : 'Falta<br>') + fmtBRL(Math.abs(diff));
+    bloco.innerHTML = (diff < 0 ? 'Supera em<br>' : 'Faltando<br>') + fmtBRL(Math.abs(diff));
   }
 
   if (isPremium()) {

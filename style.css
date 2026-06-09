@@ -941,7 +941,7 @@ thead th:nth-child(5) { width: 64px; }
 thead th:nth-child(6) { width: 30px; }
 
 td {
-    padding: 8px 6px;
+    padding: 10px;
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
 }
@@ -976,13 +976,13 @@ tr.obra-done td input {
 
 /* Linhas duplas (main + sub) da tabela premium */
 tr.main-row td {
-    padding-top: 10px;
-    padding-bottom: 6px;
+    padding-top: 15px;
+    padding-bottom: 15px;
     border-bottom: none;
 }
 
 tr.sub-row td {
-    padding: 0 8px 7px;
+    padding: 10px;
     border-bottom: 1px solid var(--border);
 }
 
@@ -1160,12 +1160,12 @@ tr.main-row .td-mes {
 
 input.perc-input {
     width: 100%;
-    max-width: 80px;
+    max-width: 75px;
     padding: 5px 6px;
     border: 1px solid var(--border);
     border-radius: 5px;
     font-family: var(--font);
-    font-size: 13px;
+    font-size: 15px;
     text-align: right;
     background: var(--bg);
     outline: none;
@@ -1189,8 +1189,7 @@ input.rv-input {
     max-width: 120px;
     border: 1px solid var(--border);
     border-radius: 4px;
-    padding: 5px 6px;
-    font-size: 13px;
+    font-size: 15px;
     font-family: var(--font);
     text-align: right;
     background: var(--bg);
@@ -2091,6 +2090,10 @@ dl.slider-fin-dl dd.slider-result-val {
     gap: 4px;
 }
 
+.result-card.result-card-tr-indisponivel {
+    background: var(--border);
+}
+
 .result-card.accent {
     background: var(--accent-light);
     border-color: #B2D8C4;
@@ -2162,11 +2165,10 @@ dl.slider-fin-dl dd.slider-result-val {
     background: var(--accent-light);
     border: 1px solid #B2D8C4;
     border-radius: var(--radius);
-    padding: 14px;
+    padding: 10px 14px 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
 }
 
 .mini-soma-label {
@@ -2283,6 +2285,7 @@ dl.slider-fin-dl dd.slider-result-val {
 
 .quick-disclaimer-slider {
     background: #e5e5e5;
+    text-align: center;
     padding: 10px 14px;
     font-size: 13px;
     color: #6b6b6b;
@@ -3417,6 +3420,13 @@ dl.slider-fin-dl dd.slider-result-val {
 }
 
 .auth-btn-wrap:active { opacity: .7; }
+
+.auth-btn-wrap.auth-btn-logado {
+    border: none;
+    padding: 0;
+    min-width: unset;
+    min-height: unset;
+}
 
 /* Avatar com foto do Google */
 .auth-avatar {

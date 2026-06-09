@@ -320,12 +320,12 @@ function renderResultQuick() {
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Valor Base<br><strong>Taxa Referencial = 0,0000%</strong></dt>
+          <dt class="slider-result-label">Valor Base previsto<br><strong>Taxa Referencial = 0,0000%</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
         ${temFin ? `
         <dl class="slider-result-row slider-fin-dl" id="slider-fin-dl">
-          <dt class="slider-result-label">Comparativo Evolução x Financiamento<br><strong>Sua 1ª parcela: ${fmtBRL(formQuick.parcelaFinanciamento)}</strong></dt>
+          <dt class="slider-result-label">Evolução x Financiamento<br><strong>Sua 1ª parcela: ${fmtBRL(formQuick.parcelaFinanciamento)}</strong></dt>
           <dd class="slider-result-val" id="slider-fin-bloco">—</dd>
         </dl>` : ''}
       </div>
@@ -388,7 +388,7 @@ function atualizaSliderQuick() {
     const fin  = parseFloat(formQuick.parcelaFinanciamento);
     const diff = fin - previsto;
     dl.className = 'slider-result-row slider-fin-dl' + (diff < 0 ? ' slider-fin-danger' : '');
-    bloco.innerHTML = (diff < 0 ? 'Supera em<br>' : 'Falta<br>') + fmtBRL(Math.abs(diff));
+    bloco.innerHTML = (diff < 0 ? 'Supera em<br>' : 'Faltando<br>') + fmtBRL(Math.abs(diff));
   }
 }
 
