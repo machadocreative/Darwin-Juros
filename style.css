@@ -916,7 +916,8 @@ thead tr {
     top: var(--sticky-head-top, 0px);
     z-index: 5;
     background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    border: 1px solid var(--border);
+    margin-top: 15px;
 }
 
 th {
@@ -934,9 +935,9 @@ th {
    Ordem: # · Mês · % Obra · Valor · Pago? */
 .table-head-sticky th:nth-child(1), .table-wrap td:nth-child(1) { width: 24px; }
 .table-head-sticky th:nth-child(2), .table-wrap td:nth-child(2) { width: 90px; }
-.table-head-sticky th:nth-child(3), .table-wrap td:nth-child(3) { width: 23%; }
+.table-head-sticky th:nth-child(3), .table-wrap td:nth-child(3) { width: 18%; }
 .table-head-sticky th:nth-child(4), .table-wrap td:nth-child(4) { width: 27%; }
-.table-head-sticky th:nth-child(5), .table-wrap td:nth-child(5) { width: 64px; }
+.table-head-sticky th:nth-child(5), .table-wrap td:nth-child(5) { width: 80px; }
 
 td {
     padding: 10px;
@@ -1233,22 +1234,26 @@ input.rv-input.invalid {
     background: #E6F2EC;
     color: var(--accent);
     font-size: 11px;
-    padding: 3px 8px;
+    padding: 3px 6px;
     border-radius: 20px;
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
     border: none;
     font-family: var(--font);
+    display: inline-block;
+    max-width: 100%;
 }
 
 .badge-nao {
     background: #F2F2F0;
     color: var(--muted);
     font-size: 11px;
-    padding: 3px 8px;
+    padding: 3px 6px;
     border-radius: 20px;
     cursor: pointer;
+    display: inline-block;
+    max-width: 100%;
     white-space: nowrap;
     border: none;
     font-family: var(--font);
