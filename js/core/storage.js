@@ -19,6 +19,25 @@ function ultimaPercPaga(mesArr) {
   return null;
 }
 
+// Espelho dos valores efetivamente usados no cálculo.
+// NÃO altera os campos originais do form (preserva a distinção vazio vs. zero
+// de que taxaAdmValor() depende). Serve apenas para refletir na nuvem o valor
+// real aplicado — útil para conferência, backup e suporte ao usuário.
+function _valoresEfetivos() {
+  const ef = {
+    taxaAdm: taxaAdmValor(form.taxaAdm),       // vazio → 25; "0" digitado → 0
+    seguro: parseFloat(form.seguro || 0)        // vazio → 0
+  };
+  // percFinanciado é calculado em tempo real (não é mais input).
+  // Grava o valor real exibido, em vez do resíduo "80" do objeto form.
+  const vt = parseFloat(form.valorTotal || 0);
+  const vf = parseFloat(form.valorFinanciado || 0);
+  if (vt > 0 && vf > 0) {
+    ef.percFinanciado = parseFloat(((vf / vt) * 100).toFixed(2));
+  }
+  return ef;
+}
+
 function saveProfile(premiumFlag, toastMsg = 'Alterações salvas com sucesso!') {
   const profiles = loadProfiles();
   const existente = profiles.find(p => p.id === (currentProfileId || ''));
@@ -29,7 +48,9 @@ function saveProfile(premiumFlag, toastMsg = 'Alterações salvas com sucesso!')
     meses: JSON.parse(JSON.stringify(meses)),
     savedAt: new Date().toISOString(),
     // preserva flag premium existente; aplica novo se passado
-    premium: premiumFlag === true ? true : (existente?.premium || false)
+    premium: premiumFlag === true ? true : (existente?.premium || false),
+    // espelho dos valores reais usados no cálculo (apenas para a nuvem)
+    _efetivo: _valoresEfetivos()
   };
   const idx = profiles.findIndex(p => p.id === data.id);
   if (idx >= 0) profiles[idx] = data; else profiles.push(data);
