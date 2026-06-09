@@ -318,8 +318,7 @@ function refreshTable() {
           // Reaplica máscara + valor preservando o handler de commit
           attachMask('pi-' + i, 'perc2', r.perc, () => updatePercMask(i));
         } else {
-          percCell.innerHTML = `<input id="pi-${i}" class="perc-input" type="text" inputmode="numeric" placeholder="0,00%"
-            onblur="validatePercBlur(${i})">`;
+          percCell.innerHTML = `<div class="input-wrap perc-input-wrap"><input id="pi-${i}" class="perc-input has-suf" type="text" inputmode="numeric" placeholder="0,00" onblur="validatePercBlur(${i})"><span class="suf">%</span></div>`;
           setTimeout(() => attachMask('pi-' + i, 'perc2', r.perc, () => updatePercMask(i)), 0);
         }
       }
@@ -509,8 +508,7 @@ function _buildTableRows() {
       ? `<span class="perc-static">—</span>`
       : r.pago
         ? `<span class="perc-static">${fmtPerc(r.perc, 2)}</span>`
-        : `<input id="pi-${i}" class="perc-input" type="text" inputmode="numeric" placeholder="0,00%"
-             onblur="validatePercBlur(${i})">`;
+        : `<div class="input-wrap perc-input-wrap"><input id="pi-${i}" class="perc-input has-suf" type="text" inputmode="numeric" placeholder="0,00" onblur="validatePercBlur(${i})"><span class="suf">%</span></div>`;
 
     // O valor cobrado no mês i é calculado sobre a medição do mês i-1
     const prevAnterior = i > 0 ? meses[i - 1].previsto : null;
@@ -748,7 +746,7 @@ function buildTabela(inline = false) {
       </div>
     </div>
 
-    <div class="result-card accent result-card-full large tabela-sticky-card" style="margin-top: 0; padding-bottom: 10px">
+    <div class="result-card accent result-card-full large tabela-sticky-card" style="margin-top: 0">
       <div class="card-large-left">
         <div class="qrc-label">Valor total estimado<br></div>
         <div class="qrc-note">Contabilizando valores futuros sem a correção</div>
@@ -756,17 +754,17 @@ function buildTabela(inline = false) {
       <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
     </div>
 
+    <table class="table-head-sticky">
+      <thead><tr>
+        <th class="th-center">#</th>
+        <th>Mês</th>
+        <th class="th-right">% Obra</th>
+        <th class="th-right">Valor</th>
+        <th class="th-center">Pago?</th>
+      </tr></thead>
+    </table>
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
-            <th class="th-center">#</th>
-            <th>Mês</th>
-            <th class="th-right">% Obra</th>
-            <th class="th-right">Valor</th>
-            <th class="th-center">Pago?</th>
-          </tr>
-        </thead>
         <tbody>${_buildTableRows()}</tbody>
       </table>
 
@@ -1082,14 +1080,16 @@ function renderMiniTabela(replace = false) {
       <span class="mini-soma-label">Total pago</span>
       <span class="mini-soma-val" id="mini-total-val">${fmtBRL(0)}</span>
     </div>
+    <table class="table-head-sticky">
+      <thead><tr>
+        <th class="th-center">#</th>
+        <th>Mês</th>
+        <th class="th-right">Valor pago</th>
+        <th class="th-center">Pago?</th>
+      </tr></thead>
+    </table>
     <div class="table-wrap">
       <table>
-        <thead><tr>
-          <th class="th-center">#</th>
-          <th>Mês</th>
-          <th class="th-right">Valor pago</th>
-          <th class="th-center">Pago?</th>
-        </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>

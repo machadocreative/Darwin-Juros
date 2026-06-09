@@ -910,13 +910,13 @@ thead tr {
     background: var(--bg);
 }
 
-/* Cabeçalho da tabela fixo logo abaixo do card sticky ao rolar a página.
-   --sticky-head-top é a altura do card, definida em _syncStickyOffsets(). */
-thead th {
+/* Tabela de cabeçalho separada — sticky como bloco inteiro, sem gap transparente */
+.table-head-sticky {
     position: sticky;
     top: var(--sticky-head-top, 0px);
     z-index: 5;
     background: var(--bg);
+    border-bottom: 1px solid var(--border);
 }
 
 th {
@@ -927,18 +927,16 @@ th {
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .05em;
-    border-bottom: 1px solid var(--border);
     white-space: nowrap;
 }
 
-/* Larguras das colunas (table-layout: fixed) — evita sobreposição no mobile.
-   Ordem: # · Mês · % Obra · Valor · Pago? · toggle */
-thead th:nth-child(1) { width: 24px; }
-thead th:nth-child(2) { width: 58px; }
-thead th:nth-child(3) { width: 23%; }
-thead th:nth-child(4) { width: 27%; }
-thead th:nth-child(5) { width: 64px; }
-thead th:nth-child(6) { width: 30px; }
+/* Larguras das colunas (table-layout: fixed) — espelhadas na tabela de header e na de body.
+   Ordem: # · Mês · % Obra · Valor · Pago? */
+.table-head-sticky th:nth-child(1), .table-wrap td:nth-child(1) { width: 24px; }
+.table-head-sticky th:nth-child(2), .table-wrap td:nth-child(2) { width: 90px; }
+.table-head-sticky th:nth-child(3), .table-wrap td:nth-child(3) { width: 23%; }
+.table-head-sticky th:nth-child(4), .table-wrap td:nth-child(4) { width: 27%; }
+.table-head-sticky th:nth-child(5), .table-wrap td:nth-child(5) { width: 64px; }
 
 td {
     padding: 10px;
@@ -2121,7 +2119,7 @@ dl.slider-fin-dl dd.slider-result-val {
     align-items: center;
     justify-content: space-between;
     padding-right: 30px;
-    gap: 16px;
+    gap: 35px;
     margin-bottom: 10px;
 }
 
@@ -2165,7 +2163,7 @@ dl.slider-fin-dl dd.slider-result-val {
     background: var(--accent-light);
     border: 1px solid #B2D8C4;
     border-radius: var(--radius);
-    padding: 10px 14px 25px;
+    padding: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -2347,6 +2345,13 @@ dl.slider-fin-dl dd.slider-result-val {
 .quick-perc-input-wrap {
     flex: 1;
     max-width: 120px;
+}
+
+.perc-input-wrap {
+    display: inline-flex;
+    position: relative;
+    width: 100%;
+    max-width: 80px;
 }
 
 /* ── BOTÃO DE AJUDA ── */
