@@ -1114,9 +1114,16 @@ tr.sub-row.obra-done td {
     white-space: nowrap;
     font-size: 13px;
     font-weight: 500;
+}
+
+tr.main-row .td-mes {
     display: flex;
     align-items: center;
-    gap: 2px;
+}
+
+.td-mes-label {
+    display: inline-block;
+    width: 68px;
 }
 
 

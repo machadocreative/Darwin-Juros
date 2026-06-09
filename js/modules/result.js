@@ -523,7 +523,7 @@ function _buildTableRows() {
     <tr id="row-${i}" class="main-row${cls ? ' ' + cls : ''}${alt}">
       <td class="num-col">${i + 1}</td>
       <td class="td-mes">
-        ${escHtml(r.mes)}${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">${isLastPago ? '▾' : '▸'}</button>`}
+        <span class="td-mes-label">${escHtml(r.mes)}</span>${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">${isLastPago ? '▾' : '▸'}</button>`}
       </td>
       <td class="td-right">${percCell}</td>
       <td id="rv-${i}" class="td-valor-principal">${valorCell}</td>
