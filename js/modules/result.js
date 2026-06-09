@@ -749,7 +749,7 @@ function buildTabela(inline = false) {
     <div class="result-card accent result-card-full large tabela-sticky-card" style="margin-top: 0">
       <div class="card-large-left">
         <div class="qrc-label">Valor total estimado<br></div>
-        <div class="qrc-note">Contabilizando valores futuros sem a correção</div>
+        <div class="qrc-note">Contabilizando com valores futuros sem a correção</div>
       </div>
       <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
     </div>
@@ -861,22 +861,22 @@ function renderResult() {
       <div class="result-card">
         <div class="qrc-label">Parcela média estimada</div>
         <div class="qrc-val">${fmtBRL(media)}</div>
+        <div class="qrc-note">Valor para ${ativas.length} meses</div>
       </div>
     </div>
 
     <div class="result-card result-card-full large" style="margin-top:10px">
       <div class="card-large-left">
-        <div class="qrc-label">Total estimado de juros de obra
-          ${premium && proporcaoReal > 0 ? `<span class="qrc-badge-refinado">✦ ${Math.round(proporcaoReal * 100)}% refinado</span>` : ''}
-        </div>
+        <div class="qrc-label">Valor total estimado</div>
         <div class="qrc-note">${premium && proporcaoReal === 0
-          ? 'Estimativa — refine inserindo os valores reais no Histórico de Prestações'
+          ? 'Utilize a função Histórico de Prestações para refinar o cálculo'
           : premium
-            ? 'Combinando valores reais com estimativas futuras'
-            : 'Estimativa — TR futura, % de obra e prazo podem variar'
+            ? 'Contabilizando com valores futuros sem a correção'
+            : 'Correção monetária futura, evolução de obra e prazo de entrega alteram este valor'
         }</div>
       </div>
-      <div class="qrc-val">${fmtBRL(totalObra)}</div>
+      <div class="qrc-val">${fmtBRL(totalObra)}
+        ${premium && proporcaoReal > 0 ? `<span class="qrc-badge-refinado">✦ ${Math.round(proporcaoReal * 100)}% refinado</span>` : ''}</div>
     </div>
 
     <div class="feature-grid">
@@ -1008,7 +1008,7 @@ function renderSliderResult() {
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Valor Base previsto<br><strong>Taxa Referencial = 0,0000%</strong></dt>
+          <dt class="slider-result-label">Valor base previsto<br><strong>Taxa Referencial = 0,0000%</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
         ${temFin ? `

@@ -773,7 +773,7 @@ input.invalid {
 .result-header h4 {
     font-size: 13px;
     color: var(--muted);
-    margin: 15px auto 5px 10px;
+    margin: 15px;
     font-weight: 300;
 }
 
@@ -1186,6 +1186,7 @@ input.perc-input.invalid {
 input.rv-input {
     width: 100%;
     max-width: 120px;
+    padding: 5px 6px;
     border: 1px solid var(--border);
     border-radius: 4px;
     font-size: 15px;
@@ -1200,6 +1201,11 @@ input.rv-input {
 input.rv-input:focus {
     outline: none;
     border-color: var(--accent);
+}
+
+tr.main-row input.perc-input,
+tr.main-row input.rv-input {
+    background: var(--bg);
 }
 
 input.rv-input.invalid {
@@ -1875,7 +1881,7 @@ dl.slider-fin-dl dd.slider-result-val {
     align-items: baseline;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 20px;
+    margin: 20px 0;
 }
 
 .paywall-amount {
@@ -1903,7 +1909,7 @@ dl.slider-fin-dl dd.slider-result-val {
     font-size: 15px;
     font-weight: 600;
     cursor: not-allowed;
-    margin-bottom: 10px;
+    margin: 15px 0;
     opacity: .6;
 }
 
@@ -2357,6 +2363,15 @@ dl.slider-fin-dl dd.slider-result-val {
     position: relative;
     width: 100%;
     max-width: 80px;
+}
+
+.perc-input-wrap input.has-suf {
+    padding-right: 22px;
+}
+
+.perc-input-wrap .suf {
+    right: 5px;
+    font-size: 12px;
 }
 
 /* ── BOTÃO DE AJUDA ── */

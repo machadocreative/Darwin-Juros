@@ -320,7 +320,7 @@ function renderResultQuick() {
           <dd class="slider-result-val" id="slider-saldo">—</dd>
         </dl>
         <dl class="slider-result-row highlight">
-          <dt class="slider-result-label">Valor Base previsto<br><strong>Taxa Referencial = 0,0000%</strong></dt>
+          <dt class="slider-result-label">Valor base previsto<br><strong>Taxa Referencial = 0,0000%</strong></dt>
           <dd class="slider-result-val accent" id="slider-val">—</dd>
         </dl>
         ${temFin ? `
