@@ -910,14 +910,17 @@ thead tr {
     background: var(--bg);
 }
 
-/* Tabela de cabeçalho separada — sticky como bloco inteiro, sem gap transparente */
+/* Tabela de cabeçalho separada — sticky como bloco inteiro, sem gap transparente.
+   O box-shadow negativo acima preenche o gap de 8px com a cor de fundo da página,
+   cobrindo qualquer conteúdo que role por trás quando colado ao topo. */
 .table-head-sticky {
     position: sticky;
     top: var(--sticky-head-top, 0px);
     z-index: 5;
     background: var(--bg);
     border: 1px solid var(--border);
-    margin-top: 15px;
+    margin-top: 8px;
+    box-shadow: 0 -8px 0 var(--bg);
 }
 
 th {
@@ -1185,7 +1188,7 @@ input.perc-input.invalid {
 
 input.rv-input {
     width: 100%;
-    max-width: 120px;
+    max-width: 140px;
     padding: 5px 6px;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -1203,9 +1206,12 @@ input.rv-input:focus {
     border-color: var(--accent);
 }
 
-tr.main-row input.perc-input,
-tr.main-row input.rv-input {
-    background: var(--bg);
+/* Nas linhas coloridas os inputs herdam o background da célula,
+   evitando o quadrado branco/bege sobre fundos verdes e cinzas */
+tr.pago-row input,
+tr.row-alt input,
+tr.obra-done input {
+    background: inherit;
 }
 
 input.rv-input.invalid {
@@ -1785,8 +1791,8 @@ dl.slider-fin-dl dd.slider-result-val {
 }
 
 .feat-badge-premium {
-    background: var(--accent-light);
-    color: var(--accent);
+    background: var(--blue-bg);
+    color: var(--blue);
 }
 
 .free-preview-cta {
@@ -2116,9 +2122,9 @@ dl.slider-fin-dl dd.slider-result-val {
     right: 8px;
     font-size: 9px;
     font-weight: 700;
-    color: var(--accent);
-    background: #fff;
-    border: 1px solid var(--accent);
+    color: var(--blue);
+    background: var(--blue-bg);
+    border: 1px solid #B2D4E8;
     border-radius: 20px;
     padding: 1px 7px;
     letter-spacing: .03em;
@@ -2161,7 +2167,6 @@ dl.slider-fin-dl dd.slider-result-val {
     position: sticky;
     top: 0;
     z-index: 8;
-    /* fundo sólido para cobrir as linhas que passam por trás */
     background: var(--accent-light);
 }
 
@@ -2242,9 +2247,9 @@ dl.slider-fin-dl dd.slider-result-val {
     display: inline-block;
     font-size: 11px;
     font-weight: 600;
-    color: var(--accent);
-    background: var(--accent-light, #e8f5ee);
-    border: 1px solid var(--accent);
+    color: var(--blue);
+    background: var(--blue-bg);
+    border: 1px solid #B2D4E8;
     border-radius: 20px;
     padding: 1px 8px;
     margin-left: 6px;
@@ -2913,8 +2918,8 @@ dl.slider-fin-dl dd.slider-result-val {
 }
 
 .fc-badge.premium {
-    background: #FAF0E6;
-    color: #B8730B;
+    background: var(--blue-bg);
+    color: var(--blue);
 }
 
 .fc-badge.new {
@@ -2987,7 +2992,7 @@ dl.slider-fin-dl dd.slider-result-val {
 .pc-premium-stripe {
     width: 36px;
     align-self: stretch;
-    background: #C9A227;
+    background: var(--blue);
     color: #fff;
     font-size: 16px;
     display: flex;

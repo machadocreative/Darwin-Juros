@@ -9,7 +9,7 @@ function showPrePaywall() {
 
   setHtml(`
     <div class="result-header" style="margin-bottom:20px">
-      <h2>✦ Ativar Simulação Premium</h2>
+      <h2>💎 Ativar Simulação Premium</h2>
       <p>Para o desbloqueio da versão premium, os campos abaixo precisam ser bloqueados para garantir a precisão das funcionalidades e cálculos da evolução de obra.</p><br>
       <p>Caso deseje alterar a <strong>data de início</strong> dos pagamentos ou o <strong>valor total do imóvel</strong>, realize esta correção e confirme antes de prosseguir.</p>
     </div>

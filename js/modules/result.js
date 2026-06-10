@@ -26,7 +26,7 @@ function renderProfiles() {
              </div>`
           : '';
         const premiumBadge = p.premium
-          ? `<div class="pc-premium-stripe">✦</div>`
+          ? `<div class="pc-premium-stripe">💎</div>`
           : '';
         return `
         <div class="profile-card${p.premium ? ' profile-card-premium' : ''}" id="pc-${p.id}"
@@ -653,7 +653,8 @@ function _syncStickyOffsets() {
   const card = document.querySelector('.tabela-sticky-card') || document.querySelector('.mini-somatorio-sticky');
   if (!card) return;
   const rect = card.getBoundingClientRect();
-  document.documentElement.style.setProperty('--sticky-head-top', Math.round(rect.height) + 'px');
+  // +8 corresponde ao margin-top do .table-head-sticky (gap visual entre card e header)
+  document.documentElement.style.setProperty('--sticky-head-top', (Math.round(rect.height) + 8) + 'px');
 }
 
 // Reposiciona ao girar/redimensionar a tela
@@ -818,7 +819,7 @@ function renderResult() {
   const temPago   = pagas.length > 0;
   const temReal   = pagas.some(r => r.valorReal);
 
-  const notaPago = !temPago ? 'Nenhum registro' : '';
+  const notaPago = !temPago ? 'Nenhum registro' : `${pagas.length}/${ativas.length} Prestações pagas`;
 
   // Estimativa total da obra: usa real onde disponível, previsto para o restante
   const totalObra = ativas.reduce((s, r) => s + (r.valorReal || r.previsto), 0);
@@ -839,13 +840,13 @@ function renderResult() {
     ${premium ? `
     <div class="result-grid">
       <div class="result-card accent">
-        <span class="qrc-premium-tag">✦</span>
+        <span class="qrc-premium-tag">💎</span>
         <div class="qrc-label">Saldo devedor atual</div>
         <div class="qrc-val" id="res-saldo-atual">${fmtBRL(saldoAtual)}</div>
         <div class="qrc-note">${temPago ? 'de ' + fmtBRL(parseFloat(form.valorFinanciado)) : 'Nenhuma parcela paga'}</div>
       </div>
       <div class="result-card">
-        <span class="qrc-premium-tag">✦</span>
+        <span class="qrc-premium-tag">💎</span>
         <div class="qrc-label">Evolução de Obra</div>
         <div class="qrc-val">${fmtPerc(percUltimaMedicao, 2)}</div>
         <div class="qrc-note">${temPago ? 'Medição: ' + mesUltimaMedicao : 'Nenhuma parcela paga'}</div>
@@ -875,20 +876,20 @@ function renderResult() {
             : 'Correção monetária futura, evolução de obra e prazo de entrega alteram este valor'
         }</div>
       </div>
-      <div class="qrc-val">${fmtBRL(totalObra)}
-        ${premium && proporcaoReal > 0 ? `<span class="qrc-badge-refinado">✦ ${Math.round(proporcaoReal * 100)}% refinado</span>` : ''}</div>
+      <div class="qrc-val">${fmtBRL(totalObra)}</div>
+      ${premium && proporcaoReal > 0 ? `<span class="qrc-badge-refinado">💎 ${Math.round(proporcaoReal * 100)}% refinado</span>` : ''}
     </div>
 
     <div class="feature-grid">
       <button class="feat-btn" onclick="renderSliderResult()">
         <span class="feat-icon">📊</span>
         <span class="feat-label">Visualizador de Prestações</span>
-        ${premium ? '<span class="feat-badge feat-badge-premium">✦ Premium</span>' : ''}
+        ${premium ? '<span class="feat-badge feat-badge-premium">💎 Premium</span>' : ''}
       </button>
       <button class="feat-btn" onclick="${premium ? 'renderTabela()' : 'renderMiniTabela()'}">
         <span class="feat-icon">📋</span>
         <span class="feat-label">Histórico de Prestações</span>
-        ${premium ? '<span class="feat-badge feat-badge-premium">✦ Premium</span>' : ''}
+        ${premium ? '<span class="feat-badge feat-badge-premium">💎 Premium</span>' : ''}
       </button>
       <button class="feat-btn feat-soon" disabled>
         <span class="feat-icon">📤</span>
