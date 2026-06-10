@@ -305,8 +305,8 @@ function refreshTable() {
     const subrow = document.getElementById('subrow-' + i);
     if (subrow) subrow.className = subCls(r, i);
 
-    // % Obra
-    const percCell = row.cells[2];
+    // % Obra — cells[3] pois td-toggle ocupa cells[2]
+    const percCell = row.cells[3];
     if (percCell) {
       if (r.bloqueado) {
         percCell.innerHTML = `<span class="perc-static">—</span>`;
@@ -467,16 +467,14 @@ function toggleSubRow(i) {
 
 // ── HELPER: conteúdo da sub-row em 3 células separadas ──
 function _subRowCells(r) {
-  if (r.bloqueado) return `<td colspan="5" class="td-sub-c">—</td>`;
+  if (r.bloqueado) return `<td colspan="6" class="td-sub-c">—</td>`;
   const tm = parseFloat(form.taxaAnual) / 100 / 12;
   const totalPct = ((tm + r.tr) * 100).toFixed(4);
   const taxaStr = r.tr > 0
     ? `${totalPct}%`
     : `${(tm * 100).toFixed(4)}% <span class="sub-tr-ind">(TR indisponível)</span>`;
-  // Célula única (colspan 6) com layout flex interno — desacopla das larguras
-  // fixas das colunas da tabela principal, evitando sobreposição no mobile.
   return `
-    <td class="td-sub-c" colspan="5">
+    <td class="td-sub-c" colspan="6">
       <div class="sub-grid">
         <div class="sub-item td-sub-saldo" id="sub-saldo-${r._idx}">
           <span class="sub-label">Saldo devedor</span>
@@ -529,9 +527,8 @@ function _buildTableRows() {
     return `
     <tr id="row-${i}" class="main-row${cls ? ' ' + cls : ''}${alt}">
       <td class="num-col">${i + 1}</td>
-      <td class="td-mes">
-        <span class="td-mes-label">${escHtml(r.mes)}</span>${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">${isLastPago ? '▾' : '▸'}</button>`}
-      </td>
+      <td class="td-mes"><span class="td-mes-label">${escHtml(r.mes)}</span></td>
+      <td class="td-toggle">${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">${isLastPago ? '▾' : '▸'}</button>`}</td>
       <td class="td-right">${percCell}</td>
       <td id="rv-${i}" class="td-valor-principal">${valorCell}</td>
       <td class="td-center">${badge}</td>
@@ -759,6 +756,7 @@ function buildTabela(inline = false) {
       <thead><tr>
         <th class="th-center">#</th>
         <th>Mês</th>
+        <th></th>
         <th class="th-right">% Obra</th>
         <th class="th-right">Valor</th>
         <th class="th-center">Pago?</th>
@@ -876,8 +874,10 @@ function renderResult() {
             : 'Correção monetária futura, evolução de obra e prazo de entrega alteram este valor'
         }</div>
       </div>
-      <div class="qrc-val">${fmtBRL(totalObra)}</div>
-      ${premium && proporcaoReal > 0 ? `<span class="qrc-badge-refinado">💎 ${Math.round(proporcaoReal * 100)}% refinado</span>` : ''}
+      <div class="qrc-val-block">
+        <div class="qrc-val">${fmtBRL(totalObra)}</div>
+        ${premium && proporcaoReal > 0 ? `<span class="qrc-badge-refinado">💎 ${Math.round(proporcaoReal * 100)}% refinado</span>` : ''}
+      </div>
     </div>
 
     <div class="feature-grid">
