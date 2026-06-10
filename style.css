@@ -934,14 +934,19 @@ th {
     white-space: nowrap;
 }
 
-/* Larguras das colunas (table-layout: fixed) — espelhadas na tabela de header e na de body.
-   Ordem: # · Mês · Toggle · % Obra · Valor · Pago? */
-.table-head-sticky th:nth-child(1), .table-wrap td:nth-child(1) { width: 24px; }
-.table-head-sticky th:nth-child(2), .table-wrap td:nth-child(2) { width: 80px; }
-.table-head-sticky th:nth-child(3), .table-wrap td:nth-child(3) { width: 28px; }
-.table-head-sticky th:nth-child(4), .table-wrap td:nth-child(4) { width: 18%; }
-.table-head-sticky th:nth-child(5), .table-wrap td:nth-child(5) { width: 27%; }
-.table-head-sticky th:nth-child(6), .table-wrap td:nth-child(6) { width: 80px; }
+/* Larguras das colunas — premium (6 col: # · Mês · Toggle · % Obra · Valor · Pago?) */
+.table-head-sticky.table-premium th:nth-child(1), .table-wrap.table-premium td:nth-child(1) { width: 24px; }
+.table-head-sticky.table-premium th:nth-child(2), .table-wrap.table-premium td:nth-child(2) { width: 60px; }
+.table-head-sticky.table-premium th:nth-child(3), .table-wrap.table-premium td:nth-child(3) { width: 28px; }
+.table-head-sticky.table-premium th:nth-child(4), .table-wrap.table-premium td:nth-child(4) { width: 18%; }
+.table-head-sticky.table-premium th:nth-child(5), .table-wrap.table-premium td:nth-child(5) { width: 27%; }
+.table-head-sticky.table-premium th:nth-child(6), .table-wrap.table-premium td:nth-child(6) { width: 80px; }
+
+/* Larguras das colunas — mini (4 col: # · Mês · Valor · Pago?) */
+.table-head-sticky.table-mini th:nth-child(1), .table-wrap.table-mini td:nth-child(1) { width: 24px; }
+/* col 2 (Mês): sem largura fixa — ocupa o espaço restante */
+.table-head-sticky.table-mini th:nth-child(3), .table-wrap.table-mini td:nth-child(3) { width: 27%; }
+.table-head-sticky.table-mini th:nth-child(4), .table-wrap.table-mini td:nth-child(4) { width: 80px; }
 
 .td-toggle {
     padding: 0;
@@ -1164,7 +1169,7 @@ tr.sub-row.obra-done td {
 input.perc-input {
     width: 100%;
     max-width: 75px;
-    padding: 5px 6px;
+    padding: 10px 6px;
     border: 1px solid var(--border);
     border-radius: 5px;
     font-family: var(--font);
@@ -1190,7 +1195,7 @@ input.perc-input.invalid {
 input.rv-input {
     width: 100%;
     max-width: 140px;
-    padding: 5px 6px;
+    padding: 10px 6px;
     border: 1px solid var(--border);
     border-radius: 4px;
     font-size: 15px;
@@ -2208,12 +2213,39 @@ dl.slider-fin-dl dd.slider-result-val {
 }
 
 .mini-val-wrap {
-    max-width: 120px;
+    width: 100%;
+    max-width: 140px;
     margin-left: auto;
+}
+
+.mini-val-wrap .pre {
+    left: 10px;
+    font-size: 12px;
 }
 
 .mini-val-input {
     width: 100%;
+    padding: 10px 8px 10px 28px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 15px;
+    font-family: var(--font);
+    text-align: right;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color .15s;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.mini-val-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.mini-val-input:not(:placeholder-shown) {
+    font-weight: 700;
 }
 
 .qrc-label {

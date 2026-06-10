@@ -752,7 +752,7 @@ function buildTabela(inline = false) {
       <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
     </div>
 
-    <table class="table-head-sticky">
+    <table class="table-head-sticky table-premium">
       <thead><tr>
         <th class="th-center">#</th>
         <th>Mês</th>
@@ -762,7 +762,7 @@ function buildTabela(inline = false) {
         <th class="th-center">Pago?</th>
       </tr></thead>
     </table>
-    <div class="table-wrap">
+    <div class="table-wrap table-premium">
       <table>
         <tbody>${_buildTableRows()}</tbody>
       </table>
@@ -1050,7 +1050,7 @@ function renderMiniTabela(replace = false) {
   if (decorridos < 0) {
     setHtml(`
       <button class="breadcrumb-back" onclick="history.back()">← Voltar à tela de resultados</button>
-      <div class="screen-title">Histórico de Parcelas</div>
+      <div class="screen-title">Histórico de Prestações</div>
       <div class="info-box" style="margin-top:12px">A simulação ainda não iniciou. O histórico estará disponível a partir de ${mLabel(ymIni)}.</div>
     `);
     return;
@@ -1065,7 +1065,7 @@ function renderMiniTabela(replace = false) {
       <td class="td-right">
         <div class="input-wrap mini-val-wrap">
           <span class="pre" style="font-size:12px">R$</span>
-          <input type="text" id="mini-val-${i}" class="has-pre mini-val-input" inputmode="numeric" placeholder="—">
+          <input type="text" id="mini-val-${i}" class="mini-val-input" inputmode="numeric" placeholder="—">
         </div>
       </td>
       <td class="td-center">
@@ -1075,21 +1075,21 @@ function renderMiniTabela(replace = false) {
 
   setHtml(`
     <button class="breadcrumb-back" onclick="history.back()">← Voltar à tela de resultados</button>
-    <div class="screen-title">Histórico de Parcelas</div>
+    <div class="screen-title">Histórico de Prestações</div>
     ${totalSim < decorridos ? '<div class="info-box" style="margin-top:12px;margin-bottom:12px">⚠️ A data de entrega está no passado — ajuste-a em <strong>Editar</strong> se necessário.</div>' : ''}
     <div class="mini-somatorio-sticky" id="mini-somatorio">
       <span class="mini-soma-label">Total pago</span>
       <span class="mini-soma-val" id="mini-total-val">${fmtBRL(0)}</span>
     </div>
-    <table class="table-head-sticky">
+    <table class="table-head-sticky table-mini">
       <thead><tr>
         <th class="th-center">#</th>
         <th>Mês</th>
-        <th class="th-right">Valor pago</th>
+        <th class="th-right">Valor</th>
         <th class="th-center">Pago?</th>
       </tr></thead>
     </table>
-    <div class="table-wrap">
+    <div class="table-wrap table-mini">
       <table>
         <tbody>${rows}</tbody>
       </table>
