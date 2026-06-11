@@ -77,7 +77,7 @@ function showPaywall() {
       <div id="cupom-area" style="display: none;">
         <input type="text" id="cupom-input" placeholder="Digite seu cupom" maxlength="20"
           style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font); font-size: 14px; margin-top: 8px; text-transform: uppercase; letter-spacing: .08em; outline: none;">
-        <button class="paywall-btn-aplicar" onclick="aplicarCupom()">Aplicar cupom</button>
+        <button class="paywall-btn-aplicar" id="cupom-aplicar-btn" onclick="aplicarCupom()">Aplicar cupom</button>
       </div>
       <button class="paywall-btn-voltar" onclick="closePaywall()">← Voltar</button>
     </div>
@@ -95,19 +95,61 @@ function showCupomInput() {
   if (area) { area.style.display = 'block'; document.getElementById('cupom-input')?.focus(); }
 }
 
-function aplicarCupom() {
+async function aplicarCupom() {
   const el  = document.getElementById('cupom-input');
   if (!el) return;
   const val = (el.value || '').trim().toUpperCase();
-  if (validarCupom(val)) {
-    closePaywall();
-    ativarPremiumPerfil();
-    _showPremiumConfirmacao();
-  } else {
-    el.style.borderColor  = 'var(--danger)';
-    el.style.background   = 'var(--danger-light)';
-    showToast('⚠️ Cupom inválido. Tente novamente.');
+
+  const _recusar = (msg) => {
+    el.style.borderColor = 'var(--danger)';
+    el.style.background  = 'var(--danger-light)';
+    showToast(msg);
+  };
+
+  // 1) Validação offline do checksum — barra códigos inválidos sem tocar a rede
+  if (!validarCupom(val)) {
+    _recusar('⚠️ Cupom inválido. Tente novamente.');
+    return;
   }
+
+  // 2) O cupom fixo legado (DARWIN10) é reutilizável por design — não passa
+  //    pelo resgate único. Só os códigos gerados (DRW-...) são de uso único.
+  const ehCupomUnico = typeof CUPOM_VALIDO === 'undefined' || val !== CUPOM_VALIDO;
+
+  if (ehCupomUnico) {
+    // 3) Uso único exige login (para registrar o resgate na nuvem)
+    if (!window.currentUser) {
+      _recusar('⚠️ Entre na sua conta para resgatar o cupom.');
+      return;
+    }
+
+    // 4) Reserva atômica na nuvem: só ativa se o código for inédito
+    const btn = document.getElementById('cupom-aplicar-btn');
+    if (btn) { btn.disabled = true; btn.dataset._txt = btn.textContent; btn.textContent = 'Validando…'; }
+
+    let res = { ok: false, motivo: 'sem_rede' };
+    if (typeof window._resgatarCupom === 'function') {
+      res = await window._resgatarCupom(val, currentProfileId);
+    }
+
+    if (btn) { btn.disabled = false; btn.textContent = btn.dataset._txt || 'Aplicar cupom'; }
+
+    if (!res.ok) {
+      if (res.motivo === 'ja_usado') {
+        _recusar('⚠️ Este cupom já foi utilizado.');
+      } else if (res.motivo === 'sem_login') {
+        _recusar('⚠️ Entre na sua conta para resgatar o cupom.');
+      } else {
+        _recusar('⚠️ Sem conexão para validar o cupom. Tente novamente.');
+      }
+      return;
+    }
+  }
+
+  // 5) Tudo certo (legado válido OU cupom único recém-reservado) → libera
+  closePaywall();
+  ativarPremiumPerfil();
+  _showPremiumConfirmacao();
 }
 
 function _showPremiumConfirmacao() {

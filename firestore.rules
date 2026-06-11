@@ -1,0 +1,52 @@
+rules_version = '2';
+
+// ── Regras de segurança do Firestore — Darwin Juros ──
+// Cole este conteúdo em: Firebase Console → Firestore Database → Regras → Publicar.
+// Mantenha este arquivo no repo como fonte da verdade do que está publicado.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Lista de administradores. SUBSTITUA pelo seu UID do Firebase
+    // (Authentication → Users, ou veja no próprio gerador-cupons.html ao logar).
+    // Deve bater com ADMIN_UIDS no gerador.
+    function isAdmin() {
+      return request.auth != null
+             && request.auth.uid in ['COLE_SEU_UID_AQUI'];
+    }
+
+    // ── Dados do usuário ──
+    // Cada um só lê/escreve as próprias subcoleções:
+    //   • profiles/{id}  → perfis salvos
+    //   • excluidos/{id} → marcas de exclusão (tombstones) que propagam o
+    //     apagamento entre dispositivos
+    match /users/{uid}/{sub}/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid
+                         && (sub == 'profiles' || sub == 'excluidos');
+    }
+
+    // ── Cupons emitidos (catálogo / rastreio) ──
+    // Documento por código: cupons_emitidos/{CODIGO}. Só admin registra e lê.
+    match /cupons_emitidos/{codigo} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ── Cupons resgatados (uso único) ──
+    // Documento por código: cupons_resgatados/{CODIGO}.
+    // Defesa em profundidade — o resgate único não pode depender só do cliente:
+    //   • create: qualquer usuário logado pode resgatar, MAS o documento criado
+    //     precisa registrar o próprio uid (impede gravar resgate "em nome" de outro).
+    //   • read: só admin (para o painel de rastreio) — usuário comum não precisa
+    //     ler a lista de quem resgatou o quê.
+    //   • update/delete: PROIBIDOS para todos. Um código, uma vez resgatado,
+    //     nunca pode ser sobrescrito ou apagado pelo cliente — é isso que
+    //     garante o "uso único" de verdade (nem um cliente malicioso reabre).
+    match /cupons_resgatados/{codigo} {
+      allow read: if isAdmin();
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}

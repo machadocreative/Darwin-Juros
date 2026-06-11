@@ -3,11 +3,20 @@ function goProfiles() { renderProfiles(); }
 
 const PF_ICON_OPTIONS = ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏯','🏰','🗼','🛖','🏗️'];
 
-function renderProfiles() {
+// skipSync=true evita disparar nova sincronização — usado quando o próprio
+// _syncProfiles re-renderiza esta tela ao concluir (impede loop de sync).
+function renderProfiles(skipSync) {
   screen = 'profiles';
   _navPush('perfis');
   showBottomNav();
   setNavActive('perfis');
+
+  // Sincroniza ao abrir a aba Perfis (em background). É o que mantém os
+  // dispositivos convergindo sem depender de novo login. O _syncProfiles
+  // tem guarda contra reentrância e re-renderiza esta tela ao terminar.
+  if (!skipSync && window.currentUser && typeof window._syncProfiles === 'function') {
+    window._syncProfiles();
+  }
 
   const profiles = loadProfiles().sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
   const n = profiles.length;

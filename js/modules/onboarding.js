@@ -198,7 +198,10 @@ function confirmarEdicao() {
   }
   questions.nomePerfil.save();
 
-  // Persiste o ícone escolhido (premium) direto no perfil — saveProfile preserva via existente.icon
+  // Grava o ícone escolhido (premium) no perfil local. O saveProfile que ocorre
+  // em seguida reconstrói o objeto, mas agora preserva existente.icon — então
+  // este ícone sobrevive e sobe para a nuvem no save final. Sem aquela
+  // preservação, o ícone voltava ao padrão (bug corrigido em storage.js).
   if (premium && window._editMode?.iconSel && window._editMode.profileIdBackup) {
     const profiles = loadProfiles();
     const idx = profiles.findIndex(p => p.id === window._editMode.profileIdBackup);

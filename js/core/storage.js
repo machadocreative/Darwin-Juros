@@ -125,6 +125,11 @@ function saveProfile(premiumFlag, toastMsg = 'Alterações salvas com sucesso!')
     // espelho dos valores reais usados no cálculo (apenas para a nuvem)
     _efetivo: _valoresEfetivos()
   };
+  // Preserva o ícone do perfil. saveProfile reconstrói o objeto do zero; sem
+  // isto, qualquer save (ex.: após a tela de edição) apagaria o ícone
+  // escolhido, voltando ao padrão. Só inclui a chave se houver um ícone, para
+  // não gravar `icon: undefined`.
+  if (existente?.icon) data.icon = existente.icon;
   const idx = profiles.findIndex(p => p.id === data.id);
   if (idx >= 0) profiles[idx] = data; else profiles.push(data);
   currentProfileId = data.id;
