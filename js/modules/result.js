@@ -45,6 +45,14 @@ function renderProfiles() {
 
   const label = n === 1 ? '1 perfil salvo' : `${n} perfis salvos`;
 
+  // "Última sincronização" — só faz sentido para usuário logado (deslogado
+  // não há nuvem). O carimbo é gravado em firebase.js ao fim de cada sync.
+  let lastSync = '';
+  try { lastSync = localStorage.getItem('juros_obra_last_sync') || ''; } catch (e) {}
+  const syncBlock = (window.currentUser && lastSync)
+    ? `<div class="sync-status">☁️ Última sincronização: ${fmtDateTime(lastSync)}</div>`
+    : '';
+
   setHtml(`
     <div class="greeting">
       <div class="greeting-row">
@@ -55,6 +63,7 @@ function renderProfiles() {
     </div>
     ${n ? `<div class="section-label">${label}</div>` : ''}
     <div class="profile-list">${list}</div>
+    ${syncBlock}
     <button class="btn-add-profile" onclick="renderBifurcacao()">+ Nova simulação</button>
   `);
   profiles.forEach(p => _initLongPress('pc-' + p.id, p.id));
@@ -111,11 +120,8 @@ function _confirmarExcluirPerfilModal(profileId) {
 }
 
 function _executarExcluirPerfilModal(profileId) {
-  saveProfiles(loadProfiles().filter(p => p.id !== profileId));
-  // Remove da nuvem também (se logado)
-  if (window.currentUser && typeof window._cloudDeleteProfile === 'function') {
-    window._cloudDeleteProfile(profileId);
-  }
+  // removeProfile remove local, marca tombstone e exclui da nuvem
+  removeProfile(profileId);
   document.getElementById('modal-menu-perfil')?.remove();
   if (currentProfileId === profileId) currentProfileId = null;
   showToast('Perfil excluído.');
@@ -141,9 +147,8 @@ function abrirIconePerfil(profileId) {
 }
 
 function salvarIconePerfil(profileId, icon) {
-  const profiles = loadProfiles();
-  const idx = profiles.findIndex(p => p.id === profileId);
-  if (idx >= 0) { profiles[idx].icon = icon; saveProfiles(profiles); }
+  // patchProfile atualiza savedAt e sincroniza com a nuvem
+  patchProfile(profileId, p => { p.icon = icon; });
   document.getElementById('modal-icone-overlay')?.remove();
   renderProfiles();
 }
@@ -154,12 +159,8 @@ function deleteProfileFromResult() {
   if (!btn) return;
   if (btn.dataset.confirming === '1') {
     if (currentProfileId) {
-      const _idExcluir = currentProfileId;
-      saveProfiles(loadProfiles().filter(p => p.id !== _idExcluir));
-      // Remove da nuvem também (se logado)
-      if (window.currentUser && typeof window._cloudDeleteProfile === 'function') {
-        window._cloudDeleteProfile(_idExcluir);
-      }
+      // removeProfile remove local, marca tombstone e exclui da nuvem
+      removeProfile(currentProfileId);
       currentProfileId = null;
       showToast('Perfil excluído.');
     }

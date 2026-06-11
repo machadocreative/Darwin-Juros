@@ -2830,6 +2830,14 @@ dl.slider-fin-dl dd.slider-result-val {
     padding: 20px;
 }
 
+/* Carimbo discreto de "Última sincronização" na tela de Perfis */
+.sync-status {
+    margin: 14px 20px 4px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+}
+
 /* ── ÚLTIMO PERFIL ── */
 
 .last-profile {

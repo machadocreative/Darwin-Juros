@@ -264,13 +264,12 @@ function confirmarRenomearPerfil() {
   }
 
   if (targetId) {
-    const idx = profiles.findIndex(p => p.id === targetId);
-    if (idx >= 0) {
-      profiles[idx].nome = raw;
+    // patchProfile atualiza savedAt e sincroniza com a nuvem
+    patchProfile(targetId, p => {
+      p.nome = raw;
       // mantém o nome dentro do form salvo em sincronia (tela de edição lê daqui)
-      if (profiles[idx].form) profiles[idx].form.nomeSimulacao = raw;
-      saveProfiles(profiles);
-    }
+      if (p.form) p.form.nomeSimulacao = raw;
+    });
   }
 
   if (targetId === currentProfileId) {

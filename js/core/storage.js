@@ -11,6 +11,79 @@ function saveProfiles(p) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
 }
 
+// ── TOMBSTONES (marcas de exclusão) ──
+// Guarda os IDs de perfis excluídos para que o merge da nuvem não os
+// "ressuscite". Sem isso, um perfil ainda presente no localStorage de outro
+// dispositivo seria regravado na nuvem no próximo sync. Cada tombstone guarda
+// quando foi criado, permitindo expirá-los depois de um tempo.
+const TOMBSTONE_KEY = 'juros_obra_excluidos';
+const TOMBSTONE_TTL_MS = 1000 * 60 * 60 * 24 * 90; // 90 dias
+
+function loadTombstones() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(TOMBSTONE_KEY) || '[]');
+    // expira marcas antigas para a lista não crescer indefinidamente
+    const agora = Date.now();
+    const vivas = arr.filter(t => t && t.id && (agora - (t.at || 0)) < TOMBSTONE_TTL_MS);
+    if (vivas.length !== arr.length) {
+      localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(vivas));
+    }
+    return vivas;
+  } catch (e) { return []; }
+}
+
+function tombstoneIds() {
+  return new Set(loadTombstones().map(t => t.id));
+}
+
+// Marca um perfil como excluído. Idempotente.
+function addTombstone(id) {
+  if (!id) return;
+  const arr = loadTombstones();
+  if (!arr.some(t => t.id === id)) {
+    arr.push({ id, at: Date.now() });
+    localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(arr));
+  }
+}
+
+// Remove a marca de exclusão (ex.: o usuário recria/recebe o mesmo id de novo).
+function clearTombstone(id) {
+  if (!id) return;
+  const arr = loadTombstones().filter(t => t.id !== id);
+  localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(arr));
+}
+
+// ── PATCH de perfil (mutação parcial consistente) ──
+// Aplica uma alteração pontual (renomear, trocar ícone, ativar premium) de
+// forma consistente: atualiza savedAt (para vencer o desempate do merge na
+// nuvem), grava local E sincroniza em background. Centraliza o que antes
+// estava repetido — e propenso a esquecer o sync/savedAt — em cada função.
+function patchProfile(id, mutator) {
+  if (!id || typeof mutator !== 'function') return null;
+  const profiles = loadProfiles();
+  const idx = profiles.findIndex(p => p.id === id);
+  if (idx < 0) return null;
+
+  mutator(profiles[idx]);
+  profiles[idx].savedAt = new Date().toISOString();
+  saveProfiles(profiles);
+
+  if (window.currentUser && typeof window._cloudSaveProfile === 'function') {
+    window._cloudSaveProfile(profiles[idx]);
+  }
+  return profiles[idx];
+}
+
+// Exclusão consistente: remove local, marca tombstone e remove da nuvem.
+function removeProfile(id) {
+  if (!id) return;
+  saveProfiles(loadProfiles().filter(p => p.id !== id));
+  addTombstone(id);
+  if (window.currentUser && typeof window._cloudDeleteProfile === 'function') {
+    window._cloudDeleteProfile(id);
+  }
+}
+
 function ultimaPercPaga(mesArr) {
   // percorre de trás para frente e acha a última linha paga não bloqueada
   for (let i = mesArr.length - 1; i >= 0; i--) {
@@ -55,6 +128,9 @@ function saveProfile(premiumFlag, toastMsg = 'Alterações salvas com sucesso!')
   const idx = profiles.findIndex(p => p.id === data.id);
   if (idx >= 0) profiles[idx] = data; else profiles.push(data);
   currentProfileId = data.id;
+  // perfil (re)criado/salvo deixa de estar "excluído" — evita que um
+  // tombstone antigo do mesmo id o derrube no próximo sync
+  clearTombstone(data.id);
   saveProfiles(profiles);
   hasUnsavedChanges = false;
 
@@ -70,11 +146,7 @@ function deleteProfile(id) {
   const card = document.getElementById('pc-' + id);
   if (!card) return;
   if (card.dataset.confirming === '1') {
-    saveProfiles(loadProfiles().filter(p => p.id !== id));
-    // Remove da nuvem também (se logado)
-    if (window.currentUser && typeof window._cloudDeleteProfile === 'function') {
-      window._cloudDeleteProfile(id);
-    }
+    removeProfile(id);
     showToast('Perfil excluído.');
     renderProfiles();
     return;

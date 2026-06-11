@@ -27,6 +27,18 @@ function fmtDateRelative(iso) {
   return `há ${mo} meses`;
 }
 
+// Data + hora absolutas (pt-BR) — ex.: "11/06/2026, 14:32". Usado na
+// "Última sincronização". Retorna '' se a data for inválida/ausente.
+function fmtDateTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
 // Normaliza vírgula → ponto para parseFloat funcionar em ambos os locales
 function parseDecimal(val) { return parseFloat(String(val).replace(',', '.')); }
 

@@ -30,9 +30,9 @@ function ativarPremiumPerfil() {
     saveProfile(true);
     return;
   }
-  const profiles = loadProfiles();
-  const idx = profiles.findIndex(p => p.id === currentProfileId);
-  if (idx >= 0) { profiles[idx].premium = true; saveProfiles(profiles); }
+  // patchProfile atualiza savedAt e sincroniza com a nuvem — essencial para
+  // o premium não ser "rebaixado" no merge entre dispositivos
+  patchProfile(currentProfileId, p => { p.premium = true; });
 }
 
 // ── CÁLCULO ──

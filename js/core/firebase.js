@@ -1,5 +1,26 @@
 // ── FIREBASE ──
 // Inicialização, autenticação (Google) e sincronização de perfis (Firestore)
+//
+// ┌──────────────────────────────────────────────────────────────────────────┐
+// │ COMO OS DADOS SE COMPORTAM (modelo "local primeiro")                      │
+// │                                                                          │
+// │ • O app SEMPRE lê e escreve no armazenamento do aparelho (localStorage). │
+// │   É a "cópia de trabalho" — por isso o app funciona até sem internet.    │
+// │ • A nuvem (Firestore) é o BACKUP e o ponto de encontro entre aparelhos.  │
+// │   Ela guarda os perfis e os entrega para outro celular do mesmo usuário. │
+// │                                                                          │
+// │ Quando os dois se encontram (no login, ao abrir o app ou no F5), o app   │
+// │ junta os dois lados perfil por perfil, com estas regras de prioridade:   │
+// │   1. Vence a versão salva MAIS RECENTEMENTE (campo savedAt).             │
+// │   2. Empate de data → a NUVEM ganha.                                     │
+// │   3. Premium nunca cai: se foi premium em algum lado, continua premium.  │
+// │   4. Perfil apagado aqui continua apagado (marca de exclusão / tombstone │
+// │      em localStorage) — não "ressuscita" pela nuvem.                     │
+// │                                                                          │
+// │ Por isso toda edição local (renomear, ícone, premium) passa por          │
+// │ patchProfile (em storage.js): ele atualiza a data e sobe pra nuvem,      │
+// │ garantindo que a alteração recente vença na próxima junção.              │
+// └──────────────────────────────────────────────────────────────────────────┘
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
@@ -52,7 +73,20 @@ async function logoutGoogle() {
   try {
     await signOut(_auth);
     window.currentUser = null;
+    // Limpa o espelho local para não vazar os perfis desta conta para uma
+    // outra que logue no mesmo navegador (o sync regravaria os perfis antigos
+    // na nova conta). Os dados continuam seguros na nuvem e voltam no próximo
+    // login. Tombstones também são zerados — pertenciam à conta que saiu.
+    if (typeof saveProfiles === 'function') saveProfiles([]);
+    try { localStorage.removeItem('juros_obra_excluidos'); } catch (e) {}
+    try { localStorage.removeItem('juros_obra_last_sync'); } catch (e) {}
+    if (typeof currentProfileId !== 'undefined') currentProfileId = null;
     _updateAuthUI();
+    if (typeof renderProfiles === 'function' && screen === 'profiles') {
+      renderProfiles();
+    } else if (typeof renderHome === 'function' && (screen === 'home' || screen === 'nova')) {
+      renderHome();
+    }
     showToast('Você saiu da sua conta.');
   } catch (e) {
     showToast('Erro ao sair. Tente novamente.');
@@ -107,10 +141,13 @@ async function _cloudLoadProfiles() {
 //      resultado mantém premium=true (um sync nunca "rebaixa" um perfil pago).
 function _mergeProfiles(local, cloud) {
   const map = new Map();
-  cloud.forEach(p => { if (p?.id) map.set(p.id, p); });
+  // IDs marcados como excluídos localmente — não devem voltar pela nuvem
+  const excluidos = (typeof tombstoneIds === 'function') ? tombstoneIds() : new Set();
+
+  cloud.forEach(p => { if (p?.id && !excluidos.has(p.id)) map.set(p.id, p); });
 
   local.forEach(p => {
-    if (!p?.id) return;
+    if (!p?.id || excluidos.has(p.id)) return;
     const existente = map.get(p.id);
     // Estritamente MAIOR: em empate, mantém a nuvem (já está no map)
     if (!existente ||
@@ -122,7 +159,7 @@ function _mergeProfiles(local, cloud) {
   // Blindagem do premium: percorre as duas fontes e garante que,
   // se o perfil já foi premium em algum lugar, continua premium.
   const garantePremium = (p) => {
-    if (!p?.id) return;
+    if (!p?.id || excluidos.has(p.id)) return;
     const atual = map.get(p.id);
     if (atual && p.premium === true && atual.premium !== true) {
       map.set(p.id, { ...atual, premium: true });
@@ -145,15 +182,29 @@ async function _syncProfiles() {
     const cloud  = await _cloudLoadProfiles();
     const merged = _mergeProfiles(local, cloud);
 
+    // Propaga exclusões: se um perfil ainda está na nuvem mas foi marcado como
+    // excluído aqui (tombstone), apaga-o de vez. Cobre o caso em que outro
+    // dispositivo o regravou antes deste sincronizar.
+    const excluidos = (typeof tombstoneIds === 'function') ? tombstoneIds() : new Set();
+    if (excluidos.size) {
+      for (const p of cloud) {
+        if (p?.id && excluidos.has(p.id)) { await _cloudDeleteProfile(p.id); }
+      }
+    }
+
     // Grava o conjunto consolidado na nuvem
     for (const p of merged) { await _cloudSaveProfile(p); }
 
     // Atualiza o espelho local
     saveProfiles(merged);
 
+    // Carimba o horário desta sincronização bem-sucedida (exibido na tela
+    // de Perfis como "Última sincronização")
+    try { localStorage.setItem('juros_obra_last_sync', new Date().toISOString()); } catch (e) {}
+
     // Re-renderiza a tela atual para refletir os perfis recém-sincronizados
     if (typeof screen !== 'undefined') {
-      if (screen === 'perfis' && typeof renderProfiles === 'function') {
+      if (screen === 'profiles' && typeof renderProfiles === 'function') {
         renderProfiles();
       } else if ((screen === 'home' || screen === 'nova') && typeof renderHome === 'function') {
         renderHome();
