@@ -537,7 +537,7 @@ function _buildTableRows() {
     return `
     <tr id="row-${i}" class="main-row${cls ? ' ' + cls : ''}${alt}">
       <td class="num-col">${i + 1}</td>
-      <td class="td-mes"><span class="td-mes-label">${escHtml(r.mes)}</span></td>
+      <td class="td-mes"><span class="td-mes-label">${escHtml(mesAnoCurto(r.mes))}</span></td>
       <td class="td-toggle">${r.bloqueado ? '' : `<button id="sub-toggle-${i}" class="sub-toggle-btn" onclick="toggleSubRow(${i})">${isLastPago ? '▾' : '▸'}</button>`}</td>
       <td class="td-right">${percCell}</td>
       <td id="rv-${i}" class="td-valor-principal">${valorCell}</td>
@@ -1071,7 +1071,7 @@ function renderMiniTabela(replace = false) {
   const rows = ativas.slice(0, countRows).map((r, i) => `
     <tr id="mini-row-${i}" class="${r.pago ? 'pago-row' : ''}${i % 2 === 1 ? ' row-alt' : ''}">
       <td class="num-col">${i + 1}</td>
-      <td class="td-mes">${escHtml(r.mes)}</td>
+      <td class="td-mes">${escHtml(mesAnoCurto(r.mes))}</td>
       <td class="td-right">
         <div class="input-wrap mini-val-wrap">
           <span class="pre" style="font-size:12px">R$</span>
@@ -1125,6 +1125,10 @@ function _initMiniTabelaMasks(countRows) {
     el.oninput = () => {
       maskValue(el, 'brl');
       const v = maskRead(el);
+      // Estado da "última parcela paga" ANTES desta digitação — para detectar a
+      // transição e celebrar só no momento em que o usuário conclui o pagamento
+      // final (e não a cada tecla nem ao reabrir a tela já paga).
+      const ultimaPagaAntes = _miniUltimaPaga(countRows);
       if (v && v > 0) {
         r.pago      = true;
         r.valorReal = v;
@@ -1139,9 +1143,27 @@ function _initMiniTabelaMasks(countRows) {
       const row = document.getElementById('mini-row-' + i);
       if (row) row.className = (r.pago ? 'pago-row' : '') + (i % 2 === 1 ? ' row-alt' : '');
       _updateMiniSomatorio(countRows);
+      // Celebração free: a mini-tabela não tem % de obra, então o gatilho é o
+      // "mês final" (última parcela exibida) ficar pago. Dispara só na transição.
+      if (!ultimaPagaAntes && _miniUltimaPaga(countRows)) {
+        setTimeout(showCelebration, 300);
+      }
     };
   }
   _updateMiniSomatorio(countRows);
+}
+
+// Mini-tabela (free): a celebração deve disparar quando o MÊS FINAL da obra
+// está pago. A mini-tabela só exibe até o mês atual (countRows), então o mês
+// final só está presente quando countRows alcançou a última parcela ativa.
+// Retorna true apenas nesse caso E com a última parcela paga — assim não
+// celebra quando a entrega ainda está no futuro (última linha exibida ≠ final).
+function _miniUltimaPaga(countRows) {
+  const ativas = meses.filter(r => !r.bloqueado);
+  if (!ativas.length) return false;
+  // a última linha exibida precisa ser a última parcela ativa da simulação
+  if (countRows < ativas.length) return false;
+  return ativas[ativas.length - 1].pago === true;
 }
 
 function _updateMiniSomatorio(countRows) {

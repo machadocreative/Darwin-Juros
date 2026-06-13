@@ -3591,3 +3591,30 @@ dl.slider-fin-dl dd.slider-result-val {
 
 .auth-menu-logout:active { background: var(--bg); }
 
+
+/* ════════════════════════════════════════════════════════════════════════
+   CAMADA DESKTOP (horizontalização para PC)
+   Tudo acima é o layout retrato/mobile (default, intocado). As regras abaixo
+   só entram acima de 900px de largura — não afetam celular nem tablet em pé.
+   Adicione novas adaptações de desktop SEMPRE dentro deste bloco.
+   ════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 900px) {
+
+    /* Alarga o trilho central — no mobile permanece 660px */
+    main {
+        max-width: 1280px;
+    }
+
+    /* ── Tela de Perfis: lista vira grade responsiva ── */
+    .profile-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 14px;
+        align-items: start;
+    }
+
+    /* "Última sincronização" e "+ Nova simulação" acompanham a largura total */
+    .sync-status {
+        margin-top: 18px;
+    }
+}

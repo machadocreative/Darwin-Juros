@@ -1,6 +1,7 @@
 // ── FORMATAÇÃO ──
-function fmtBRL(v) { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 }); }
-function fmtPerc(v, d = 4) { return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }) + '%'; }
+// Guarda contra NaN/Infinity/undefined: cai para 0 em vez de renderizar "R$ NaN".
+function fmtBRL(v) { const n = Number(v); return (Number.isFinite(n) ? n : 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 }); }
+function fmtPerc(v, d = 4) { const n = Number(v); return (Number.isFinite(n) ? n : 0).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }) + '%'; }
 function sanitizeName(s) { return s.replace(/[<>"'`\\\/\{\}\[\]]/g, '').trim().slice(0, 30); }
 function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
@@ -9,13 +10,18 @@ function parseMS(s) { if (!s) return null; const [y, m] = s.split('-').map(Numbe
 function mBetween(a, b) { return (b.y - a.y) * 12 + (b.m - a.m); }
 function addM(base, n) { let m = base.m + n, y = base.y; while (m > 12) { m -= 12; y++; } return { y, m }; }
 function mLabel(ym) { return ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'][ym.m - 1] + '/' + ym.y; }
+// Encurta o ano de um label "Mês/AAAA" → "Mês/AA" (só exibição; não altera o
+// r.mes armazenado). Usado nas tabelas de histórico para ganhar espaço.
+function mesAnoCurto(mesStr) { return String(mesStr || '').replace(/\/(\d{2})(\d{2})$/, '/$2'); }
 function mLabelFull(s) {
   if (!s) return '';
   const ym = parseMS(s);
   return ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][ym.m - 1] + ' de ' + ym.y;
 }
 function fmtDateRelative(iso) {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  // Math.max(0, …): se o relógio de outro dispositivo estiver adiantado, o
+  // savedAt pode ficar no futuro — sem o clamp daria "há -2 dias".
+  const days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
   if (days === 0) return 'hoje';
   if (days === 1) return 'ontem';
   if (days < 7)  return `há ${days} dias`;
@@ -54,7 +60,6 @@ function taxaAdmValor(raw) {
 // ── MASKED INPUT ENGINE ──
 // Cada campo tem um "tipo de máscara":
 //   'brl'   → R$ 999.999,99   (centavos obrigatórios, 2 decimais)
-//   'perc1' → 999,9%          (está sendo utilizado?)
 //   'perc2' → 999,99%         (2 decimais — % de obra e % de financiamento)
 //   'perc4' → 99,9999%        (2 inteiros, 4 decimais — taxa de juros e tr)
 //   'int'   → número inteiro  (meses pagos no fluxo B)
@@ -67,12 +72,6 @@ function maskApply(rawDigits, tipo) {
     const reais = Math.floor(n / 100);
     const cents = n % 100;
     return reais.toLocaleString('pt-BR') + ',' + (cents < 10 ? '0' : '') + cents;
-  }
-  if (tipo === 'perc1') {
-    const n = parseInt(d, 10);
-    const inteiro = Math.floor(n / 10);
-    const dec = n % 10;
-    return inteiro.toLocaleString('pt-BR') + ',' + dec;
   }
   if (tipo === 'perc2') {
     const limited = d.slice(0, 5); // máx: 10000 -> 100,00
@@ -102,6 +101,12 @@ function maskValue(el, tipo) {
   if (tipo === 'perc4') {
     digits = digits.slice(0, 6); // 99,9999
   }
+  if (tipo === 'brl') {
+    digits = digits.slice(0, 12); // até R$ 9.999.999.999,99 — evita estouro de MAX_SAFE_INTEGER
+  }
+  if (tipo === 'int') {
+    digits = digits.slice(0, 9);  // até 999.999.999 — folga absurda, sem overflow
+  }
   el.value = maskApply(digits, tipo);
   el.dataset.rawDigits = digits;
 }
@@ -115,9 +120,6 @@ function maskInit(el, tipo, initialNumeric) {
   if (tipo === 'brl') {
     const cents = Math.round(num * 100);
     el.dataset.rawDigits = String(cents);
-  } else if (tipo === 'perc1') {
-    const tenths = Math.round(num * 10);
-    el.dataset.rawDigits = String(tenths);
   } else if (tipo === 'perc2') {
     const hundredths = Math.round(num * 100);
     el.dataset.rawDigits = String(hundredths);
@@ -136,7 +138,6 @@ function maskRead(el) {
   if (!digits) return NaN;
   const n = parseInt(digits, 10) || 0;
   if (tipo === 'brl')   return n / 100;
-  if (tipo === 'perc1') return n / 10;
   if (tipo === 'perc2') return n / 100;
   if (tipo === 'perc4') return n / 10000;
   if (tipo === 'int')   return n;

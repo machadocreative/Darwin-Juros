@@ -37,10 +37,13 @@ function renderHome() {
   const profiles = loadProfiles().sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
   const last = profiles[0];
 
+  // Ícone do perfil premium (escolhido pelo usuário); demais usam o padrão
+  const lastIcon = (last && last.premium && last.icon) ? last.icon : '🏠';
+
   const lastHtml = last ? `
     <div class="section-label">Continuar de onde parou</div>
     <div class="last-profile" onclick="loadProfile('${last.id}')">
-      <div class="lp-icon">🏠</div>
+      <div class="lp-icon">${lastIcon}</div>
       <div class="lp-content">
         <div class="lp-label">Último acesso · ${fmtDateRelative(last.savedAt)}</div>
         <div class="lp-name">${escHtml(last.nome)}</div>

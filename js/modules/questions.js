@@ -137,29 +137,29 @@ const questions = {
         `;
     },
     validate: () => {
-      const el = document.getElementById(QUESTION_IDS.seguro);
-      const v = maskRead(el);
-      if (!v || v <= 0) {
-        el?.classList.add('invalid');
-        const e = document.getElementById('err-seguro'); if (e) e.style.display = 'block';
-        return false;
-      }
+      // Seguro é OPCIONAL: vazio significa "sem seguro" = 0 (conforme o modelo
+      // _efetivo.seguro, que prevê 0 quando vazio). A máscara só aceita dígitos,
+      // então nunca há valor negativo/ inválido a barrar — sempre passa.
       return true;
     },
     save: () => {
       const elSeg = document.getElementById(QUESTION_IDS.seguro);
       const elAdm = document.getElementById(QUESTION_IDS.taxaAdm);
-      const seg = maskRead(elSeg);
+      const seg = maskRead(elSeg);             // NaN se vazio, 0 se zerado
       const admRaw = maskRead(elAdm);          // NaN se vazio, 0 se zerado
-      // Vazio → '' (cálculos aplicam default 25 via taxaAdmValor). Zero → 0 explícito.
+      // Vazio → '' (cálculos tratam '' || 0 = 0). Zero/positivo → valor explícito.
       const adm = isNaN(admRaw) ? '' : admRaw;
-      form.seguro = String(seg);
+      form.seguro = isNaN(seg) ? '' : String(seg);
       form.taxaAdm = String(adm);
-      formQuick.seguro = seg;
+      formQuick.seguro = isNaN(seg) ? 0 : seg;
       formQuick.taxaAdm = adm;
     },
     init: () => {
-      const initialSeg = form.seguro || formQuick.seguro;
+      // distingue '' (nunca preenchido → placeholder) de 0 (sem seguro → "0,00"),
+      // espelhando o tratamento de taxaAdm logo abaixo
+      const initialSeg = (form.seguro !== '' && form.seguro != null) ? form.seguro
+                       : (formQuick.seguro !== '' && formQuick.seguro != null) ? formQuick.seguro
+                       : '';
       // taxaAdm: usa o valor salvo (inclusive 0); se nunca preenchido, deixa vazio
       // para o placeholder "25,00" aparecer (o default 25 é aplicado nos cálculos).
       const savedAdm = (form.taxaAdm !== '' && form.taxaAdm != null) ? form.taxaAdm

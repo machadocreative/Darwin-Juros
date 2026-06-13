@@ -46,6 +46,10 @@ window.currentUser = null;
 
 // Evita sincronizações simultâneas
 let _syncing = false;
+// Throttle: ignora syncs não-forçados disparados em menos de 30s do último.
+// (Entrar/sair da aba Perfis repetidamente não dispara N syncs seguidos.)
+let _lastSyncAt = 0;
+const _SYNC_THROTTLE_MS = 30000;
 
 // ── Login com Google (popup) ──
 async function loginComGoogle() {
@@ -56,7 +60,7 @@ async function loginComGoogle() {
       window.currentUser = result.user;
       _updateAuthUI();
       showToast('Login realizado com sucesso!');
-      _syncProfiles(); // sincroniza perfis logo após login
+      _syncProfiles(true); // sincroniza perfis logo após login (força, ignora throttle)
     }
   } catch (e) {
     if (e.code === 'auth/popup-closed-by-user' ||
@@ -238,33 +242,43 @@ function _mergeProfiles(local, cloud, excluidos) {
 }
 
 // ── Sincronização: sobe locais, baixa nuvem, faz merge, atualiza local ──
-async function _syncProfiles() {
+// force=true ignora o throttle (usado no login e na detecção de sessão).
+async function _syncProfiles(force) {
   if (!window.currentUser || _syncing) return;
   if (typeof loadProfiles !== 'function' || typeof saveProfiles !== 'function') return;
+  if (!force && Date.now() - _lastSyncAt < _SYNC_THROTTLE_MS) return;
 
   _syncing = true;
   try {
-    const local  = loadProfiles();
-    const cloud  = await _cloudLoadProfiles();
+    const local = loadProfiles();
+    // leituras independentes em paralelo
+    const [cloud, tombCloud] = await Promise.all([
+      _cloudLoadProfiles(),
+      _cloudLoadTombstones()
+    ]);
 
     // Une as marcas de exclusão dos dois lados: o que foi apagado aqui (local)
     // E o que foi apagado em qualquer outro dispositivo (nuvem). É esta união
     // que faz a exclusão CONVERGIR entre dispositivos.
     const tombLocal = (typeof tombstoneIds === 'function') ? tombstoneIds() : new Set();
-    const tombCloud = await _cloudLoadTombstones();
     const excluidos = new Set([...tombLocal, ...tombCloud]);
 
     const merged = _mergeProfiles(local, cloud, excluidos);
 
+    // Índice da nuvem por id — usado para subir só o que mudou (incremental).
+    const cloudById = new Map(cloud.filter(p => p?.id).map(p => [p.id, p]));
+
     // Espelha as exclusões nos dois sentidos:
     //  (a) tombstone local que ainda não está na nuvem → sobe (avisa os outros)
+    const exclusaoOps = [];
     if (typeof addTombstone === 'function') {
       for (const id of tombLocal) {
         if (!tombCloud.has(id)) {
-          try {
-            const tref = doc(_db, 'users', window.currentUser.uid, 'excluidos', id);
-            await setDoc(tref, { excluidoEm: serverTimestamp() });
-          } catch (e) { console.error('Erro ao subir exclusão:', e); }
+          const tref = doc(_db, 'users', window.currentUser.uid, 'excluidos', id);
+          exclusaoOps.push(
+            setDoc(tref, { excluidoEm: serverTimestamp() })
+              .catch(e => console.error('Erro ao subir exclusão:', e))
+          );
         }
       }
       //  (b) tombstone que veio da nuvem → registra localmente (para este
@@ -276,11 +290,22 @@ async function _syncProfiles() {
 
     //  (c) perfil ainda presente na nuvem mas marcado como excluído → apaga
     for (const p of cloud) {
-      if (p?.id && excluidos.has(p.id)) { await _cloudDeleteProfile(p.id); }
+      if (p?.id && excluidos.has(p.id)) exclusaoOps.push(_cloudDeleteProfile(p.id));
     }
 
-    // Grava o conjunto consolidado na nuvem
-    for (const p of merged) { await _cloudSaveProfile(p); }
+    // Sobe na nuvem APENAS os perfis novos ou alterados (savedAt ou premium
+    // diferentes do que já está lá). Antes regravava todos a cada sync — agora
+    // que o sync roda ao abrir Perfis, isso evitava dezenas de writes por visita.
+    const uploadOps = [];
+    for (const p of merged) {
+      const cv = cloudById.get(p.id);
+      if (!cv || cv.savedAt !== p.savedAt || cv.premium !== p.premium) {
+        uploadOps.push(_cloudSaveProfile(p));
+      }
+    }
+
+    // Writes em paralelo (cada _cloud* já trata o próprio erro internamente)
+    await Promise.all([...exclusaoOps, ...uploadOps]);
 
     // Atualiza o espelho local
     saveProfiles(merged);
@@ -303,6 +328,8 @@ async function _syncProfiles() {
     console.error('Erro na sincronização:', e);
   } finally {
     _syncing = false;
+    // marca o fim desta tentativa (base do throttle dos próximos syncs)
+    _lastSyncAt = Date.now();
   }
 }
 
@@ -367,7 +394,7 @@ onAuthStateChanged(_auth, (user) => {
   requestAnimationFrame(() => _updateAuthUI());
   // Sincroniza ao detectar login na abertura do app (não logo após o popup,
   // que já chama _syncProfiles diretamente)
-  if (user && !erajLogado) _syncProfiles();
+  if (user && !erajLogado) _syncProfiles(true); // força no login detectado (abertura/F5)
 });
 
 // Expõe para os outros módulos (storage.js é script clássico)

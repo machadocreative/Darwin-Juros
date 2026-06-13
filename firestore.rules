@@ -35,8 +35,11 @@ service cloud.firestore {
     // ── Cupons resgatados (uso único) ──
     // Documento por código: cupons_resgatados/{CODIGO}.
     // Defesa em profundidade — o resgate único não pode depender só do cliente:
-    //   • create: qualquer usuário logado pode resgatar, MAS o documento criado
-    //     precisa registrar o próprio uid (impede gravar resgate "em nome" de outro).
+    //   • create: qualquer usuário logado pode resgatar, MAS:
+    //       - o id deve ter o formato DRW-XXXX-XXXX-CC com o alfabeto sem
+    //         ambíguos (sem I/O/0/1) — impede poluir a coleção com lixo;
+    //       - o documento só pode conter os campos previstos (hasOnly);
+    //       - uid gravado precisa ser o do próprio autor (não resgata por outro).
     //   • read: só admin (para o painel de rastreio) — usuário comum não precisa
     //     ler a lista de quem resgatou o quê.
     //   • update/delete: PROIBIDOS para todos. Um código, uma vez resgatado,
@@ -45,7 +48,9 @@ service cloud.firestore {
     match /cupons_resgatados/{codigo} {
       allow read: if isAdmin();
       allow create: if request.auth != null
-                    && request.resource.data.uid == request.auth.uid;
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['uid', 'profileId', 'resgatadoEm'])
+                    && codigo.matches('DRW-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{2}');
       allow update, delete: if false;
     }
   }
