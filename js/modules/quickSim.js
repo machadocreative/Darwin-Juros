@@ -214,19 +214,6 @@ function _calcTRParcela() {
   return { trPerc, trReais };
 }
 
-// ENCONTRAR MÊS INFORMADO + 1
-function _nextMesLabel(ym) {
-  let { y, m } = ym;
-
-  m += 1;
-  if (m > 12) {
-    m = 1;
-    y += 1;
-  }
-
-  return { y, m };
-}
-
 // ── TELA DE RESULTADO ──
 function renderResultQuick() {
   screen = 'resultQuick';
@@ -241,7 +228,7 @@ function renderResultQuick() {
   const temTR = trPerc !== null && trPerc > 0;
 
   const ymAtual = parseMS(formQuick.mesMedido);
-  const ymSeguinte = _nextMesLabel(ymAtual);
+  const ymSeguinte = addM(ymAtual, 1);
   const proxMesLabel = mLabel(ymSeguinte);
 
   const parcelaAtual = _calcTotalParcelaAtual();
@@ -286,7 +273,7 @@ function renderResultQuick() {
           <div class="qrc-val">${fmtBRL(parcelaAtual - (trReais || 0))}</div>
           <div class="qrc-note">Juros + Encargos</div>
         </div>
-        <div class="result-card">
+        <div class="result-card${temTR ? '' : ' result-card-tr-indisponivel'}">
           <div class="qrc-label">Correção</div>
           <div class="qrc-val">${temTR ? fmtBRL(trReais) : '<small>Indisponível</small>'}</div>
           <div class="qrc-note">${temTR ?  'TR ' + fmtPerc(trPerc, 4) + ' · ' + mesLabel : ''}</div>

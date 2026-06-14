@@ -104,6 +104,12 @@ window.addEventListener('load', async () => {
   await _carregarTRHistorico();
 
   renderHome();
+
+  // Se a série de TR não carregou, as prestações são estimadas sem correção
+  // monetária — avisa o usuário (deferido para depois do splash/render).
+  if (window._trLoadFailed && typeof showToast === 'function') {
+    setTimeout(() => showToast('⚠️ Não foi possível carregar o histórico de TR. As prestações serão estimadas sem correção monetária.', 6000), 1400);
+  }
 });
 
 // ── CARREGAMENTO DO JSON DE TR ──
@@ -114,8 +120,12 @@ async function _carregarTRHistorico() {
     const res = await fetch('data/tr-historico.json');
     if (!res.ok) throw new Error('not found');
     window._trHistorico = await res.json();
+    window._trLoadFailed = false;
   } catch {
     window._trHistorico = {};
+    window._trLoadFailed = true;
+    // não fica totalmente silencioso: registra no console para diagnóstico
+    console.warn('Darwin: falha ao carregar data/tr-historico.json — TR tratada como indisponível (cálculo sem correção monetária).');
   }
 }
 

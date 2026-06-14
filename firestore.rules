@@ -12,7 +12,7 @@ service cloud.firestore {
     // Deve bater com ADMIN_UIDS no gerador.
     function isAdmin() {
       return request.auth != null
-             && request.auth.uid in ['COLE_SEU_UID_AQUI'];
+             && request.auth.uid in ['EqQ10n05JwYTVbi1P4HTKwjiypB3'];
     }
 
     // ── Dados do usuário ──

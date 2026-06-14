@@ -1194,7 +1194,7 @@ input.perc-input.invalid {
 
 input.rv-input {
     width: 100%;
-    max-width: 140px;
+    max-width: 100px;
     padding: 10px 6px;
     border: 1px solid var(--border);
     border-radius: 4px;

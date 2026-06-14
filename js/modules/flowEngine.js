@@ -1,25 +1,19 @@
-// ── FLOWENGINE.JS (COM DEBUG) ──
-// Motor genérico de navegação de fluxos
-// Este arquivo tem logs para ajudar a debugar problemas
+// ── FLOWENGINE.JS ──
+// Motor genérico de navegação de fluxos (quicksim e simulação completa).
 
 let currentFlowArray = null;     // Array de questões do fluxo atual
 let currentFlowStep = 0;         // Índice atual no fluxo
-
-console.log('✅ flowEngine.js CARREGADO com sucesso!');
 
 // ────────────────────────────────────────────────────────────────
 // INICIALIZAÇÃO DO FLUXO
 // ────────────────────────────────────────────────────────────────
 
 function initFlow(flowArray) {
-  console.log('🚀 initFlow() chamada com:', flowArray);
   currentFlowArray = flowArray;
   currentFlowStep = 0;
   currentStep = 0;
   _navFlowDepth = 0; // reinicia contador de profundidade de histórico
   fluxo = flowArray === FLOW_QUICKSIM ? 'quick' : 'complete';
-  console.log('✅ Fluxo inicializado. currentFlowArray:', currentFlowArray);
-  console.log('✅ Fluxo tipo:', fluxo);
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -27,12 +21,8 @@ function initFlow(flowArray) {
 // ────────────────────────────────────────────────────────────────
 
 function renderFlowStep() {
-  console.log('📖 renderFlowStep() chamada');
-  console.log('  currentFlowArray:', currentFlowArray);
-  console.log('  currentFlowStep:', currentFlowStep);
-
   if (!currentFlowArray) {
-    console.error('❌ flowEngine: Nenhum fluxo inicializado.');
+    console.error('flowEngine: nenhum fluxo inicializado.');
     return;
   }
 
@@ -41,7 +31,6 @@ function renderFlowStep() {
     while (currentFlowStep < getTotalStepsForFlow(currentFlowArray)) {
       const key = getCurrentQuestion(currentFlowArray, currentFlowStep);
       if (!migrationSkipCheck(key)) break;
-      console.log(`  ⏭ Pulando '${key}' (dados migrados do QuickSim)`);
       currentFlowStep++;
       currentStep = currentFlowStep;
     }
@@ -52,27 +41,19 @@ function renderFlowStep() {
   }
 
   const questionKey = getCurrentQuestion(currentFlowArray, currentFlowStep);
-  console.log('  Pergunta atual key:', questionKey);
-  
   const questionObj = questions[questionKey];
-  console.log('  Pergunta objeto:', questionObj);
 
   if (!questionObj) {
-    console.error(`❌ flowEngine: Questão '${questionKey}' não encontrada em questions.js`);
+    console.error(`flowEngine: questão '${questionKey}' não encontrada em questions.js`);
     return;
   }
 
   // Renderiza o HTML da questão
   const questionHtml = questionObj.render();
-  console.log('  HTML da pergunta renderizado');
 
   // Renderiza o container com a questão + botões de navegação
   const totalSteps = getTotalStepsForFlow(currentFlowArray);
-  const isFirst = currentFlowStep === 0;
   const isLast = currentFlowStep === totalSteps - 1;
-
-  console.log(`  Total de steps: ${totalSteps}, É primeiro: ${isFirst}, É último: ${isLast}`);
-
   const isOptionalLast = isLast && !!questionObj.optional;
 
   const html = `
@@ -93,19 +74,16 @@ function renderFlowStep() {
       </button>
     </div>`;
 
-  console.log('  Chamando setHtml()');
   setHtml(html);
 
   // Inicializa máscaras, callbacks e estado da questão
   if (questionObj.init) {
-    console.log('  Inicializando máscaras da pergunta');
     setTimeout(() => questionObj.init(), 80);
   }
 
   // Ajusta tela
   screen = currentFlowArray === FLOW_QUICKSIM ? 'quick' : 'onboarding';
   _navPush(screen, { step: currentFlowStep });
-  console.log('✅ renderFlowStep() completado. screen:', screen);
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -113,29 +91,21 @@ function renderFlowStep() {
 // ────────────────────────────────────────────────────────────────
 
 function nextFlowStep() {
-  console.log('➡️ nextFlowStep() chamada');
-  
   if (!currentFlowArray) {
-    console.error('❌ Nenhum fluxo inicializado');
+    console.error('flowEngine: nenhum fluxo inicializado');
     return;
   }
 
   const questionKey = getCurrentQuestion(currentFlowArray, currentFlowStep);
   const questionObj = questions[questionKey];
 
-  console.log('  Validando pergunta:', questionKey);
-  
   // Valida a resposta
   if (!questionObj.validate()) {
-    console.log('  ❌ Validação falhou, não avança');
     return; // Validação falhou, não avança
   }
 
-  console.log('  ✅ Validação passou');
-
   // Salva os dados
   if (questionObj.save) {
-    console.log('  Salvando dados');
     questionObj.save();
   }
 
@@ -145,14 +115,10 @@ function nextFlowStep() {
 
   const totalSteps = getTotalStepsForFlow(currentFlowArray);
 
-  console.log(`  Avançou para passo ${currentFlowStep} de ${totalSteps}`);
-
   // Verifica se chegou ao final
   if (currentFlowStep >= totalSteps) {
-    console.log('  🏁 Fluxo finalizado, chamando _finalizeFlow()');
     _finalizeFlow();
   } else {
-    console.log('  Renderizando próximo passo');
     renderFlowStep();
   }
 }
@@ -173,8 +139,6 @@ function skipFlowStep() {
 }
 
 function prevFlowStep() {
-  console.log('⬅️ prevFlowStep() chamada');
-
   if (currentFlowStep > 0) {
     currentFlowStep--;
     currentStep = currentFlowStep;
@@ -189,7 +153,6 @@ function prevFlowStep() {
     if (migrationAbort && migrationSkipCheck && currentFlowStep === 0) {
       const key = getCurrentQuestion(currentFlowArray, 0);
       if (migrationSkipCheck(key)) {
-        console.log('  ↩ Abortando migração, voltando para resultado QuickSim');
         const fn = migrationAbort;
         migrationAbort = null;
         migrationSkipCheck = null;
@@ -197,10 +160,7 @@ function prevFlowStep() {
         return;
       }
     }
-    console.log(`  Voltou para passo ${currentFlowStep}`);
     renderFlowStep();
-  } else {
-    console.log('  Já está no primeiro passo');
   }
 }
 
@@ -209,18 +169,12 @@ function prevFlowStep() {
 // ────────────────────────────────────────────────────────────────
 
 function _finalizeFlow() {
-  console.log('🏁 _finalizeFlow() chamada');
-  console.log('  currentFlowArray === FLOW_QUICKSIM?', currentFlowArray === FLOW_QUICKSIM);
-  console.log('  currentFlowArray === FLOW_FULLSIM?', currentFlowArray === FLOW_FULLSIM);
-  
   if (currentFlowArray === FLOW_QUICKSIM) {
-    console.log('  Chamando renderResultQuick()');
     renderResultQuick();
   } else if (currentFlowArray === FLOW_FULLSIM) {
-    console.log('  Chamando _finalizarOnboarding()');
     _finalizarOnboarding();
   } else {
-    console.error('  ❌ Fluxo desconhecido!');
+    console.error('flowEngine: fluxo desconhecido ao finalizar.');
   }
 }
 
@@ -240,10 +194,6 @@ function _renderProgressBar(totalSteps) {
 function _formatStepNumber(current, total) {
   return `${String(current).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
 }
-
-// ────────────────────────────────────────────────────────────────
-// NAVEGAÇÃO SEGURA (com lembrete de salvar)
-// ────────────────────────────────────────────────────────────────
 
 // ────────────────────────────────────────────────────────────────
 // BIFURCAÇÃO INICIAL
@@ -279,5 +229,3 @@ function renderBifurcacao() {
 function escolherFluxo(f) {
   novaSimulacao(f === 'quick' ? 'quick' : 'complete');
 }
-
-console.log('✅ Todas as funções do flowEngine carregadas com sucesso!');

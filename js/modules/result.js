@@ -364,8 +364,11 @@ function refreshTable() {
     const subSaldo = document.getElementById('sub-saldo-val-' + i);
     const subTaxa  = document.getElementById('sub-taxa-val-' + i);
     const subPrev  = document.getElementById('sub-prev-val-' + i);
+    const subPrevLabel = document.getElementById('sub-prev-label-' + i);
     if (subSaldo) subSaldo.textContent = fmtBRL(r.saldo);
-    if (subPrev)  subPrev.textContent  = r.perc >= 100 ? '—' : fmtBRL(r.previsto);
+    const _prev = _subPrevContent(r);
+    if (subPrev) subPrev.textContent = _prev.val;
+    if (subPrevLabel) subPrevLabel.textContent = _prev.label;
     if (subTaxa) {
       const tm = parseFloat(form.taxaAnual) / 100 / 12;
       const totalPct = ((tm + r.tr) * 100).toFixed(4);
@@ -475,6 +478,17 @@ function toggleSubRow(i) {
   btn.textContent = hidden ? '▸' : '▾';
 }
 
+// ── HELPER: rótulo e valor da previsão ("Próxima") da sub-row ──
+// Sem TR (meses futuros), a previsão é só o valor BASE, sem a correção
+// monetária — por isso aparece menor que parcelas já pagas. Para não induzir
+// o usuário a achar que a parcela vai cair, sinalizamos que é uma estimativa
+// e prefixamos ">" (o valor real será MAIOR, pois a TR só soma).
+function _subPrevContent(r) {
+  if (r.perc >= 100) return { label: 'Próxima', val: '—' };
+  if (r.tr > 0)      return { label: 'Próxima', val: fmtBRL(r.previsto) };
+  return { label: 'Próxima Estim.', val: '> ' + fmtBRL(r.previsto) };
+}
+
 // ── HELPER: conteúdo da sub-row em 3 células separadas ──
 function _subRowCells(r) {
   if (r.bloqueado) return `<td colspan="6" class="td-sub-c">—</td>`;
@@ -483,6 +497,7 @@ function _subRowCells(r) {
   const taxaStr = r.tr > 0
     ? `${totalPct}%`
     : `${(tm * 100).toFixed(4)}% <span class="sub-tr-ind">(TR indisponível)</span>`;
+  const prev = _subPrevContent(r);
   return `
     <td class="td-sub-c" colspan="6">
       <div class="sub-grid">
@@ -495,8 +510,8 @@ function _subRowCells(r) {
           <span id="sub-taxa-val-${r._idx}">${taxaStr}</span>
         </div>
         <div class="sub-item td-sub-prev">
-          <span class="sub-label">Próxima</span>
-          <span id="sub-prev-val-${r._idx}">${r.perc >= 100 ? '—' : fmtBRL(r.previsto)}</span>
+          <span class="sub-label" id="sub-prev-label-${r._idx}">${prev.label}</span>
+          <span id="sub-prev-val-${r._idx}">${prev.val}</span>
         </div>
       </div>
     </td>`;
@@ -765,10 +780,10 @@ function buildTabela(inline = false) {
     <table class="table-head-sticky table-premium">
       <thead><tr>
         <th class="th-center">#</th>
-        <th>Mês</th>
+        <th class="th-center">Mês</th>
         <th></th>
-        <th class="th-right">% Obra</th>
-        <th class="th-right">Valor</th>
+        <th class="th-center">% Obra</th>
+        <th class="th-center">Valor</th>
         <th class="th-center">Pago?</th>
       </tr></thead>
     </table>
@@ -1094,8 +1109,8 @@ function renderMiniTabela(replace = false) {
     <table class="table-head-sticky table-mini">
       <thead><tr>
         <th class="th-center">#</th>
-        <th>Mês</th>
-        <th class="th-right">Valor</th>
+        <th class="th-center">Mês</th>
+        <th class="th-center">Valor</th>
         <th class="th-center">Pago?</th>
       </tr></thead>
     </table>
