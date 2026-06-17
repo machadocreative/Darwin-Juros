@@ -772,7 +772,7 @@ function buildTabela(inline = false) {
     <div class="result-card accent result-card-full large tabela-sticky-card" style="margin-top: 0">
       <div class="card-large-left">
         <div class="qrc-label">Valor total estimado<br></div>
-        <div class="qrc-note">Contabilizando com valores futuros sem a correção</div>
+        <div class="qrc-note">Incluindo estimativas futuras SEM Correção Monetária</div>
       </div>
       <div class="qrc-val" id="res-total-hibrido">${fmtBRL(totalHibrid)}</div>
     </div>
@@ -895,7 +895,7 @@ function renderResult() {
         <div class="qrc-note">${premium && proporcaoReal === 0
           ? 'Utilize a função Histórico de Prestações para refinar o cálculo'
           : premium
-            ? 'Contabilizando com valores futuros sem a correção'
+            ? 'Incluindo estimativas futuras SEM Correção Monetária'
             : 'Correção monetária futura, evolução de obra e prazo de entrega alteram este valor'
         }</div>
       </div>

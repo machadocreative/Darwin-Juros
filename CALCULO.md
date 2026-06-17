@@ -172,3 +172,42 @@ nos dois lados.
 - **Bloqueio:** a partir da primeira parcela com `perc ≥ 100%`, as seguintes são
   marcadas `bloqueado` (não entram no cálculo ativo).
 - **Limite:** `MAX_MESES` parcelas.
+
+---
+
+## 9. Valor total estimado (free vs premium)
+
+O card "Valor total estimado" **não** é calculado a partir da mini tabela nem é
+exclusivo do premium. Ele vem do mesmo motor de projeção mês a mês (`calcTable`)
+que o app monta internamente para qualquer perfil.
+
+Fórmula (`totalObra` em [result.js](js/modules/result.js); idêntica ao
+`totalHibrid` da tela de Histórico):
+```
+valor total estimado = Σ (de cada mês ativo) de  ( valorReal  ||  previsto )
+```
+- Mês com **valor pago informado** (na mini tabela do free, ou na tabela premium)
+  → entra com o **valor real** digitado.
+- Mês **sem** valor informado → entra com a **previsão**
+  `previsto = (juros mensais + TR) × saldo + encargos`.
+
+Por isso é um número **híbrido**: real onde você informou + projeção onde não.
+
+**Free vs premium é só VISIBILIDADE, não cálculo.** Os dois calculam o total com a
+mesma matemática e a mesma projeção mês a mês. O **premium abre** essa projeção
+parcela a parcela (tabela premium, permitindo refinar o futuro); o **free** entrega
+só o **total consolidado** e usa a mini tabela apenas para registrar os valores
+**já pagos** (que então substituem a projeção daqueles meses no somatório).
+
+### Exemplo real (perfil "Teste Darwin 300k", free)
+- 16 meses pagos informados na mini tabela (155, 210, 265 … +55/mês até 980),
+  somando **R$ 9.080,00** (= "Total pago").
+- 12 meses restantes entram pela **projeção**.
+- Total estimado = 9.080,00 (real) + 12.373,80 (projeção) = **R$ 21.453,80**.
+- Antes de informar esses 16 valores, o mesmo perfil mostrava ~**R$ 22.450,40**
+  (100% projeção). A diferença (~R$ 997) é porque os valores reais informados
+  foram um pouco menores que a projeção daqueles meses.
+
+> A nota do card ("correção monetária futura, evolução de obra e prazo de entrega
+> alteram este valor") se refere à parte **ainda projetada**: quanto mais meses
+> reais você informa, mais o total se aproxima do efetivo.
