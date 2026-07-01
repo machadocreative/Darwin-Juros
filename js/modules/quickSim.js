@@ -261,7 +261,7 @@ function renderResultQuick() {
     </div>
 
     <div class="result-header">
-      <h3>Visualizador de Prestações</h3>
+      <h3>Visualizador de Porcentagens</h3>
  
       ${card1Html}
 

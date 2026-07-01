@@ -908,7 +908,7 @@ function renderResult() {
     <div class="feature-grid">
       <button class="feat-btn" onclick="renderSliderResult()">
         <span class="feat-icon">📊</span>
-        <span class="feat-label">Visualizador de Prestações</span>
+        <span class="feat-label">Visualizador de Porcentagens</span>
         ${premium ? '<span class="feat-badge feat-badge-premium">💎 Premium</span>' : ''}
       </button>
       <button class="feat-btn" onclick="${premium ? 'renderTabela()' : 'renderMiniTabela()'}">
@@ -1009,7 +1009,7 @@ function renderSliderResult() {
 
   setHtml(`
     <button class="breadcrumb-back" onclick="history.back()">← Voltar à tela de resultados</button>
-    <div class="screen-title">Visualizador de Prestações</div>
+    <div class="screen-title">Visualizador de Porcentagens</div>
 
     ${cardsPremium}
 
